@@ -24,6 +24,12 @@ It is assumed that the sensors' data is not processed in any way by the embedded
 
 >NB : how do we deal with the calibration of the sensors ?
 
+# TODO
+
+* [ ] Get the list of the sensors to be read
+* [ ] Define precisely what data to plot and which graph to use
+* [ ] Define the data format for the recordings
+
 # Hardware
 
 This software should run on a standard computer running Windows / Linux.
