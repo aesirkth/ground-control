@@ -1,6 +1,15 @@
-# Ground Station
+# Ground Station <!-- omit in toc -->
 
 This software is intended to read the data received by the receiver in real time and display it in a clear way to follow the flight parameters.
+
+It runs using `python 3.7.4`
+
+- [Functionalities](#functionalities)
+- [TODO](#todo)
+- [Hardware](#hardware)
+- [Transmission protocol](#transmission-protocol)
+- [Installation](#installation)
+- [Folder structure](#folder-structure)
 
 # Functionalities
 
@@ -32,8 +41,30 @@ It is assumed that the sensors' data is not processed in any way by the embedded
 
 # Hardware
 
-This software should run on a standard computer running Windows / Linux.
+This software should run on a standard computer running Windows. It should work as well on Unix systems but has not been tested.
+
+# Transmission protocol
+
+See the example telemetry code [here](./dummy_telemetry/dummy_telemetry.ino)
 
 # Installation
 
-TODO
+Install `python 3.7.4`
+
+Run `python3 -m pip install -r requirements.txt`
+
+Enjoy
+
+# Folder structure
+
+``` py
+.
+├── README.md                   # This file
+├── data/                       # (Ungitted) folder to store the received telemetry
+├── dummy_telemetry/
+│   └── dummy_telemetry.ino     # Example telemetry code for arduino
+├── read_serial.py              # unused
+├── requirements.txt
+├── serial_read.py
+└── test2.py                    # unused
+```
