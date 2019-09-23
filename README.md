@@ -86,7 +86,7 @@ Enjoy
 │   └── dummy_telemetry.ino     # Example telemetry code for arduino
 ├── dashboard.py                # Dashboard
 ├── read_serial.py              # not used
-├── requirements.txt
 ├── serial_read.py              # Serial reader
-└── test2.py                    # not used
+├── test2.py                    # not used
+└── requirements.txt
 ```
