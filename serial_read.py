@@ -1,3 +1,8 @@
+"""
+Read data sent over serial link and save it on storage
+
+"""
+
 import csv
 import datetime
 from os import mkdir
@@ -18,6 +23,16 @@ sepdata = "\t"
 
 
 def resetCSV(path=path):
+    """ Empty the file located at `path`
+    
+    If the file does not exist, it is created
+
+    Parameters
+    ----------
+    path: path-like object
+        path to the file to write
+    
+    """
     base = dirname(path)
     
     if not isdir(base):
@@ -27,21 +42,63 @@ def resetCSV(path=path):
         print("CVS file flushed")
 
 
-def writeCSV(dataArray):
+def writeCSV(dataArray, path=path):
+    """ Append a line in the file located at `path`
+
+    Each element of `dataArray` is written separated by a comma ','
+
+    Parameters
+    ----------
+    dataArray: array-like object
+        data to write in the file
+
+    path: path-like object
+        path to the file to write
+
+    """
     with open(path, 'a', newline='') as csvFile:
         writer = csv.writer(csvFile, delimiter=',')
         writer.writerow(dataArray)
 
 
 def check_header(line):
+    """ Check if `line` is a valid header
+
+    A valid header :
+        - is non empty
+        - starts with a `newhead` character ("N")
+        - ends with a `endline` character ("E")
+    
+    Parameters
+    ----------
+    line: string
+        line to verify
+
+    """
     return len(line) > 0 and line[0] == newhead and line[-1] == endline
 
 
 def check_line(line):
+    """ Check if `line` is a valid line
+
+    A valid line :
+        - is non empty
+        - starts with a `newline` character ("N")
+        - ends with a `endline` character ("E")
+    
+    Parameters
+    ----------
+    line: string
+        line to verify
+
+    """
     return len(line) > 0 and line[0] == newline and line[-1] == endline
 
 
 def main():
+    """ Wait to get a valid header via serial link then save all received data to a file
+
+    """
     # NB: need to find a way to catch timeouts
     with serial.Serial(port, baudrate=baudrate, timeout=0.1) as ser:
         def get_line():
