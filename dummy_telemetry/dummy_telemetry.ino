@@ -36,6 +36,7 @@ Comments :
 
 
 int cpt = 0;
+unsigned long time;
 
 
 void setup() {
@@ -53,17 +54,17 @@ void setup() {
 // Dummy code to send arbitrary data to the ground station
 // The data should match the header
 void loop() {
-  if (cpt >= 10)
+  if (cpt >= 50)
   { 
     cpt = 0;
   }
-  
+  time = millis();
   Serial.print(NEWLINE);
-  Serial.print(cpt);Serial.print(SEPDATA);
+  Serial.print(time);Serial.print(SEPDATA);
   Serial.print(cpt + 1);
   Serial.println(ENDLINE);
   cpt++;
 
-  delay(1000);
+  delay(10);
 
 }
