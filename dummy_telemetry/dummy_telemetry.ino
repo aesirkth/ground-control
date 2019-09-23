@@ -21,6 +21,8 @@ Protocol description :
 
 Comments :
   - We should send the time of the data sampling along the samples
+  - The link could be bi-directionnal while the rocket is on the launch pad
+  - We need to define a nomenclature between the OBC and the Dashboard to know how to process the data
 
 */
 

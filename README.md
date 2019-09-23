@@ -4,9 +4,13 @@ This software is intended to read the data received by the receiver in real time
 
 It runs using `python 3.7.4`
 
+# Table of contents <!-- omit in toc -->
 - [Functionalities](#functionalities)
 - [TODO](#todo)
 - [Hardware](#hardware)
+  - [Launch Pad Station](#launch-pad-station)
+  - [Telemetry Receiver](#telemetry-receiver)
+  - [Dashboard Computer](#dashboard-computer)
 - [Transmission protocol](#transmission-protocol)
 - [Installation](#installation)
 - [Folder structure](#folder-structure)
@@ -41,7 +45,24 @@ It is assumed that the sensors' data is not processed in any way by the embedded
 
 # Hardware
 
+The ground station is made of different systems :
+  * The Launch Pad Station
+  * The Telemetry Receiver 
+  * The Dashboard Computer
+  * The FPV System (*not described here*)
+
+
+
+
+## Launch Pad Station
+
+## Telemetry Receiver
+
+## Dashboard Computer
+
 This software should run on a standard computer running Windows. It should work as well on Unix systems but has not been tested.
+
+All the received data is saved in the Dashboard Computer hard drive for future use.
 
 # Transmission protocol
 
@@ -63,8 +84,8 @@ Enjoy
 ├── data/                       # (Ungitted) folder to store the received telemetry
 ├── dummy_telemetry/
 │   └── dummy_telemetry.ino     # Example telemetry code for arduino
-├── read_serial.py              # unused
+├── read_serial.py              # not used
 ├── requirements.txt
 ├── serial_read.py
-└── test2.py                    # unused
+└── test2.py                    # not used
 ```
