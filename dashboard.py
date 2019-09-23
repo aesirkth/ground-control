@@ -21,6 +21,9 @@ style.use("ggplot")
 f = Figure(figsize=(5,5), dpi=100)
 a = f.add_subplot(111)
 
+f1 = Figure(figsize=(5,5), dpi=100)
+a1 = f1.add_subplot(111)
+
 
 def animate(i):
     pullData = open('./data/telemetry.csv',"r").read()
@@ -36,7 +39,19 @@ def animate(i):
     a.clear()
     a.plot(xList, yList)
 
-    
+def animate1(i):
+    pullData = open('./data/telemetry.csv',"r").read()
+    dataList = pullData.split('\n')
+    xList = []
+    yList = []
+    for eachLine in dataList[1:]:
+        if len(eachLine) > 1:
+            x, y = eachLine.split(',')[1:]
+            xList.append(int(x))
+            yList.append(-int(y))
+
+    a1.clear()
+    a1.plot(xList, yList)
             
 
 class SeaofBTCapp(tk.Tk):
@@ -56,7 +71,7 @@ class SeaofBTCapp(tk.Tk):
 
         self.frames = {}
 
-        for F in (StartPage, PageOne, PageTwo, PageThree):
+        for F in (StartPage, PageThree):
 
             frame = F(container, self)
 
@@ -79,49 +94,13 @@ class StartPage(tk.Frame):
         label = tk.Label(self, text="Start Page", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
 
-        button = ttk.Button(self, text="Visit Page 1",
-                            command=lambda: controller.show_frame(PageOne))
-        button.pack()
-
-        button2 = ttk.Button(self, text="Visit Page 2",
-                            command=lambda: controller.show_frame(PageTwo))
-        button2.pack()
 
         button3 = ttk.Button(self, text="Graph Page",
                             command=lambda: controller.show_frame(PageThree))
         button3.pack()
 
 
-class PageOne(tk.Frame):
 
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text="Page One!!!", font=LARGE_FONT)
-        label.pack(pady=10,padx=10)
-
-        button1 = ttk.Button(self, text="Back to Home",
-                            command=lambda: controller.show_frame(StartPage))
-        button1.pack()
-
-        button2 = ttk.Button(self, text="Page Two",
-                            command=lambda: controller.show_frame(PageTwo))
-        button2.pack()
-
-
-class PageTwo(tk.Frame):
-
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text="Page Two!!!", font=LARGE_FONT)
-        label.pack(pady=10,padx=10)
-
-        button1 = ttk.Button(self, text="Back to Home",
-                            command=lambda: controller.show_frame(StartPage))
-        button1.pack()
-
-        button2 = ttk.Button(self, text="Page One",
-                            command=lambda: controller.show_frame(PageOne))
-        button2.pack()
 
 
 class PageThree(tk.Frame):
@@ -135,19 +114,17 @@ class PageThree(tk.Frame):
                             command=lambda: controller.show_frame(StartPage))
         button1.pack()
 
-        
-
-        
-
         canvas = FigureCanvasTkAgg(f, self)
         canvas.draw()
-        canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        toolbar = NavigationToolbar2Tk(canvas, self)
-        toolbar.update()
-        canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        canvas2 = FigureCanvasTkAgg(f1, self)
+        canvas2.draw()
+        canvas2.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+
 
 
 app = SeaofBTCapp()
 ani = animation.FuncAnimation(f, animate, interval=1000)
+ani1 = animation.FuncAnimation(f1, animate1, interval=1000)
 app.mainloop()

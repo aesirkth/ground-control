@@ -125,7 +125,7 @@ def main():
             now = datetime.datetime.utcnow().isoformat()
             
             if check_line(line):
-                print(line)
+                # print(line)
                 line_data = [now] + line[1:-1].split(sepdata)
                 writeCSV(line_data)
 
