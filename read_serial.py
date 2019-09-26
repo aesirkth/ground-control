@@ -16,7 +16,6 @@ def writeCSV(dataArray):
     with open('writtenData.csv', 'a+') as csvFile:
         writer = csv.writer(csvFile, delimiter=',')
         writer.writerow(dataArray)
-        
 
 
 size = 100
@@ -25,9 +24,9 @@ y1_vec = [0 for i in range(size)]
 y2_vec = [0 for i in range(size)]
 line1 = []
 line2 = []
-      
-data_read = [0,0,0,0,0]
 
+
+data_read = [0,0,0,0,0]
 ser = serial.Serial('COM6', 9600) #change the serial port with the good one
 print(str(ser))
 
