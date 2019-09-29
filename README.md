@@ -6,7 +6,6 @@ It runs using `python 3.7.4`
 
 # Table of contents <!-- omit in toc -->
 - [Functionalities](#functionalities)
-- [TODO](#todo)
 - [Hardware](#hardware)
   - [Launch Pad Station](#launch-pad-station)
   - [Telemetry Receiver](#telemetry-receiver)
@@ -37,11 +36,6 @@ It is assumed that the sensors' data is not processed in any way by the embedded
 
 >NB : how do we deal with the calibration of the sensors ?
 
-# TODO
-
-* [ ] Get the list of the sensors to be read
-* [ ] Define precisely what data to plot and which graph to use
-* [ ] Define the data format for the recordings
 
 # Hardware
 
