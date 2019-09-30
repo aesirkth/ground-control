@@ -27,7 +27,7 @@ class Telemetry:
         # self.is_reading = True
         self.port = self.find_serial(bonjour)
 
-    def resetCSV(self, path=path):
+    def resetCSV(self, path):
         """ Empty the file located at `path`
         
         If the file does not exist, it is created
@@ -47,7 +47,7 @@ class Telemetry:
             print("CVS file flushed")
 
 
-    def writeCSV(self, dataArray, path=path):
+    def writeCSV(self, dataArray, path):
         """ Append a line in the file located at `path`
 
         Each element of `dataArray` is written separated by a comma ','
@@ -112,7 +112,7 @@ class Telemetry:
         for p in available_ports:
             print("Testing : {}...".format(p.device))
             # The timeout should be long enough to that the telemetry receiver can reset and send BONJOUR before the reading ends
-            with serial.Serial(p.device, baudrate=baudrate, timeout=2) as ser:
+            with serial.Serial(p.device, baudrate=self.baudrate, timeout=2) as ser:
                 ser.reset_input_buffer()
 
                 line = self.get_clean_serial_line(ser)
@@ -168,7 +168,7 @@ class Telemetry:
         # NB: need to find a way to catch timeouts
         with serial.Serial(self.port, baudrate=self.baudrate, timeout=0.1) as ser:
 
-            self.resetCSV()
+            self.resetCSV(self.path)
             ser.reset_input_buffer() #reset the buffer
 
             got_header = False
@@ -178,7 +178,7 @@ class Telemetry:
 
                 if self.check_header(line):
                     header_data = ["Time"] + line[1:-1].split(sepdata)
-                    self.writeCSV(header_data)
+                    self.writeCSV(header_data, self.path)
                     got_header = True
                     print("Header received : {}".format(",".join(header_data)))
 
@@ -189,7 +189,7 @@ class Telemetry:
                 if self.check_line(line):
                     # print(line)
                     line_data = [now] + line[1:-1].split(sepdata)
-                    self.writeCSV(line_data)
+                    self.writeCSV(line_data, self.path)
     
 
     def stop_read(self):
