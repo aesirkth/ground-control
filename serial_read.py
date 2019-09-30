@@ -9,9 +9,9 @@ from os import mkdir
 from os.path import dirname, isdir
 
 import serial
+import serial.tools.list_ports
 
-# Change this to the right port you want to read
-port = 'COM3'
+
 baudrate = 115200
 path = './data/telemetry.csv'
 
@@ -20,6 +20,7 @@ newline = "N"
 newhead = "H"
 endline = "E"
 sepdata = "\t"
+bonjour = "TELEMETRY"
 
 
 def resetCSV(path=path):
@@ -61,6 +62,43 @@ def writeCSV(dataArray, path=path):
         writer.writerow(dataArray)
 
 
+def find_serial(bonjour):
+    """ Test all connected serial device to find the one that sends `bonjour` as the first transmitted line
+
+    Parameters
+    ----------
+    bonjour : string
+        string that should be sent by the device we want to find
+    
+    Returns
+    -------
+    port : string
+        full name/path of the port where the found device is connected 
+
+    """
+    available_ports = serial.tools.list_ports.comports()
+
+    print("\nSearching for available serial devices...")
+    print("Found device(s) : {}".format(", ".join([p.description for p in available_ports])))
+
+    for p in available_ports:
+        print("Testing : {}...".format(p.device))
+        # The timeout should be long enough to that the telemetry receiver can reset and send BONJOUR before the reading ends
+        with serial.Serial(p.device, baudrate=baudrate, timeout=2) as ser:
+            ser.reset_input_buffer()
+
+            line = ser.readline()
+            line = line.decode('ascii')
+            line = line.replace("\r\n", "")
+            if line == bonjour:
+                print("Found telemetry device on port : {}".format(p.device))
+                return p.device
+
+    print("/!\\ Failed to find telemetry device /!\\")
+    # Must trigger an exception instead of returning None
+    return None
+
+
 def check_header(line):
     """ Check if `line` is a valid header
 
@@ -99,6 +137,7 @@ def main():
     """ Wait to get a valid header via serial link then save all received data to a file
 
     """
+    port = find_serial(bonjour)
     # NB: need to find a way to catch timeouts
     with serial.Serial(port, baudrate=baudrate, timeout=0.1) as ser:
         def get_line():
