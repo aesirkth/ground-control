@@ -19,11 +19,14 @@ path = './data/telemetry.csv'
 
 telemetry = Telemetry(baudrate=baudrate, path=path)
 
-t = threading.Thread(target=telemetry.start_read)
-t.start()
+
+def run_telemetry():
+    t = threading.Thread(target=telemetry.start_read)
+    t.start()
 
 
-
+def stop_telemetry():
+    telemetry.stop_read()
 
 
 matplotlib.use("TkAgg")
