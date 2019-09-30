@@ -1,6 +1,7 @@
 # The code for changing pages was derived from: http://stackoverflow.com/questions/7546050/switch-between-two-frames-in-tkinter
 # License: http://creativecommons.org/licenses/by-sa/3.0/	
 
+import threading
 import tkinter as tk
 from tkinter import ttk
 
@@ -10,6 +11,20 @@ from matplotlib import style
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
                                                NavigationToolbar2Tk)
 from matplotlib.figure import Figure
+
+from serial_read.serial_read import Telemetry
+
+baudrate = 115200
+path = './data/telemetry.csv'
+
+telemetry = Telemetry(baudrate=baudrate, path=path)
+
+t = threading.Thread(target=telemetry.start_read)
+t.start()
+
+
+
+
 
 matplotlib.use("TkAgg")
 
@@ -128,3 +143,5 @@ app = SeaofBTCapp()
 ani = animation.FuncAnimation(f, animate, interval=1000)
 ani1 = animation.FuncAnimation(f1, animate1, interval=1000)
 app.mainloop()
+# Stop the serial reading
+telemetry.stop_read()
