@@ -14,15 +14,20 @@ from matplotlib.figure import Figure
 
 matplotlib.use("TkAgg")
 
-
 LARGE_FONT = ("Verdana", 12)
 style.use("ggplot")
 
-f1 = Figure(figsize=(5, 3), dpi=100)
+f1 = Figure(figsize=(4, 3), dpi=100)
 a1 = f1.add_subplot(111)
 
-f2 = Figure(figsize=(5, 3), dpi=100)
+f2 = Figure(figsize=(4, 3), dpi=100)
 a2 = f2.add_subplot(111)
+
+f3 = Figure(figsize=(4, 3), dpi=100)
+a3 = f3.add_subplot(111)
+
+f4 = Figure(figsize=(4, 3), dpi=100)
+a4 = f4.add_subplot(111)
 
 
 def animate(i, sub):
@@ -43,31 +48,24 @@ def animate(i, sub):
 class SeaofBTCapp(tk.Tk):
 
     def __init__(self, *args, **kwargs):
-        
         tk.Tk.__init__(self, *args, **kwargs)
-
         # tk.Tk.iconbitmap(self, default="clienticon.ico")
         tk.Tk.wm_title(self, "AESIR Dashboard")
-
         container = tk.Frame(self)
-        container.pack(side="top", fill="both", expand=True)
+        container.pack(fill=tk.BOTH, expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
 
         for F in (StartPage, PageThree):
-
             frame = F(container, self)
-
             self.frames[F] = frame
-
             frame.grid(row=0, column=0, sticky="nsew")
 
         self.show_frame(StartPage)
 
     def show_frame(self, cont):
-
         frame = self.frames[cont]
         frame.tkraise()
 
@@ -95,16 +93,27 @@ class PageThree(tk.Frame):
                             command=lambda: controller.show_frame(StartPage))
         button1.pack()
 
-        canvas = FigureCanvasTkAgg(f1, self)
-        canvas.draw()
-        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        canvas1 = FigureCanvasTkAgg(f1, self)
+        canvas1.draw()
+        canvas1.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
         canvas2 = FigureCanvasTkAgg(f2, self)
         canvas2.draw()
-        canvas2.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+        canvas2.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+
+        canvas3 = FigureCanvasTkAgg(f3, self)
+        canvas3.draw()
+        canvas3.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        canvas4 = FigureCanvasTkAgg(f4, self)
+        canvas4.draw()
+        canvas4.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
 
 
 app = SeaofBTCapp()
-ani = animation.FuncAnimation(f1, animate, fargs=[a1], interval=500)
-ani1 = animation.FuncAnimation(f2, animate, fargs=[a2], interval=500)
+ani1 = animation.FuncAnimation(f1, animate, fargs=[a1], interval=100)
+ani2 = animation.FuncAnimation(f2, animate, fargs=[a2], interval=200)
+ani3 = animation.FuncAnimation(f3, animate, fargs=[a3], interval=400)
+ani4 = animation.FuncAnimation(f4, animate, fargs=[a4], interval=800)
 app.mainloop()
