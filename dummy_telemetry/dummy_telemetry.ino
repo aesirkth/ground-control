@@ -16,6 +16,9 @@ Protocol description :
   The first character is used to check if we received the beginning of the line. The last character is used to check
   if the line is complete (ie if the serial read did not timeout before the end of the line)
 
+  Before transmitting values, the telementry receiver sends a recognizable BONJOUR string so that the reader can
+  identify what device is sending data
+
   The transmission starts by the sending of the data header line to the ground station. This header is sent once.
   Then the data is sent
 
@@ -30,6 +33,7 @@ Comments :
 #define NEWHEAD "H"
 #define ENDLINE "E"
 #define SEPDATA "\t"
+#define BONJOUR "TELEMETRY"
 
 // Change this to use a different baudrate
 #define BAUDRATE 115200
@@ -41,11 +45,12 @@ unsigned long time;
 
 void setup() {
   Serial.begin(BAUDRATE);
-
+  // Send string to indicate that this device is the telemetry receiver
+  Serial.println(BONJOUR);
   // Send the header to the ground station
   Serial.print(NEWHEAD);
-  Serial.print("Accel");Serial.print(SEPDATA);
-  Serial.print("Gyro");
+  Serial.print("Millis");Serial.print(SEPDATA);
+  Serial.print("Data");
   Serial.println(ENDLINE);
 
   delay(1000);

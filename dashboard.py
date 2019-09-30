@@ -2,6 +2,7 @@
 # http://stackoverflow.com/questions/7546050/switch-between-two-frames-in-tkinter
 # License: http://creativecommons.org/licenses/by-sa/3.0/	
 
+import threading
 import tkinter as tk
 from tkinter import ttk
 
@@ -11,6 +12,23 @@ from matplotlib import style
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
                                                NavigationToolbar2Tk)
 from matplotlib.figure import Figure
+
+from serial_read.serial_read import Telemetry
+
+baudrate = 115200
+path = './data/telemetry.csv'
+
+telemetry = Telemetry(baudrate=baudrate, path=path)
+
+
+def run_telemetry():
+    t = threading.Thread(target=telemetry.start_read)
+    t.start()
+
+
+def stop_telemetry():
+    telemetry.stop_read()
+
 
 matplotlib.use("TkAgg")
 
@@ -115,3 +133,5 @@ ani2 = animation.FuncAnimation(f2, animate, fargs=[a2], interval=200)
 ani3 = animation.FuncAnimation(f3, animate, fargs=[a3], interval=400)
 ani4 = animation.FuncAnimation(f4, animate, fargs=[a4], interval=800)
 app.mainloop()
+# Stop the serial reading
+telemetry.stop_read()
