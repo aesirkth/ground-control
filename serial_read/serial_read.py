@@ -5,16 +5,12 @@ Read data sent over serial link and save it on storage
 
 import csv
 import datetime
-import threading
-import time
 from os import mkdir
 from os.path import dirname, isdir
 
 import serial
 import serial.tools.list_ports
 
-baudrate = 115200
-path = './data/telemetry.csv'
 
 # See ./dummy_telemetry/dummy_telemetry.ino for the description of the protocol
 newline = "N"
@@ -198,18 +194,4 @@ class Telemetry:
 
     def stop_read(self):
         self.is_reading = False
-
-
-
-
-if __name__ == "__main__":
-    telemetry = Telemetry(baudrate=baudrate, path=path)
-    try :
-        t = threading.Thread(target=telemetry.start_read)
-        t.start()
-        while True:
-         time.sleep(10)
-    except (KeyboardInterrupt, SystemExit):
-        telemetry.stop_read()
     
-    telemetry.stop_read()
