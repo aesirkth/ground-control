@@ -49,8 +49,8 @@ void setup() {
   Serial.println(BONJOUR);
   // Send the header to the ground station
   Serial.print(NEWHEAD);
-  Serial.print("Accel");Serial.print(SEPDATA);
-  Serial.print("Gyro");
+  Serial.print("Millis");Serial.print(SEPDATA);
+  Serial.print("Data");
   Serial.println(ENDLINE);
 
   delay(1000);
