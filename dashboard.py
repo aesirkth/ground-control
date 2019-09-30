@@ -75,11 +75,11 @@ class StartPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text="Start Page", font=LARGE_FONT)
-        label.pack(pady=10, padx=10)
+        label.grid(pady=10, padx=10)
 
         button3 = ttk.Button(self, text="Graph Page",
                             command=lambda: controller.show_frame(PageThree))
-        button3.pack()
+        button3.grid()
 
 
 class PageThree(tk.Frame):
@@ -87,28 +87,26 @@ class PageThree(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text="Graph Page!", font=LARGE_FONT)
-        label.pack(pady=10, padx=10)
-
+        label.grid(padx=15, pady=10)
         button1 = ttk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(StartPage))
-        button1.pack()
+        button1.grid()
 
         canvas1 = FigureCanvasTkAgg(f1, self)
         canvas1.draw()
-        canvas1.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        canvas1.get_tk_widget().grid(row = 1, column = 1)
 
         canvas2 = FigureCanvasTkAgg(f2, self)
         canvas2.draw()
-        canvas2.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        canvas2.get_tk_widget().grid(row = 1, column = 2)
 
         canvas3 = FigureCanvasTkAgg(f3, self)
         canvas3.draw()
-        canvas3.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        canvas3.get_tk_widget().grid(row = 2, column = 1)
 
         canvas4 = FigureCanvasTkAgg(f4, self)
         canvas4.draw()
-        canvas4.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-
+        canvas4.get_tk_widget().grid(row = 2, column = 2)
 
 
 app = SeaofBTCapp()
