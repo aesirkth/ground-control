@@ -62,6 +62,30 @@ def writeCSV(dataArray, path=path):
         writer.writerow(dataArray)
 
 
+def get_clean_serial_line(ser):
+    """ Read a line from serial link and return it as a string
+
+    The line is decoded to ascii and the newline character is removed
+
+    NB: The newline character is different on linux systems
+
+    Parameters
+    ----------
+    ser : Serial instance
+        the Serial instance to read a line from
+    
+    Returns
+    -------
+    line : string
+        the processed line read from serial
+
+    """
+    line = ser.readline()
+    line = line.decode('ascii')
+    line = line.replace("\r\n", "")
+    return line
+
+
 def find_serial(bonjour):
     """ Test all connected serial device to find the one that sends `bonjour` as the first transmitted line
 
@@ -87,9 +111,8 @@ def find_serial(bonjour):
         with serial.Serial(p.device, baudrate=baudrate, timeout=2) as ser:
             ser.reset_input_buffer()
 
-            line = ser.readline()
-            line = line.decode('ascii')
-            line = line.replace("\r\n", "")
+            line = get_clean_serial_line(ser)
+
             if line == bonjour:
                 print("Found telemetry device on port : {}".format(p.device))
                 return p.device
@@ -140,11 +163,6 @@ def main():
     port = find_serial(bonjour)
     # NB: need to find a way to catch timeouts
     with serial.Serial(port, baudrate=baudrate, timeout=0.1) as ser:
-        def get_line():
-            line = ser.readline()
-            line = line.decode('ascii')
-            line = line.replace("\r\n", "")
-            return line
 
         resetCSV()
         ser.reset_input_buffer() #reset the buffer
@@ -152,7 +170,8 @@ def main():
         got_header = False
         print("Waiting for header...")
         while not got_header:
-            line = get_line()
+            line = get_clean_serial_line(ser)
+
             if check_header(line):
                 header_data = ["Time"] + line[1:-1].split(sepdata)
                 writeCSV(header_data)
@@ -160,7 +179,7 @@ def main():
                 print("Header received : {}".format(",".join(header_data)))
 
         while True:
-            line = get_line()
+            line = get_clean_serial_line(ser)
             now = datetime.datetime.utcnow().isoformat()
             
             if check_line(line):
