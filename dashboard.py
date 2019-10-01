@@ -18,10 +18,14 @@ from serial_read.serial_read import Telemetry
 baudrate = 115200
 path = './data/telemetry.csv'
 
+port = None
 telemetry = Telemetry(baudrate=baudrate, path=path)
 
 
 def run_telemetry():
+    global port
+    if port == None:
+        port = telemetry.find_serial(bonjour="TELEMETRY")
     t = threading.Thread(target=telemetry.start_read)
     t.start()
 
