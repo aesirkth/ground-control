@@ -108,7 +108,13 @@ class PageThree(tk.Frame):
         label.grid(padx=15, pady=10)
         button1 = ttk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(StartPage))
-        button1.grid()
+        button1.grid(row = 1, column = 0)
+        button2 = ttk.Button(self, text="Start",
+                             command=lambda: run_telemetry())
+        button2.grid(row = 0, column = 1)
+        button3 = ttk.Button(self, text="Stop",
+                             command=lambda: stop_telemetry())
+        button3.grid(row = 0, column = 2)
 
         canvas1 = FigureCanvasTkAgg(f1, self)
         canvas1.draw()
