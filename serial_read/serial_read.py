@@ -41,14 +41,14 @@ class Telemetry:
     
     Examples
     --------
-    >>> telemetry = Telemetry(baudrate=112500, path="path/to/file.csv")
+    >>> telemetry = Telemetry(baudrate=115200, path="path/to/file.csv")
     >>> port = telemetry.find_serial(bonjour="TELEMETRY")
     >>> telemetry.start_read()
     ...
     >>> telemetry.stop_read()
 
 
-    >>> telemetry = Telemetry(baudrate=112500, path="path/to/file.cvs")
+    >>> telemetry = Telemetry(baudrate=115200, path="path/to/file.cvs")
     >>> telemetry.start_read(bonjour="TELEMETRY")
     ...
     >>> telemetry.stop_read()
