@@ -1,6 +1,6 @@
 # The code for changing pages was derived from:
 # http://stackoverflow.com/questions/7546050/switch-between-two-frames-in-tkinter
-# License: http://creativecommons.org/licenses/by-sa/3.0/	
+# License: http://creativecommons.org/licenses/by-sa/3.0/
 
 import threading
 import tkinter as tk
@@ -65,7 +65,7 @@ def animate(i, sub):
 
     sub.clear()
     sub.plot(xList, yList)
-            
+
 
 class SeaofBTCapp(tk.Tk):
 
@@ -91,7 +91,7 @@ class SeaofBTCapp(tk.Tk):
         frame = self.frames[cont]
         frame.tkraise()
 
-        
+
 class StartPage(tk.Frame):
 
     def __init__(self, parent, controller):
@@ -100,7 +100,7 @@ class StartPage(tk.Frame):
         label.grid(pady=10, padx=10)
 
         button3 = ttk.Button(self, text="Graph Page",
-                            command=lambda: controller.show_frame(PageThree))
+                             command=lambda: controller.show_frame(PageThree))
         button3.grid()
 
 
@@ -111,30 +111,30 @@ class PageThree(tk.Frame):
         label = tk.Label(self, text="Graph Page!", font=LARGE_FONT)
         label.grid(padx=15, pady=10)
         button1 = ttk.Button(self, text="Back to Home",
-                            command=lambda: controller.show_frame(StartPage))
-        button1.grid(row = 1, column = 0)
+                             command=lambda: controller.show_frame(StartPage))
+        button1.grid(row=1, column=0)
         button2 = ttk.Button(self, text="Start",
                              command=lambda: run_telemetry())
-        button2.grid(row = 0, column = 1)
+        button2.grid(row=0, column=1)
         button3 = ttk.Button(self, text="Stop",
                              command=lambda: stop_telemetry())
-        button3.grid(row = 0, column = 2)
+        button3.grid(row=0, column=2)
 
         canvas1 = FigureCanvasTkAgg(f1, self)
         canvas1.draw()
-        canvas1.get_tk_widget().grid(row = 1, column = 1)
+        canvas1.get_tk_widget().grid(row=1, column=1)
 
         canvas2 = FigureCanvasTkAgg(f2, self)
         canvas2.draw()
-        canvas2.get_tk_widget().grid(row = 1, column = 2)
+        canvas2.get_tk_widget().grid(row=1, column=2)
 
         canvas3 = FigureCanvasTkAgg(f3, self)
         canvas3.draw()
-        canvas3.get_tk_widget().grid(row = 2, column = 1)
+        canvas3.get_tk_widget().grid(row=2, column=1)
 
         canvas4 = FigureCanvasTkAgg(f4, self)
         canvas4.draw()
-        canvas4.get_tk_widget().grid(row = 2, column = 2)
+        canvas4.get_tk_widget().grid(row=2, column=2)
 
 
 app = SeaofBTCapp()

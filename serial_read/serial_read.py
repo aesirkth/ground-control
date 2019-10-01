@@ -17,7 +17,7 @@ newline = "N"
 newhead = "H"
 endline = "E"
 sepdata = "\t"
-bonjour = "TELEMETRY" # Not used
+bonjour = "TELEMETRY"  # Not used
 
 
 class Telemetry:
@@ -38,7 +38,7 @@ class Telemetry:
         Full name/path of the port the instance is set to read data from
     is_reading : bool
         True if the instance is currently reading data from serial link
-    
+
     Examples
     --------
     >>> telemetry = Telemetry(baudrate=115200, path="path/to/file.csv")
@@ -54,28 +54,27 @@ class Telemetry:
     >>> telemetry.stop_read()
 
     """
+
     def __init__(self, baudrate, path):
         self.baudrate = baudrate
         self.path = path
         self.is_reading = False
         self.port = None
 
-
     def resetCSV(self):
         """ Empty the file located at `self.path`
-        
+
         If the file does not exist, it is created
-        
+
         """
         base = dirname(self.path)
-        
+
         # This fails if there are two or more levels of directory not yet existing in the path
         if not isdir(base):
             mkdir(base)
-        
+
         with open(self.path, 'w+'):
             print("CVS file flushed")
-
 
     def writeCSV(self, dataArray):
         """ Append a line in the file located at `self.path`
@@ -92,7 +91,6 @@ class Telemetry:
             writer = csv.writer(csvFile, delimiter=',')
             writer.writerow(dataArray)
 
-
     def get_clean_serial_line(self, ser):
         """ Read a line from serial link and return it as a string
 
@@ -104,7 +102,7 @@ class Telemetry:
         ----------
         ser : Serial instance
             the Serial instance to read a line from
-        
+
         Returns
         -------
         line : string
@@ -116,7 +114,6 @@ class Telemetry:
         line = line.replace("\r\n", "")
         return line
 
-
     def check_header(self, line):
         """ Check if `line` is a valid header
 
@@ -124,7 +121,7 @@ class Telemetry:
             - is non empty
             - starts with a `newhead` character ("N")
             - ends with a `endline` character ("E")
-        
+
         Parameters
         ----------
         line: string
@@ -133,7 +130,6 @@ class Telemetry:
         """
         return len(line) > 0 and line[0] == newhead and line[-1] == endline
 
-
     def check_line(self, line):
         """ Check if `line` is a valid line
 
@@ -141,7 +137,7 @@ class Telemetry:
             - is non empty
             - starts with a `newline` character ("N")
             - ends with a `endline` character ("E")
-        
+
         Parameters
         ----------
         line: string
@@ -149,8 +145,7 @@ class Telemetry:
 
         """
         return len(line) > 0 and line[0] == newline and line[-1] == endline
-    
-    
+
     def find_serial(self, bonjour):
         """ Test all connected serial devices to find the one that sends `bonjour` as the first transmitted line
 
@@ -160,7 +155,7 @@ class Telemetry:
         ----------
         bonjour : string
             string that should be sent by the device we want to find
-        
+
         Returns
         -------
         port : string
@@ -171,7 +166,8 @@ class Telemetry:
         available_ports = serial.tools.list_ports.comports()
 
         print("\nSearching for available serial devices...")
-        print("Found device(s) : {}".format(", ".join([p.description for p in available_ports])))
+        print("Found device(s) : {}".format(
+            ", ".join([p.description for p in available_ports])))
 
         for p in available_ports:
             print("Testing : {}...".format(p.device))
@@ -190,7 +186,6 @@ class Telemetry:
         # Must trigger an exception instead of returning None
         self.port = None
         return None
-
 
     def start_read(self, bonjour=None):
         """ Wait to get a valid header via serial link then save all received data to a file
@@ -214,7 +209,7 @@ class Telemetry:
         with serial.Serial(self.port, baudrate=self.baudrate, timeout=0.1) as ser:
 
             self.resetCSV()
-            ser.reset_input_buffer() # Reset the buffer
+            ser.reset_input_buffer()  # Reset the buffer
 
             got_header = False
             print("Waiting for header...")
@@ -231,12 +226,11 @@ class Telemetry:
             while self.is_reading:
                 line = self.get_clean_serial_line(ser)
                 now = datetime.datetime.utcnow().isoformat()
-                
+
                 if self.check_line(line):
                     # print(line)
                     line_data = [now] + line[1:-1].split(sepdata)
                     self.writeCSV(line_data)
-    
 
     def stop_read(self):
         """" Call this method to terminate serial reading
@@ -245,4 +239,3 @@ class Telemetry:
 
         """
         self.is_reading = False
-    
