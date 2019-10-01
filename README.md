@@ -78,7 +78,8 @@ Enjoy
 ├── data/                       # (Ungitted) folder to store the received telemetry
 ├── dummy_telemetry/
 │   └── dummy_telemetry.ino     # Example telemetry code for arduino
+├── serial_read/
+│   └── serial_read.py          # Class used to read data from serial link
 ├── dashboard.py                # Dashboard
-├── serial_read.py              # Serial reader
 └── requirements.txt
 ```
