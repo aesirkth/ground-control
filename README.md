@@ -5,14 +5,11 @@
 - [Purpose](#purpose)
 - [Functionalities](#functionalities)
 - [Hardware](#hardware)
-  - [Rocket](#rocket)
-    - [Sensors](#sensors)
-  - [Launch Pad Station](#launch-pad-station)
-  - [Telemetry Receiver](#telemetry-receiver)
-  - [Dashboard Computer](#dashboard-computer)
+- [Sensors](#sensors)
 - [Transmission protocol](#transmission-protocol)
 - [How to use ?](#how-to-use-)
   - [Testing](#testing)
+  - [Flight conditions](#flight-conditions)
 - [Folder structure](#folder-structure)
 
 
@@ -50,7 +47,7 @@ This software should :
 
 # Hardware
 
-The hardware if made of the following elements :
+The hardware is made of the following elements :
   * Rocket
   * The Launch Pad Station
   * The Telemetry Receiver 
@@ -66,14 +63,8 @@ Here is a diagram of the data links between the subsystems :
 >The diagram was made with [draw.io](https://www.draw.io)<br>
 >To make changes to it, edit the source file `/doc/diagrams/data_links.xml`
 
-## Rocket
 
-The Rocket has on-board sensors used to measure the flight parameters and an on-board transmitter that sends them to the ground in real time.
-
-The Rocket is connected to the ground with a single wire when on the Launch Pad. This wire is automatically disconnected on launch and serves as the launch indicator for the OBC. There is also a serial link between the rocket and the LPS when the rocket is on the launch pad.
-
-
-### Sensors
+# Sensors
 
 The following sensors are embedded on the Rocket :
   * Inertial Motion Unit `ICM20602` from Invensense
@@ -81,23 +72,6 @@ The following sensors are embedded on the Rocket :
   * Magnetometer `LIS3MDLTR` from STMicroelectronics
   * Dynamic pressure sensor `ABPDRRT005PG2A5` from Honeywell
   * GPS receiver `M8Q` from u-blox
-
-
-## Launch Pad Station
-
-The Launch Pad Station is connected to the Ground Station via a wireless connection.
-
-
-## Telemetry Receiver
-
-The Telemetry Receiver is an Arduino board connected to a radio receiver. The received data is transmitted to the Ground Station via a serial link.
-
-
-## Dashboard Computer
-
-This software should run on a standard computer running Windows. It should work as well on Unix systems but has not been tested.
-
-All the received data is saved in the Dashboard Computer hard drive for future use.
 
 
 # Transmission protocol
@@ -131,6 +105,11 @@ python3 ./dashboard.py
 ```
 
 Enjoy
+
+
+## Flight conditions
+
+>TODO
 
 
 # Folder structure
