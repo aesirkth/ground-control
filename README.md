@@ -63,7 +63,7 @@ Here is a diagram of the data links between the subsystems :
 ![data_link](/doc/diagrams/data_links.png)
 
 
->The diagram was made with draw.io<br>
+>The diagram was made with [draw.io](https://www.draw.io)<br>
 >To make changes to it, edit the source file `/doc/diagrams/data_links.xml`
 
 ## Rocket
