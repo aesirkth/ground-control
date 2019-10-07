@@ -6,11 +6,10 @@ Class to read data sent over serial link and save it on storage
 import csv
 import datetime
 from os import mkdir
-from os.path import dirname, isdir
+from os.path import isdir, join
 
 import serial
 import serial.tools.list_ports
-
 
 bonjour = "TELEMETRY"  # Not used
 
@@ -71,25 +70,19 @@ class Telemetry:
         self.header = ""
         self.calibration = {}
         self.messages = []
-        self.data = []
+        self.data = [[], [], [],]
+        self.date_created = datetime.datetime.now().replace(microsecond=0).isoformat()
+        self.data_file = "{}_data.csv".format(self.date_created.replace(":","-"))
+        self.data_path = join(self.path, self.data_file)
 
-    def resetCSV(self):
-        """ Empty the file located at `self.path`
+        if not isdir(self.path):
+            mkdir(self.path)
+        
+        with open(self.data_path, 'w'):
+            print("Data file created")
 
-        If the file does not exist, it is created
-
-        """
-        base = dirname(self.path)
-
-        # This fails if there are two or more levels of directory not yet existing in the path
-        if not isdir(base):
-            mkdir(base)
-
-        with open(self.path, 'w+'):
-            print("CVS file flushed")
-
-    def writeCSV(self, dataArray):
-        """ Append a line in the file located at `self.path`
+    def write_data(self, dataArray):
+        """ Append a line in the file located at `self.data_path`
 
         Each element of `dataArray` is written separated by a comma ','
 
@@ -99,8 +92,8 @@ class Telemetry:
             data to write in the file
 
         """
-        with open(self.path, 'a', newline='') as csvFile:
-            writer = csv.writer(csvFile, delimiter=',')
+        with open(self.data_path, 'a+', newline='') as file:
+            writer = csv.writer(file, delimiter=',')
             writer.writerow(dataArray)
 
     def get_clean_serial_line(self, ser):
@@ -130,7 +123,7 @@ class Telemetry:
         # Don't write the header twice
         if not self.header:
             self.header = ["Time"] + line.split(self.separators['SEP_DATA'])
-            self.writeCSV(self.header)
+            self.write_data(self.header)
             print("Header : {}".format(self.header))
 
     def process_data(self, line):
@@ -143,10 +136,22 @@ class Telemetry:
 
         """
         if self.header:
-            now = datetime.datetime.utcnow().isoformat()
+            now = datetime.datetime.now().isoformat()
             data = [now] + line.split(self.separators['SEP_DATA'])
-            self.data += data
-            self.writeCSV(data)
+            # Need to make this append at the exact same time
+            if not self.data[0]:
+                self.data[0] = [data[0]]
+            else:
+                self.data[0].append(data[0])
+            if not self.data[1]:
+                self.data[1] = [int(data[1])]
+            else:
+                self.data[1].append(int(data[1]))
+            if not self.data[2]:
+                self.data[2] = [int(data[2])]
+            else:
+                self.data[2].append(int(data[2]))
+            self.write_data(data)
 
     def process_calibration(self, line):
         """ Save calibration data in memory
@@ -248,6 +253,7 @@ class Telemetry:
 
         """
         self.is_reading = True
+        self.data = [[], [], [],]
 
         # If `bonjour` is given, search for the device location
         # If not, don't search for the device and assume that `self.port` is already set correctly
@@ -257,7 +263,6 @@ class Telemetry:
         # NB: need to find a way to catch timeouts
         with serial.Serial(self.port, baudrate=self.baudrate, timeout=0.1) as ser:
 
-            self.resetCSV()
             ser.reset_input_buffer()  # Reset the buffer
 
             while self.is_reading:
