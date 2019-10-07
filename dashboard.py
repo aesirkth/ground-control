@@ -16,16 +16,16 @@ from matplotlib.figure import Figure
 from serial_read.serial_read import Telemetry
 
 baudrate = 115200
-path = './data/telemetry.csv'
+path = './data'
 
-port = None
 telemetry = Telemetry(baudrate=baudrate, path=path)
+data_path = telemetry.data_path
 
 
 def run_telemetry():
-    global port
-    if port == None:
-        port = telemetry.find_serial(bonjour="TELEMETRY")
+    
+    if not telemetry.port:
+        telemetry.find_serial(bonjour="TELEMETRY")
     t = threading.Thread(target=telemetry.start_read)
     t.start()
 
@@ -53,15 +53,8 @@ a4 = f4.add_subplot(111)
 
 
 def animate(i, sub):
-    pullData = open('./data/telemetry.csv', "r").read()
-    dataList = pullData.split('\n')
-    xList = []
-    yList = []
-    for eachLine in dataList[1:]:
-        if len(eachLine) > 1:
-            x, y = eachLine.split(',')[1:]
-            xList.append(int(x))
-            yList.append(int(y))
+    xList = telemetry.data[1]
+    yList = telemetry.data[2]
 
     sub.clear()
     sub.plot(xList, yList)
