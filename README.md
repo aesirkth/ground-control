@@ -58,6 +58,14 @@ The hardware if made of the following elements :
   * The FPV System (*not described here*)
 
 
+Here is a diagram of the data links between the subsystems :
+
+![data_link](/doc/diagrams/data_links.png)
+
+
+>The diagram was made with draw.io<br>
+>To make changes to it, edit the source file `/doc/diagrams/data_links.xml`
+
 ## Rocket
 
 The Rocket has on-board sensors used to measure the flight parameters and an on-board transmitter that sends them to the ground in real time.
