@@ -13,10 +13,11 @@ import serial.tools.list_ports
 
 
 # See ../dummy_telemetry/dummy_telemetry.ino for the description of the protocol
-newline = "N"
-newhead = "H"
-endline = "E"
-sepdata = "\t"
+newline = "#"
+newhead = "@"
+sepdata = "&"
+sepcali = ":"
+end     = "\n"
 bonjour = "TELEMETRY"  # Not used
 
 
@@ -60,6 +61,10 @@ class Telemetry:
         self.path = path
         self.is_reading = False
         self.port = None
+        self.header = None
+        self.calibration = None
+        self.messages = None
+        self.data = None
 
     def resetCSV(self):
         """ Empty the file located at `self.path`
@@ -111,7 +116,7 @@ class Telemetry:
         """
         line = ser.readline()
         line = line.decode('ascii')
-        line = line.replace("\r\n", "")
+        line = line.replace(end, "")
         return line
 
     def check_header(self, line):
@@ -119,8 +124,7 @@ class Telemetry:
 
         A valid header :
             - is non empty
-            - starts with a `newhead` character ("N")
-            - ends with a `endline` character ("E")
+            - starts with a `newhead` character ("@")
 
         Parameters
         ----------
@@ -128,15 +132,14 @@ class Telemetry:
             line to verify
 
         """
-        return len(line) > 0 and line[0] == newhead and line[-1] == endline
+        return len(line) > 0 and line[0] == newhead
 
     def check_line(self, line):
         """ Check if `line` is a valid line
 
         A valid line :
             - is non empty
-            - starts with a `newline` character ("N")
-            - ends with a `endline` character ("E")
+            - starts with a `newline` character ("#")
 
         Parameters
         ----------
@@ -144,7 +147,7 @@ class Telemetry:
             line to verify
 
         """
-        return len(line) > 0 and line[0] == newline and line[-1] == endline
+        return len(line) > 0 and line[0] == newline
 
     def find_serial(self, bonjour):
         """ Test all connected serial devices to find the one that sends `bonjour` as the first transmitted line
@@ -218,7 +221,7 @@ class Telemetry:
                 line = self.get_clean_serial_line(ser)
 
                 if self.check_header(line):
-                    header_data = ["Time"] + line[1:-1].split(sepdata)
+                    header_data = ["Time"] + line[1:].split(sepdata)
                     self.writeCSV(header_data)
                     got_header = True
                     print("Header received : {}".format(",".join(header_data)))
@@ -229,7 +232,7 @@ class Telemetry:
 
                 if self.check_line(line):
                     # print(line)
-                    line_data = [now] + line[1:-1].split(sepdata)
+                    line_data = [now] + line[1:].split(sepdata)
                     self.writeCSV(line_data)
 
     def stop_read(self):
