@@ -118,6 +118,7 @@ Enjoy
 .
 ├── README.md                   # This file
 ├── data/                       # (Ungitted) folder to store the received telemetry
+├── doc/                        # The documentation goes there
 ├── dummy_telemetry/
 │   └── dummy_telemetry.ino     # Example telemetry code for arduino
 ├── serial_read/
