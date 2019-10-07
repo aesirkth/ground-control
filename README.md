@@ -20,7 +20,7 @@
 
 This software is designed to deal with the incomming data from the rocket and it's systems. Ability to control the Launch Pad Station should also be included here.
 
-It runs using `python 3.7.4`
+It runs with `python 3.7.4`
 
 
 # Functionalities
@@ -34,8 +34,8 @@ The raw telemetry data is processed on the fly on the Ground Station and not on 
 This software should :
 
 * [x] Read the raw data from serial connection
-* [ ] Convert the raw data from sensors
 * [x] Record all the received data for future utilisation
+* [ ] Convert the raw data from sensors
 * [ ] Display the following values in real time (time related curves if possible)
   * [ ] Altitude
   * [ ] Pressure
@@ -46,8 +46,6 @@ This software should :
 
 
 *Tick the tasks once successfully implemented and tested*
-
->NB : how do we deal with the calibration of the sensors ?
 
 
 # Hardware
@@ -64,7 +62,7 @@ The hardware if made of the following elements :
 
 The Rocket has on-board sensors used to measure the flight parameters and an on-board transmitter that sends them to the ground in real time.
 
-The Rocket is connected to the ground with a single wire when on the Launch Pad. This wire is automatically disconnected on launch and serves as the launch indicator for the OBC.
+The Rocket is connected to the ground with a single wire when on the Launch Pad. This wire is automatically disconnected on launch and serves as the launch indicator for the OBC. There is also a serial link between the rocket and the LPS when the rocket is on the launch pad.
 
 
 ### Sensors
@@ -79,10 +77,13 @@ The following sensors are embedded on the Rocket :
 
 ## Launch Pad Station
 
+The Launch Pad Station is connected to the Ground Station via a wireless connection.
+
 
 ## Telemetry Receiver
 
 The Telemetry Receiver is an Arduino board connected to a radio receiver. The received data is transmitted to the Ground Station via a serial link.
+
 
 ## Dashboard Computer
 
@@ -95,7 +96,9 @@ All the received data is saved in the Dashboard Computer hard drive for future u
 
 See the example telemetry code [here](./dummy_telemetry/dummy_telemetry.ino)
 
+
 # How to use ?
+
 
 ## Testing
 
