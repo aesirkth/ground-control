@@ -11,7 +11,8 @@
   - [Telemetry Receiver](#telemetry-receiver)
   - [Dashboard Computer](#dashboard-computer)
 - [Transmission protocol](#transmission-protocol)
-- [Installation](#installation)
+- [How to use ?](#how-to-use-)
+  - [Testing](#testing)
 - [Folder structure](#folder-structure)
 
 
@@ -94,12 +95,29 @@ All the received data is saved in the Dashboard Computer hard drive for future u
 
 See the example telemetry code [here](./dummy_telemetry/dummy_telemetry.ino)
 
+# How to use ?
 
-# Installation
+## Testing
 
-Install `python 3.7.4`
+Install `python 3.7.4` on your computer
 
-Run `python3 -m pip install -r requirements.txt`
+> Earlier versions of python could work as well but have not been tested
+
+Install the required python packages
+
+```sh
+python3 -m pip install -r requirements.txt
+```
+
+Upload `dummy_telemetry.ino` to an Arduino board
+
+Make sure the board is connected to your computer
+
+Run `dashboard.py`
+
+```
+python3 ./dashboard.py
+```
 
 Enjoy
 
