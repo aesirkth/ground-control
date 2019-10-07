@@ -12,12 +12,6 @@ import serial
 import serial.tools.list_ports
 
 
-# See ../dummy_telemetry/dummy_telemetry.ino for the description of the protocol
-newline = "#"
-newhead = "@"
-sepdata = "&"
-sepcali = ":"
-end     = "\n"
 bonjour = "TELEMETRY"  # Not used
 
 
@@ -56,15 +50,28 @@ class Telemetry:
 
     """
 
+    separators = {
+        'START_HEAD': '@',
+        'START_DATA': '#',
+        'START_CALI': '%',
+        'START_MESS': '$',
+        'SEP_DATA': '&',
+        'SEP_CALI': ':',
+        'END_LINE': '\n'
+    }
+
+    # We need to do searches both ways...
+    separators_reversed = {value: key for key, value in separators.items()}
+
     def __init__(self, baudrate, path):
         self.baudrate = baudrate
         self.path = path
         self.is_reading = False
-        self.port = None
-        self.header = None
-        self.calibration = None
-        self.messages = None
-        self.data = None
+        self.port = ""
+        self.header = ""
+        self.calibration = {}
+        self.messages = []
+        self.data = []
 
     def resetCSV(self):
         """ Empty the file located at `self.path`
@@ -116,38 +123,52 @@ class Telemetry:
         """
         line = ser.readline()
         line = line.decode('ascii')
-        line = line.replace(end, "")
+        line = line.replace(self.separators['END_LINE'], "")
         return line
 
-    def check_header(self, line):
-        """ Check if `line` is a valid header
+    def process_header(self, line):
+        # Don't write the header twice
+        if not self.header:
+            self.header = ["Time"] + line.split(self.separators['SEP_DATA'])
+            self.writeCSV(self.header)
+            print("Header : {}".format(self.header))
 
-        A valid header :
-            - is non empty
-            - starts with a `newhead` character ("@")
+    def process_data(self, line):
+        if self.header:
+            now = datetime.datetime.utcnow().isoformat()
+            data = [now] + line.split(self.separators['SEP_DATA'])
+            self.writeCSV(data)
 
-        Parameters
-        ----------
-        line: string
-            line to verify
+    def process_calibration(self, line):
+        # Don't save the calibration twice
+        if not self.calibration:
+            self.calibration = {value.split(self.separators['SEP_CALI'])[0]: value.split(
+                self.separators['SEP_CALI'])[1] for value in line.split(self.separators['SEP_DATA'])}
+            print("Got calibration")
+            print("Calibration data : {}".format(self.calibration))
 
-        """
-        return len(line) > 0 and line[0] == newhead
+    def process_message(self, line):
+        self.messages += line
+        print("Message : {}".format(line))
 
-    def check_line(self, line):
-        """ Check if `line` is a valid line
+    def process_line(self, line):
+        if len(line) > 0:
+            line_start = line[0]
+            line_content = line[1:]
+            if line_start in self.separators_reversed:
+                line_type = self.separators_reversed[line_start]
 
-        A valid line :
-            - is non empty
-            - starts with a `newline` character ("#")
+                if line_type == 'START_DATA':
+                    self.process_data(line_content)
 
-        Parameters
-        ----------
-        line: string
-            line to verify
+                elif line_type == 'START_HEAD':
+                    self.process_header(line_content)
 
-        """
-        return len(line) > 0 and line[0] == newline
+                elif line_type == 'START_CALI':
+                    self.process_calibration(line_content)
+
+                elif line_type == 'START_MESS':
+                    self.process_message(line_content)
 
     def find_serial(self, bonjour):
         """ Test all connected serial devices to find the one that sends `bonjour` as the first transmitted line
@@ -214,26 +235,9 @@ class Telemetry:
             self.resetCSV()
             ser.reset_input_buffer()  # Reset the buffer
 
-            got_header = False
-            print("Waiting for header...")
-            # The process might be stuck here...
-            while not got_header:
-                line = self.get_clean_serial_line(ser)
-
-                if self.check_header(line):
-                    header_data = ["Time"] + line[1:].split(sepdata)
-                    self.writeCSV(header_data)
-                    got_header = True
-                    print("Header received : {}".format(",".join(header_data)))
-
             while self.is_reading:
                 line = self.get_clean_serial_line(ser)
-                now = datetime.datetime.utcnow().isoformat()
-
-                if self.check_line(line):
-                    # print(line)
-                    line_data = [now] + line[1:].split(sepdata)
-                    self.writeCSV(line_data)
+                self.process_line(line)
 
     def stop_read(self):
         """" Call this method to terminate serial reading
