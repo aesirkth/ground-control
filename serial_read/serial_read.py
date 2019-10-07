@@ -134,12 +134,29 @@ class Telemetry:
             print("Header : {}".format(self.header))
 
     def process_data(self, line):
+        """ Save data in memory and on file storage
+
+        Parameters
+        ----------
+        line : string
+            line received from telemetry, without start and end character
+
+        """
         if self.header:
             now = datetime.datetime.utcnow().isoformat()
             data = [now] + line.split(self.separators['SEP_DATA'])
+            self.data += data
             self.writeCSV(data)
 
     def process_calibration(self, line):
+        """ Save calibration data in memory
+
+        Parameters
+        ----------
+        line : string
+            line received from telemetry, without start and end character
+
+        """
         # Don't save the calibration twice
         if not self.calibration:
             self.calibration = {value.split(self.separators['SEP_CALI'])[0]: value.split(
@@ -148,6 +165,14 @@ class Telemetry:
             print("Calibration data : {}".format(self.calibration))
 
     def process_message(self, line):
+        """ Save a message line in memory
+
+        Parameters
+        ----------
+        line : string
+            line received from telemetry, without start and end character
+
+        """
         self.messages += line
         print("Message : {}".format(line))
 
