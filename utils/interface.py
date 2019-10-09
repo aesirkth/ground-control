@@ -19,7 +19,7 @@ class Interface:
 
     The data read from the Interface is stored in a CSV file in real time
     The time of reception of each line is stored along the received data
-    in ISO format (YYYY-MM-DDTHH:MM:SS.ffffff)
+    in ISO format (YYYY-MM-DD HH:MM:SS.ffffff)
 
     Parameters
     ----------
@@ -66,9 +66,9 @@ class Interface:
         self.is_reading = False
 
         self.header = ""
+        self.data = [[], [], [], ]
         self.calibration = {}
         self.messages = []
-        self.data = [[], [], [], ]
 
         self.date_created = datetime.datetime.now().replace(microsecond=0).isoformat()
 
@@ -77,10 +77,15 @@ class Interface:
             bonjour.lower())
         self.data_path = join(self.path, self.data_file)
 
-        self.calibration_file = "{}_{}_calib.yaml".format(
+        self.calibration_file = "{}_{}_calibration.yaml".format(
             self.date_created.replace(":", "-"),
             bonjour.lower())
         self.calibration_path = join(self.path, self.calibration_file)
+
+        self.messages_file = "{}_{}_messages.log".format(
+            self.date_created.replace(":", "-"),
+            bonjour.lower())
+        self.messages_path = join(self.path, self.messages_file)
 
         if not isdir(self.path):
             mkdir(self.path)
@@ -103,22 +108,10 @@ class Interface:
             writer = csv.writer(file, delimiter=',')
             writer.writerow(dataArray)
 
-    def write_calibration(self):
-        """ Write the calibration data in the file located at `self.calibration_path`
-
-        """
-        with open(self.calibration_path, 'w') as file:
-            file.write(yaml.dump(self.calibration))
-
     def process_header(self, line):
-        # Don't write the header twice
-        if not self.header:
-            self.header = ["Time"] + line.split(self.separators['SEP_DATA'])
-            self.write_data(self.header)
-            print("Header : {}".format(self.header))
+        """ Save header in memory
 
-    def process_data(self, line):
-        """ Save data in memory and on file storage
+        The first item is the computer time of reception
 
         Parameters
         ----------
@@ -126,8 +119,27 @@ class Interface:
             line received from telemetry, without start and end character
 
         """
+        # Don't write the header twice
+        if not self.header:
+            self.header = ["Computer Time"] + line.split(self.separators['SEP_DATA'])
+            self.write_data(self.header)
+            print("Header : {}".format(self.header))
+
+    def process_data(self, now, line):
+        """ Save data in memory and on file storage
+
+        The first item is the computer time of reception
+        Data cannot be recorded if the header has not been received
+
+        Parameters
+        ----------
+        now : datetime object
+            time of reception of the line
+        line : string
+            line received from telemetry, without start and end character
+
+        """
         if self.header:
-            now = datetime.datetime.now().isoformat()
             data = [now] + line.split(self.separators['SEP_DATA'])
             # Need to make this append at the exact same time
             if not self.data[0]:
@@ -143,6 +155,13 @@ class Interface:
             else:
                 self.data[2].append(int(data[2]))
             self.write_data(data)
+
+    def write_calibration(self):
+        """ Write the calibration data in the file located at `self.calibration_path`
+
+        """
+        with open(self.calibration_path, 'w') as file:
+            file.write(yaml.dump(self.calibration))
 
     def process_calibration(self, line):
         """ Save calibration data in memory and on file storage
@@ -160,17 +179,42 @@ class Interface:
             self.write_calibration()
             print("Got calibration")
 
-    def process_message(self, line):
-        """ Save a message line in memory
+    def write_message(self, message):
+        """ Append a line in the file located at `self.messages_path`
+
+        If the file does not exit, it is created
 
         Parameters
         ----------
+        message: string
+            message to write in the file
+
+        """
+        with open(self.messages_path, 'a+') as file:
+            file.write(message)
+
+    def process_message(self, now, line):
+        """ Save a message line in memory and on file storage
+
+        The message is saved in memory as a list [datetime.datetime, str]
+
+        The datetime.datetime object is stored as a string containing the time
+        in ISO format (YYYY-MM-DD HH:MM:SS.ffffff) on files storage
+        Use datetime.datetime.strptime(date_time_str, '%Y-%m-%d %H:%M:%S.%f') convert the time back to a 
+        datetime.datetime object
+
+        Parameters
+        ----------
+        now : datetime object
+            time of reception of the line
         line : string
             line received from telemetry, without start and end character
 
         """
-        self.messages += line
-        print("Message : {}".format(line))
+        message = "{}\t{}\n".format(now, line)
+        self.messages.append([now, line])
+        self.write_message(message)
+        print("Message : {}".format("{} {}".format(now.time().replace(microsecond=0), line)))
 
     def process_line(self, line):
         if len(line) > 0:
@@ -178,9 +222,10 @@ class Interface:
             line_content = line[1:]
             if line_start in self.separators_reversed:
                 line_type = self.separators_reversed[line_start]
+                now = datetime.datetime.now()
 
                 if line_type == 'START_DATA':
-                    self.process_data(line_content)
+                    self.process_data(now, line_content)
 
                 elif line_type == 'START_HEAD':
                     self.process_header(line_content)
@@ -189,7 +234,7 @@ class Interface:
                     self.process_calibration(line_content)
 
                 elif line_type == 'START_MESS':
-                    self.process_message(line_content)
+                    self.process_message(now, line_content)
 
     def start_read(self):
         """ Start reading and saving data from Interface device
