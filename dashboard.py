@@ -13,19 +13,15 @@ from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
                                                NavigationToolbar2Tk)
 from matplotlib.figure import Figure
 
-from serial_read.serial_read import Telemetry
+from utils import Interface
 
 baudrate = 115200
 path = './data'
 
-telemetry = Telemetry(baudrate=baudrate, path=path)
-data_path = telemetry.data_path
+telemetry = Interface(baudrate=baudrate, path=path, bonjour="TELEMETRY")
 
 
 def run_telemetry():
-    
-    if not telemetry.port:
-        telemetry.find_serial(bonjour="TELEMETRY")
     t = threading.Thread(target=telemetry.start_read)
     t.start()
 
