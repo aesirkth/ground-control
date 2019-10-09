@@ -49,8 +49,14 @@ a4 = f4.add_subplot(111)
 
 
 def animate(i, sub):
-    xList = telemetry.data[1]
-    yList = telemetry.data[2]
+    dataList = telemetry.data
+    xList = []
+    yList = []
+    for eachLine in dataList:
+        if len(eachLine) > 1:
+            x, y = eachLine[1:3]
+            xList.append(int(x))
+            yList.append(int(y))
 
     sub.clear()
     sub.plot(xList, yList)
