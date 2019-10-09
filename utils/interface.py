@@ -36,6 +36,13 @@ class Interface:
         Serial instance used to read data from the Interface device
     is_reading : bool
         True if the instance is currently reading data from serial link
+    data : list [[datetime.datetime, str, str, ], ]
+        data read from Interface
+        each string is the received data, separated by a comma ","
+    calibration : dict {key: value, }
+        calibration data received from the Interface
+    messages : list [[datetime.datetime, str], ]
+        messages received from the Interface
 
     Examples
     --------
@@ -66,7 +73,7 @@ class Interface:
         self.is_reading = False
 
         self.header = ""
-        self.data = [[], [], [], ]
+        self.data = []
         self.calibration = {}
         self.messages = []
 
@@ -128,7 +135,7 @@ class Interface:
     def process_data(self, now, line):
         """ Save data in memory and on file storage
 
-        The first item is the computer time of reception
+        The first item is the computer time of reception as a datetime.datetime object
         Data cannot be recorded if the header has not been received
 
         Parameters
@@ -141,19 +148,7 @@ class Interface:
         """
         if self.header:
             data = [now] + line.split(self.separators['SEP_DATA'])
-            # Need to make this append at the exact same time
-            if not self.data[0]:
-                self.data[0] = [data[0]]
-            else:
-                self.data[0].append(data[0])
-            if not self.data[1]:
-                self.data[1] = [int(data[1])]
-            else:
-                self.data[1].append(int(data[1]))
-            if not self.data[2]:
-                self.data[2] = [int(data[2])]
-            else:
-                self.data[2].append(int(data[2]))
+            self.data.append(data)
             self.write_data(data)
 
     def write_calibration(self):
@@ -243,7 +238,7 @@ class Interface:
 
         """
         self.is_reading = True
-        self.data = [[], [], [], ]
+        self.data = []
 
         self.serial.open_serial()
 
