@@ -7,6 +7,7 @@
 - [Hardware](#hardware)
 - [Sensors](#sensors)
 - [Transmission protocol](#transmission-protocol)
+- [File storage](#file-storage)
 - [How to use ?](#how-to-use-)
   - [Testing](#testing)
   - [Flight conditions](#flight-conditions)
@@ -85,7 +86,14 @@ The following sensors are embedded on the Rocket :
 
 # Transmission protocol
 
-See the example telemetry code [here](./dummy_telemetry/dummy_telemetry.ino)
+For phase 1, the above schematic should be self explaining.
+
+For phase 2, see [this issue](https://github.com/aesirkth/GroundStation/issues/4)
+
+
+# File storage
+
+See [this issue](https://github.com/aesirkth/GroundStation/issues/4)
 
 
 # How to use ?
