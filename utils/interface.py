@@ -4,6 +4,7 @@ Class to read data from an Interface device and save it on storage
 """
 
 import csv
+import yaml
 import datetime
 from os import mkdir
 from os.path import isdir, join
@@ -63,20 +64,26 @@ class Interface:
         self.path = path
 
         self.is_reading = False
+
         self.header = ""
         self.calibration = {}
         self.messages = []
         self.data = [[], [], [], ]
+
         self.date_created = datetime.datetime.now().replace(microsecond=0).isoformat()
-        self.data_file = "{}_data.csv".format(
-            self.date_created.replace(":", "-"))
+
+        self.data_file = "{}_{}_data.csv".format(
+            self.date_created.replace(":", "-"),
+            bonjour.lower())
         self.data_path = join(self.path, self.data_file)
+
+        self.calibration_file = "{}_{}_calib.yaml".format(
+            self.date_created.replace(":", "-"),
+            bonjour.lower())
+        self.calibration_path = join(self.path, self.calibration_file)
 
         if not isdir(self.path):
             mkdir(self.path)
-
-        with open(self.data_path, 'w'):
-            print("Data file created")
 
         self.serial = SerialWrapper(baudrate=baudrate, bonjour=bonjour)
 
@@ -84,6 +91,7 @@ class Interface:
         """ Append a line in the file located at `self.data_path`
 
         Each element of `dataArray` is written separated by a comma ','
+        If the file does not exit, it is created
 
         Parameters
         ----------
@@ -94,6 +102,13 @@ class Interface:
         with open(self.data_path, 'a+', newline='') as file:
             writer = csv.writer(file, delimiter=',')
             writer.writerow(dataArray)
+
+    def write_calibration(self):
+        """ Write the calibration data in the file located at `self.calibration_path`
+
+        """
+        with open(self.calibration_path, 'w') as file:
+            file.write(yaml.dump(self.calibration))
 
     def process_header(self, line):
         # Don't write the header twice
@@ -130,7 +145,7 @@ class Interface:
             self.write_data(data)
 
     def process_calibration(self, line):
-        """ Save calibration data in memory
+        """ Save calibration data in memory and on file storage
 
         Parameters
         ----------
@@ -142,8 +157,8 @@ class Interface:
         if not self.calibration:
             self.calibration = {value.split(self.separators['SEP_CALI'])[0]: value.split(
                 self.separators['SEP_CALI'])[1] for value in line.split(self.separators['SEP_DATA'])}
+            self.write_calibration()
             print("Got calibration")
-            print("Calibration data : {}".format(self.calibration))
 
     def process_message(self, line):
         """ Save a message line in memory
