@@ -51,7 +51,7 @@ The hardware is made of the following elements :
   * Rocket
   * The Launch Pad Station
   * The Telemetry Receiver 
-  * The Dashboard Computer
+  * The Ground Station
   * The FPV System (*not described here*)
 
 
@@ -62,6 +62,15 @@ Here is a diagram of the data links between the subsystems :
 
 >The diagram was made with [draw.io](https://www.draw.io)<br>
 >To make changes to it, edit the source file `/doc/diagrams/data_links.xml`
+
+
+The Telemetry Interface and Launch Pad Station Interface are only forwarders. There is no logic embeded into them.
+
+Here is a schematic of the data flow trough the interfaces :
+
+![telemetry_link](/doc/diagrams/interface_link.png)
+
+`BONJOUR` is a unique string sent on serial connection initiation that is used to identify the Telemetry Interface and the LPS Interface amoung all the serial devices connected to the Dashboard Computer
 
 
 # Sensors

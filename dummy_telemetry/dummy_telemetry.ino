@@ -47,7 +47,10 @@ void setup()
 {
   Serial.begin(BAUDRATE);
 
+  // This is sent by the telemetry receiver
   bonjour();
+  // Everything after this is a simulation of what is received by the telementry receiver
+  // and forwarded to the Dashboard
   
   health_check();
 
