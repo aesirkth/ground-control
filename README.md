@@ -130,8 +130,9 @@ Enjoy
 ├── doc/                        # The documentation goes there
 ├── dummy_telemetry/
 │   └── dummy_telemetry.ino     # Example telemetry code for arduino
-├── serial_read/
-│   └── serial_read.py          # Class used to read data from serial link
+├── utils/
+│   ├── interface.py            # Class used to process data from Interface devices
+│   └── serialwrapper.py        # Class used to read/write data from serial link
 ├── dashboard.py                # Dashboard
 └── requirements.txt
 ```
