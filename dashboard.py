@@ -1,6 +1,6 @@
 # The code for changing pages was derived from:
 # http://stackoverflow.com/questions/7546050/switch-between-two-frames-in-tkinter
-# License: http://creativecommons.org/licenses/by-sa/3.0/	
+# License: http://creativecommons.org/licenses/by-sa/3.0/
 
 import threading
 import tkinter as tk
@@ -13,12 +13,12 @@ from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
                                                NavigationToolbar2Tk)
 from matplotlib.figure import Figure
 
-from serial_read.serial_read import Telemetry
+from utils import Interface
 
 baudrate = 115200
-path = './data/telemetry.csv'
+path = './data'
 
-telemetry = Telemetry(baudrate=baudrate, path=path)
+telemetry = Interface(baudrate=baudrate, path=path, bonjour="TELEMETRY")
 
 
 def run_telemetry():
@@ -49,13 +49,12 @@ a4 = f4.add_subplot(111)
 
 
 def animate(i, sub):
-    pullData = open('./data/telemetry.csv', "r").read()
-    dataList = pullData.split('\n')
+    dataList = telemetry.data
     xList = []
     yList = []
-    for eachLine in dataList[1:]:
+    for eachLine in dataList:
         if len(eachLine) > 1:
-            x, y = eachLine.split(',')[1:]
+            x, y = eachLine[1:3]
             xList.append(int(x))
             yList.append(int(y))
 
