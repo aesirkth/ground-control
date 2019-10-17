@@ -27,6 +27,13 @@ class SerialWrapper:
         unique string sent by the targeted device when the connection is opened
     port : string, optional
         port to open
+    
+    Attributes
+    ----------
+    serial_desc_substrings : (str, str, ...)
+        substring to look for in serial device description
+        Serial devices with no subtrings from `serial_desc_substrings` in their description will not
+        be oppened to avoid errors (they might be system devices not intended to be used that way)
 
     Examples
     --------
@@ -41,6 +48,7 @@ class SerialWrapper:
     >>> s.close_serial()
 
     """
+    serial_desc_substrings = ("usb", "ch340", "arduino")
 
     def __init__(self, baudrate, bonjour="", port=""):
         self.bonjour = bonjour
@@ -55,18 +63,32 @@ class SerialWrapper:
     def open_serial(self):
         """ Open the serial connection
 
+        Returns
+        -------
+        bool
+            True if the connection is opened
+            False if an error occured
+
         """
         if self.ser.port:
             if self.ser.is_open:
                 print("{} : serial connection is already open, cannot open again ({})".format(
                     self.bonjour, self.ser.port))
+                return True
             else:
-                self.ser.open()
-                print("{} : serial connection opened ({})".format(
-                    self.bonjour, self.ser.port))
+                try:
+                    self.ser.open()
+                    print("{} : serial connection opened ({})".format(
+                        self.bonjour, self.ser.port))
+                    return True
+                except Exception as e:
+                    print("Got serial error : {}".format(e))
+                    return False
+
         else:
             print("{} : cannot open serial connection, 'port' is not defined".format(
                 self.bonjour))
+            return False
 
     def close_serial(self):
         """ Close the serial connection
@@ -74,11 +96,13 @@ class SerialWrapper:
         """
         if self.ser.port:
             if self.ser.is_open:
+                self.ser.reset_input_buffer()
+                self.ser.reset_output_buffer()
                 self.ser.close()
                 print("{} : serial connection closed ({})".format(
                     self.bonjour, self.ser.port))
             else:
-                print("{} : serial connection is not open, cannot close ({})".format(
+                print("{} : serial connection already closed ({})".format(
                     self.bonjour, self.ser.port))
         else:
             print("{} : cannot close serial connection, 'port' is not defined".format(
@@ -101,7 +125,7 @@ class SerialWrapper:
 
         """
         line = self.ser.readline()
-        line = line.decode('ascii')
+        line = line.decode('utf-8', 'backslashreplace')
         line = line.replace('\n', "")
         return line
 
@@ -127,27 +151,44 @@ class SerialWrapper:
         timeout = self.ser.timeout
         self.ser.timeout = 2
 
+        # Get all the devices available on the computer
         available_ports = serial.tools.list_ports.comports()
 
-        print("\nSearching for available serial devices for ({})...".format(self.bonjour))
+        print("\nSearching for available serial devices for [{}]...".format(self.bonjour))
         if available_ports:
             print("Found device(s) : {}".format(
                 ", ".join([p.description for p in available_ports])))
+            
+            possible_interfaces = []
+            # Extract devices that are expected to be Arduinos or alike from device list
+            for p in available_ports:
+                flag = False
+                for substring in self.serial_desc_substrings:
+                    if substring in p.description.lower():
+                        flag = True
+                if flag:
+                    possible_interfaces.append(p)
+            
+            print("Those devices will be checked : {}".format(
+                ", ".join([p.description for p in possible_interfaces])))
 
-        for p in available_ports:
-            print("Testing : {}...".format(p.device))
+        # Check only devices that are expected to be Arduinos or alike
+        for p in possible_interfaces:
             self.ser.port = p.device
-            self.open_serial()
-            self.ser.reset_input_buffer()
+            print("Testing : {}...".format(self.ser.port))
 
-            line = self.readline()
+            if self.open_serial(): # If the connection cannot be oppened, no need to read from it
+                self.ser.reset_input_buffer()
 
-            if line == bonjour:
-                print("Found device ({}) on port : {}\n".format(
-                    self.bonjour, self.ser.port))
+                line = self.readline()
+
+                if line == bonjour:
+                    print("Found device ({}) on port : {}".format(
+                        self.bonjour, self.ser.port))
+                    self.close_serial()
+                    self.ser.timeout = timeout  # Restore the previous value
+                    return self.ser.port
                 self.close_serial()
-                self.ser.timeout = timeout  # Restore the previous value
-                return p.device
 
         print("/!\\ Failed to find device /!\\\n")
         # Must trigger an exception instead of returning None
