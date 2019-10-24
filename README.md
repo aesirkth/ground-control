@@ -136,8 +136,8 @@ Enjoy
 ├── README.md                   # This file
 ├── data/                       # (Ungitted) folder to store the received telemetry
 ├── doc/                        # The documentation goes there
-├── dummy_telemetry/
-│   └── dummy_telemetry.ino     # Example telemetry code for arduino
+├── dummy_interface/
+│   └── dummy_interface.ino     # Example telemetry code for arduino
 ├── utils/
 │   ├── interface.py            # Class used to process data from Interface devices
 │   └── serialwrapper.py        # Class used to read/write data from serial link
