@@ -1,32 +1,32 @@
 /*
-This code is a demo of the code used for the telemetry transmission between the rocket's OBC and the ground station.
-The purpose of this is to :
-  - Provide a simple code to test the ground station software
-  - Define the transmission protocol between the rocket and the ground station
+This code is a demo of how the data transmission works between the Ground Station Computer and the Rocket systems:
 
-Assumptions :
-  - The link is unidirectionnal
+    Telemetry is received in real time from the Rocket on the Ground Station Computer via a downlink telemetry transmitter
+    This link is unidirectional
+    
+    Commands are sent from the Ground Station to the Launch Pad Station
+    This link is bidirectional
 
-Protocol description :
-  Data is sent by "line" ie. by packet of data ending with a newline (line feed '\n').
-  To check the integrity of the data sent (at least it's completeness), the first character is :
-    - "@" for a header line
-    - "#" for a data line
-    - "%" for a calibration line
-    - "$" for a message line
-  The first character is used to check if we received the beginning of the line. The last character is used to check
-  if the line is complete (ie if the serial read did not timeout before the end of the line)
+In the real world:
+    - The Rocket and the Ground Station Computer are connected through a telemetry transmitter and a telemetry receiver
+    - The Launch Pad Station and the Ground Station Computer are connected through two wireless tranceivers
 
-  Before transmitting values, the telementry receiver sends a recognizable BONJOUR string so that the reader can
-  identify what device is sending data
+On the Ground Station Computer side, two Arduino boards are used as a gateways to the wireless tranceiver (from the LPS)
+and to the wireless receiver (from the Rocket). The Arduino boards are connected to the computer via USB for power 
+supply and serial link transmission
 
-Comments :
-  - We should send the time of the data sampling along the samples
-  - The link could be bi-directionnal while the rocket is on the launch pad
-  - We need to define a nomenclature between the OBC and the Dashboard to know how to process the data
-
+This code simulates a gateway to the Rocket or to the Launch Pad System and feeds fake data to the Ground Station Computer
+to be used for development/testing purposes
 */
 
+// Uncomment one of these to select the target interface
+// #define lps
+#define telemetry
+
+// Change this to use a different baudrate
+#define BAUDRATE 115200
+
+// Definition of the separators for the transmission protocol
 #define START_HEAD "@"
 #define START_DATA "#"
 #define START_CALI "%"
@@ -35,21 +35,30 @@ Comments :
 #define SEP_CALI ":"
 #define END_LINE "\n"
 
-#define BONJOUR "TELEMETRY"
+#if defined(telemetry)
+    #define BONJOUR "TELEMETRY"
+#elif defined(lps)
+    #define BONJOUR "LAUNCHPADSTATION"
+#endif
 
-// Change this to use a different baudrate
-#define BAUDRATE 115200
+#ifdef telemetry
+    uint32_t cpt = 0;
+    uint32_t time;
+#endif
 
-int cpt = 0;
-unsigned long time;
+
+/* 
+ * Main Arduino loops
+ */
+
 
 void setup()
 {
   Serial.begin(BAUDRATE);
 
-  // This is sent by the telemetry receiver
+  // This is sent by the interface immediately after initialization
   bonjour();
-  // Everything after this is a simulation of what is received by the telementry receiver
+  // Everything after this is a simulation of what is received by the telemetry receiver
   // and forwarded to the Dashboard
   
   health_check();
@@ -58,67 +67,79 @@ void setup()
 }
 
 // Dummy code to send arbitrary data to the ground station
-// The data should match the header
 void loop()
 {
-  if (cpt >= 50)
-  {
-    cpt = 0;
-  }
-  time = millis();
-  Serial.print(START_DATA);
-  Serial.print(time);
-  Serial.print(SEP_DATA);
-  Serial.print(cpt + 1);
-  Serial.print(END_LINE);
-  cpt++;
-
-  delay(10);
+    #if defined(telemetry)
+        fake_telemetry(&cpt);
+    #elif defined(lps)
+        // fake_lps();
+    #endif
 }
 
+
+/* 
+ * Common functions
+ */
+
+
 void bonjour()
-{
-  // Send string to indicate that this device is the telemetry receiver
+{ // Send a string to indicate who is this device
   Serial.print(BONJOUR);Serial.print(END_LINE);
+}
+
+void send_message(char *message)
+{
+  Serial.print(START_MESS);
+  Serial.print(message);
+  Serial.print(END_LINE);
+}
+
+
+/* 
+ * Functions for the telemetry gateway
+ */
+
+
+void send_data(uint32_t data[])
+{
+  Serial.print(START_DATA);
+  for (byte i = 0; i < sizeof(data); i++) {
+    if (i != 0)
+    {
+        Serial.print(SEP_DATA);
+    }
+    Serial.print(data[i]);
+  }
+  Serial.print(END_LINE);
+}
+
+void fake_telemetry(uint32_t *cpt)
+{
+  if (*cpt >= 50)
+  {
+    *cpt = 0;
+  }
+  time = millis();
+  
+  uint32_t data[2] = {time, *cpt};
+  *cpt = *cpt + 1;
+  send_data(data);
+
+  delay(10);
 }
 
 void health_check()
 {
-  Serial.print(START_MESS);
-  Serial.print("Health check started");
-  Serial.print(END_LINE);
-  delay(10);
-  Serial.print(START_MESS);
-  Serial.print("IMU1 OK");
-  Serial.print(END_LINE);
-  delay(10);
-  Serial.print(START_MESS);
-  Serial.print("IMU2 FAILED");
-  Serial.print(END_LINE);
-  delay(10);
-  Serial.print(START_MESS);
-  Serial.print("Sending calibration data ...");
-  Serial.print(END_LINE);
-  delay(10);
+  send_message("Health check started");
+  send_message("IMU1 OK");
+  send_message("IMU2 FAILED");
+  send_message("Sending calibration data ...");
   calibration();
-  delay(10);
-  Serial.print(START_MESS);
-  Serial.print("Sending calibration data done");
-  Serial.print(END_LINE);
-  delay(10);
-  Serial.print(START_MESS);
-  Serial.print("Sending header data ...");
-  Serial.print(END_LINE);
-  delay(10);
+  send_message("Sending calibration data done");
+  send_message("Sending header data ...");
   header();
-  delay(10);
-  Serial.print(START_MESS);
-  Serial.print("Sending header data done");
-  Serial.print(END_LINE);
-  delay(10);
-  Serial.print(START_MESS);
-  Serial.print("Health check complete");
-  Serial.print(END_LINE);
+  send_message("Sending header data done");
+  send_message("Health check complete");
 }
 
 void calibration()
@@ -139,3 +160,10 @@ void header()
   Serial.print("Data");
   Serial.print(END_LINE);
 }
+
+
+/* 
+ * Functions for the lps gateway
+ */
+
+// TODO
