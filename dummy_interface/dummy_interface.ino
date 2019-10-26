@@ -42,8 +42,11 @@ to be used for development/testing purposes
 #endif
 
 #ifdef telemetry
-    uint32_t cpt = 0;
-    uint32_t time;
+  uint32_t cpt = 0;
+  uint32_t time;
+#endif
+#ifdef lps
+  char command;
 #endif
 
 
@@ -58,22 +61,27 @@ void setup()
 
   // This is sent by the interface immediately after initialization
   bonjour();
-  // Everything after this is a simulation of what is received by the telemetry receiver
+  // Everything after this is a simulation of what is received by the telemetry receiver/lps
   // and forwarded to the Dashboard
   
-  health_check();
-
+  #if defined(telemetry)
+    health_check();
+  #elif defined(lps)
+    // health_check();
+  #endif
+  
   delay(100);
 }
 
-// Dummy code to send arbitrary data to the ground station
 void loop()
 {
-    #if defined(telemetry)
-        fake_telemetry(&cpt);
-    #elif defined(lps)
-        // fake_lps();
-    #endif
+  #if defined(telemetry)
+    // Dummy code to send arbitrary data to the ground station
+    fake_telemetry(&cpt);
+  #elif defined(lps)
+    // Simple ping-pong. Every byte received is sent back inside a message frame
+    fake_lps();
+  #endif
 }
 
 
@@ -100,6 +108,7 @@ void send_message(char *message)
  */
 
 
+#ifdef telemetry
 void send_data(uint32_t data[])
 {
   Serial.print(START_DATA);
@@ -160,10 +169,27 @@ void header()
   Serial.print("Data");
   Serial.print(END_LINE);
 }
+#endif
 
 
 /* 
  * Functions for the lps gateway
  */
 
-// TODO
+
+#ifdef lps
+void fake_lps()
+{
+  while (Serial.available() > 0)
+  {
+    get_command(&command);
+    char message = (char)command; 
+    send_message(&message); // This is a dirty solution but I get strange output while using command
+  }
+}
+
+void get_command(char *command)
+{
+  *command = Serial.read();
+}
+#endif
