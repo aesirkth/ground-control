@@ -49,7 +49,8 @@ def update_messages():
     new_lines = "".join(["{} : {}\n".format(
         e[0].time().replace(microsecond=0), e[1]) for e in new_messages])
     message_box.insert(tk.END, new_lines)
-    message_box.yview_moveto(1)
+    if new_messages:
+        message_box.yview_moveto(1)
 
     Root.after(100, update_messages)
 
@@ -60,7 +61,7 @@ frame_main = tk.Frame(Root)
 frame_main.grid(row=1, column=1, sticky=W+E+N+S)
 
 frame_buttons = tk.Frame(frame_main)
-frame_buttons.grid(row=1, column=1, sticky=W+E+N+S)
+frame_buttons.grid(row=1, column=1, sticky=W+E+N+S, padx=5, pady=5)
 
 button_A = tk.Button(frame_buttons, text="Send 'A'",
                      command=lambda: lps.send_command('A'))
@@ -69,12 +70,13 @@ button_B = tk.Button(frame_buttons, text="Send 'B'",
 button_A.grid(row=1, column=1)
 button_B.grid(row=1, column=2)
 
-frame_messages = tk.Frame(frame_main)
-frame_messages.grid(row=2, column=1, sticky=W+E+N+S)
+frame_messages = tk.Frame(frame_main, borderwidth = 2, relief = "groove")
+frame_messages.grid(row=2, column=1, sticky=W+E+N+S, padx=5, pady=5)
+tk.Label(frame_messages, text="Messages :").grid(row=0, column=1, sticky=W)
 
 scroll_bar = tk.Scrollbar(frame_messages)
 scroll_bar.grid(row=1, column=2, sticky=W+E+N+S)
-message_box = tk.Text(frame_messages, height=10, width=100)
+message_box = tk.Text(frame_messages, height=10, width=60)
 message_box.grid(row=1, column=1, sticky=W+E+N+S)
 scroll_bar.config(command=message_box.yview)
 message_box.config(yscrollcommand=scroll_bar.set)
