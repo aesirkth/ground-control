@@ -76,7 +76,7 @@ class SerialWrapper:
                     self.bonjour, self.ser.port))
                 return True
             except Exception as e:
-                print("Got serial error : {}".format(e))
+                print("{} : got serial error : {}".format(self.bonjour, e))
                 return False
 
         # This is true if the device has already been found/openned before
@@ -92,7 +92,8 @@ class SerialWrapper:
             if self.bonjour:
                 print("{} : Serial 'port' is not defined, using 'bonjour' to find device".format(
                     self.bonjour))
-                self.find_device(self.bonjour)
+                if self.find_device(self.bonjour):
+                    return True
             elif self.port:
                 print("{} : Using 'port' {}".format(
                     self.bonjour, self.port))
@@ -165,9 +166,8 @@ class SerialWrapper:
 
         Returns
         -------
-        port : string
-            full name/path of the port where the found device is connected
-            an empty string is returned if the device is not found
+        success : bool
+            True if the device is found
 
         """
         # Change the timeout value to 2 seconds and save the old value
@@ -178,10 +178,10 @@ class SerialWrapper:
         # Get all the devices available on the computer
         available_ports = serial.tools.list_ports.comports()
 
-        print("\nSearching for available serial devices for [{}]...".format(
+        print("Searching for available serial devices for [{}]...".format(
             self.bonjour))
         if available_ports:
-            print("Found device(s) : {}".format(
+            print("Found available device(s) : {}".format(
                 ", ".join([p.description for p in available_ports])))
 
             possible_interfaces = []
@@ -194,7 +194,7 @@ class SerialWrapper:
                 if flag:
                     possible_interfaces.append(p)
 
-            print("Those devices will be checked : {}".format(
+            print("These devices will be checked : {}".format(
                 ", ".join([p.description for p in possible_interfaces])))
 
         # Check only devices that are expected to be Arduinos or alike
@@ -203,8 +203,6 @@ class SerialWrapper:
             print("Testing : {}...".format(self.ser.port))
 
             if self.open_serial():  # If the connection cannot be oppened, no need to read from it
-                self.ser.reset_input_buffer()
-
                 line = self.readline()
 
                 if line == bonjour:
@@ -212,13 +210,12 @@ class SerialWrapper:
                         self.bonjour, self.ser.port))
                     # self.close_serial()
                     self.ser.timeout = timeout  # Restore the previous value
-                    return self.ser.port
+                    return True
                 self.close_serial()
 
         print("/!\\ Failed to find device /!\\\n")
-        # Must trigger an exception instead of returning None
         self.ser.port = ""
         if available_ports:
             self.close_serial()
         self.ser.timeout = timeout  # Restore the previous value
-        return None
+        return False
