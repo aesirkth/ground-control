@@ -36,6 +36,7 @@ Here is a diagram of the data links between these main systems :
 
 ![data_link](/doc/diagrams/data_links.png)
 
+The Dashboard can be one or two computers
 
 >The diagram was made with [draw.io](https://www.draw.io)<br>
 >To make changes to it, edit the source file `/doc/diagrams/data_links.xml`
