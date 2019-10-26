@@ -11,10 +11,10 @@ path = './data'
 
 lps = Interface(baudrate=baudrate, path=path, bonjour="LAUNCHPADSTATION")
 
-old_messages = []
 
-t = threading.Thread(target=lps.start_read)
-t.start()
+def start_read():
+    t = threading.Thread(target=lps.start_read)
+    t.start()
 
 
 def diff_list(list1, list2):
@@ -39,52 +39,69 @@ def diff_list(list1, list2):
     return diff
 
 
-def update_messages():
-    global old_messages
-    all_messages = lps.messages
-    # print(all_messages)
-    new_messages = diff_list(all_messages, old_messages)
-    new_messages = sorted(new_messages, key=lambda tup: tup[0])
-    old_messages = copy.copy(all_messages)
-    new_lines = "".join(["{} : {}\n".format(
-        e[0].time().replace(microsecond=0), e[1]) for e in new_messages])
-    message_box.insert(tk.END, new_lines)
-    if new_messages:
-        message_box.yview_moveto(1)
+class CommandButtons(tk.Frame):
+    def __init__(self, parent, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
 
-    Root.after(100, update_messages)
+        self.button_A = tk.Button(self, text="Send 'A'",
+                                  command=lambda: lps.send_command('A'))
+        self.button_B = tk.Button(self, text="Send 'B'",
+                                  command=lambda: lps.send_command('B'))
+        self.button_A.grid(row=1, column=1)
+        self.button_B.grid(row=1, column=2)
 
 
-Root = tk.Tk()
-Root.title("Launch Pad Command")
-frame_main = tk.Frame(Root)
-frame_main.grid(row=1, column=1, sticky=W+E+N+S)
+class MessageBox(tk.Frame):
+    def __init__(self, parent, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.messages = []
 
-frame_buttons = tk.Frame(frame_main)
-frame_buttons.grid(row=1, column=1, sticky=W+E+N+S, padx=5, pady=5)
+        tk.Label(self, text="Messages :").grid(row=0, column=1, sticky=W)
 
-button_A = tk.Button(frame_buttons, text="Send 'A'",
-                     command=lambda: lps.send_command('A'))
-button_B = tk.Button(frame_buttons, text="Send 'B'",
-                     command=lambda: lps.send_command('B'))
-button_A.grid(row=1, column=1)
-button_B.grid(row=1, column=2)
+        self.scroll_bar = tk.Scrollbar(self)
+        self.scroll_bar.grid(row=1, column=2, sticky=W+E+N+S)
+        self.message_box = tk.Text(self, height=10, width=60)
+        self.message_box.grid(row=1, column=1, sticky=W+E+N+S)
+        self.scroll_bar.config(command=self.message_box.yview)
+        self.message_box.config(yscrollcommand=self.scroll_bar.set)
 
-frame_messages = tk.Frame(frame_main, borderwidth = 2, relief = "groove")
-frame_messages.grid(row=2, column=1, sticky=W+E+N+S, padx=5, pady=5)
-tk.Label(frame_messages, text="Messages :").grid(row=0, column=1, sticky=W)
+        self.update_messages()
 
-scroll_bar = tk.Scrollbar(frame_messages)
-scroll_bar.grid(row=1, column=2, sticky=W+E+N+S)
-message_box = tk.Text(frame_messages, height=10, width=60)
-message_box.grid(row=1, column=1, sticky=W+E+N+S)
-scroll_bar.config(command=message_box.yview)
-message_box.config(yscrollcommand=scroll_bar.set)
+    def update_messages(self):
+        all_messages = lps.messages
+        new_messages = diff_list(all_messages, self.messages)
+        new_messages = sorted(new_messages, key=lambda tup: tup[0])
+        self.messages = copy.copy(all_messages)
+        new_lines = "".join(["{} : {}\n".format(
+            e[0].time().replace(microsecond=0), e[1]) for e in new_messages])
+        self.message_box.insert(tk.END, new_lines)
+        if new_messages:
+            self.message_box.yview_moveto(1)
+
+        self.parent.after(100, self.update_messages)
 
 
-update_messages()
+class MainApplication(tk.Frame):
+    def __init__(self, parent, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
 
-Root.mainloop()
+        self.messagebox = MessageBox(self, borderwidth=2, relief="groove")
+        self.commandbuttons = CommandButtons(self)
 
-# Do not forget to stop reading from the serial link
-lps.stop_read()
+        self.commandbuttons.grid(
+            row=1, column=1, sticky=W+E+N+S, padx=5, pady=5)
+        self.messagebox.grid(row=2, column=1, sticky=W+E+N+S, padx=5, pady=5)
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.title("Launch Pad Command")
+    MainApplication(root).pack(side="top", fill="both", expand=True)
+    start_read()
+    root.mainloop()
+
+    # Do not forget to stop reading from the serial link
+    lps.stop_read()
