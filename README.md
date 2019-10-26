@@ -3,15 +3,17 @@
 
 # Table of contents <!-- omit in toc -->
 - [Purpose](#purpose)
-- [Functionalities](#functionalities)
 - [General description](#general-description)
   - [Interfaces](#interfaces)
   - [Sensors](#sensors)
-- [Transmission protocol](#transmission-protocol)
-- [File storage](#file-storage)
+- [Functionalities](#functionalities)
+  - [Dashboard](#dashboard)
+  - [LPS Control](#lps-control)
 - [How to use ?](#how-to-use-)
   - [Development conditions](#development-conditions)
   - [Flight conditions](#flight-conditions)
+- [Transmission protocol](#transmission-protocol)
+- [File storage](#file-storage)
 - [Folder structure](#folder-structure)
 
 
@@ -20,15 +22,6 @@
 This software is designed to deal with the incomming data from the rocket and it's systems. Ability to control the Launch Pad Station is also included.
 
 It runs with `python 3.7.4`
-
-
-# Functionalities
-
-The Ground Station Dashboard can display in real time the telemetry data sent from the rocket during the flight. The received data is stored on the Ground Station hard drive for future use.
-
-The telemetry data is received via radio link by an Arduino board and sent to the computer in real time via serial link. The radio link is unidirectional : it is not possible to send data to the rocket during the flight.
-
-The raw telemetry data is processed on the fly on the Ground Station and not on the rocket.
 
 
 # General description
@@ -72,16 +65,26 @@ The following sensors are embedded on the Rocket :
   * GPS receiver `M8Q` from u-blox
 
 
-# Transmission protocol
-
-For phase 1, the above schematic should be self explaining.
-
-For phase 2, see [this issue](https://github.com/aesirkth/GroundStation/issues/4)
+# Functionalities
 
 
-# File storage
+## Dashboard
 
-See [this issue](https://github.com/aesirkth/GroundStation/issues/4)
+The Ground Station Dashboard can display in real time the telemetry data sent from the rocket during the flight. The received data is stored on the Ground Station hard drive for future use.
+
+The telemetry data is received via radio link by an Arduino board and sent to the computer in real time via serial link. The radio link is unidirectional : it is not possible to send data to the rocket during the flight.
+
+The raw telemetry data is processed on the fly on the Ground Station and not on the rocket.
+
+
+## LPS Control
+
+The LPS Control GUI is extremely simple.
+
+Click on "Open link" to open the Serial connection to to LPS Interface. Click on the buttons to send the desired command. The LPS replies to the commands by sending them back as messages. Such messages are displayed in the text box.
+
+![lps_1](/doc/images/lps_control_1.png)
+![lps_2](/doc/images/lps_control_2.png)
 
 
 # How to use ?
@@ -129,6 +132,17 @@ Enjoy
 ## Flight conditions
 
 >TODO
+
+# Transmission protocol
+
+For phase 1, the above schematic should be self explaining.
+
+For phase 2, see [this issue](https://github.com/aesirkth/GroundStation/issues/4)
+
+
+# File storage
+
+See [this issue](https://github.com/aesirkth/GroundStation/issues/4)
 
 
 # Folder structure
