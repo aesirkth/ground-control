@@ -40,9 +40,10 @@ class MessageBox(tk.Frame):
 
         tk.Label(self, text="Messages :").grid(row=0, column=1, sticky=W)
 
+        # TextBox and Scrollbar
         self.scroll_bar = tk.Scrollbar(self)
-        self.scroll_bar.grid(row=1, column=2, sticky=W+E+N+S)
         self.message_box = tk.Text(self, height=10, width=60)
+        self.scroll_bar.grid(row=1, column=2, sticky=W+E+N+S)
         self.message_box.grid(row=1, column=1, sticky=W+E+N+S)
         self.scroll_bar.config(command=self.message_box.yview)
         self.message_box.config(yscrollcommand=self.scroll_bar.set)
@@ -67,7 +68,7 @@ class MessageBox(tk.Frame):
             a list with only elements that are in one or the other input lists
 
         """
-        diff = (list(set(list1) - set(list2)))
+        diff = list(set(list1) - set(list2))
         return diff
 
     def update_messages(self):
