@@ -41,7 +41,7 @@ class Interface:
         each string is the received data, separated by a comma ","
     calibration : dict {key: value, }
         calibration data received from the Interface
-    messages : list [[datetime.datetime, str], ]
+    messages : list [(datetime.datetime, str), ]
         messages received from the Interface
 
     Examples
@@ -207,7 +207,7 @@ class Interface:
 
         """
         message = "{}\t{}\n".format(now, line)
-        self.messages.append([now, line])
+        self.messages.append((now, line))
         self.write_message(message)
         print("Message : {}".format("{} {}".format(now.time().replace(microsecond=0), line)))
 
