@@ -78,6 +78,8 @@ class SerialWrapper:
             else:
                 try:
                     self.ser.open()
+                    self.ser.reset_input_buffer()
+                    self.ser.reset_output_buffer()
                     print("{} : serial connection opened ({})".format(
                         self.bonjour, self.ser.port))
                     return True
@@ -128,6 +130,17 @@ class SerialWrapper:
         line = line.decode('utf-8', 'backslashreplace')
         line = line.replace('\n', "")
         return line
+    
+    def write(self, data):
+        """ Send data via serial link
+
+        Parameters
+        ----------
+        data : str
+            data to send as a string
+
+        """
+        self.ser.write(data.encode('utf-8'))
 
     def find_device(self, bonjour):
         """ Test all connected serial devices to find the one that sends `bonjour` as the first transmitted line
@@ -185,7 +198,7 @@ class SerialWrapper:
                 if line == bonjour:
                     print("Found device ({}) on port : {}".format(
                         self.bonjour, self.ser.port))
-                    self.close_serial()
+                    # self.close_serial()
                     self.ser.timeout = timeout  # Restore the previous value
                     return self.ser.port
                 self.close_serial()

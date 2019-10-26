@@ -230,6 +230,17 @@ class Interface:
 
                 elif line_type == 'START_MESS':
                     self.process_message(now, line_content)
+    
+    def send_command(self, command):
+        """ Send a command via serial link
+
+        Parameters
+        ----------
+        command : str
+            data to send as a string
+
+        """
+        self.serial.write(command)
 
     def start_read(self):
         """ Start reading and saving data from Interface device
