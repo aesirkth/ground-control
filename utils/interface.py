@@ -250,7 +250,7 @@ class Interface:
         """
 
         self.serial.open_serial()
-        
+
         self.is_reading = True
         self.data = []
 
