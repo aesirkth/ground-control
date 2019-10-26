@@ -139,7 +139,7 @@ Enjoy
 ├── dummy_interface/
 │   └── dummy_interface.ino     # Example telemetry code for arduino
 ├── gui/
-│   └── lps.py                  # Widgets used in the LPS control GUI
+│   └── widgets.py              # Widgets used in the LPS control GUI
 ├── utils/
 │   ├── interface.py            # Class used to process data from Interface devices
 │   └── serialwrapper.py        # Class used to read/write data from serial link
