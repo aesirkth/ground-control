@@ -27,7 +27,7 @@ class SerialWrapper:
         unique string sent by the targeted device when the connection is opened
     port : string, optional
         port to open
-    
+
     Attributes
     ----------
     serial_desc_substrings : (str, str, ...)
@@ -52,13 +52,10 @@ class SerialWrapper:
 
     def __init__(self, baudrate, bonjour="", port=""):
         self.bonjour = bonjour
+        self.port = port
         self.ser = serial.Serial()
         self.ser.baudrate = baudrate
         self.ser.timeout = 0.1
-        if bonjour:
-            self.find_device(bonjour)  # This sets ser.port
-        elif port or not self.ser.port:
-            self.ser.port = port
 
     def open_serial(self):
         """ Open the serial connection
@@ -70,27 +67,41 @@ class SerialWrapper:
             False if an error occured
 
         """
+        def open_port():
+            try:
+                self.ser.open()
+                self.ser.reset_input_buffer()
+                self.ser.reset_output_buffer()
+                print("{} : serial connection opened ({})".format(
+                    self.bonjour, self.ser.port))
+                return True
+            except Exception as e:
+                print("Got serial error : {}".format(e))
+                return False
+
+        # This is true if the device has already been found/openned before
         if self.ser.port:
             if self.ser.is_open:
                 print("{} : serial connection is already open, cannot open again ({})".format(
                     self.bonjour, self.ser.port))
                 return True
             else:
-                try:
-                    self.ser.open()
-                    self.ser.reset_input_buffer()
-                    self.ser.reset_output_buffer()
-                    print("{} : serial connection opened ({})".format(
-                        self.bonjour, self.ser.port))
-                    return True
-                except Exception as e:
-                    print("Got serial error : {}".format(e))
-                    return False
+                return open_port()
 
         else:
-            print("{} : cannot open serial connection, 'port' is not defined".format(
-                self.bonjour))
-            return False
+            if self.bonjour:
+                print("{} : Serial 'port' is not defined, using 'bonjour' to find device".format(
+                    self.bonjour))
+                self.find_device(self.bonjour)
+            elif self.port:
+                print("{} : Using 'port' {}".format(
+                    self.bonjour, self.port))
+                self.ser.port = self.port
+                return open_port()
+            else:
+                print("{} : Serial 'port' and 'bonjour' are not defined, cannot open port".format(
+                    self.bonjour))
+                return False
 
     def close_serial(self):
         """ Close the serial connection
@@ -130,7 +141,7 @@ class SerialWrapper:
         line = line.decode('utf-8', 'backslashreplace')
         line = line.replace('\n', "")
         return line
-    
+
     def write(self, data):
         """ Send data via serial link
 
@@ -167,11 +178,12 @@ class SerialWrapper:
         # Get all the devices available on the computer
         available_ports = serial.tools.list_ports.comports()
 
-        print("\nSearching for available serial devices for [{}]...".format(self.bonjour))
+        print("\nSearching for available serial devices for [{}]...".format(
+            self.bonjour))
         if available_ports:
             print("Found device(s) : {}".format(
                 ", ".join([p.description for p in available_ports])))
-            
+
             possible_interfaces = []
             # Extract devices that are expected to be Arduinos or alike from device list
             for p in available_ports:
@@ -181,7 +193,7 @@ class SerialWrapper:
                         flag = True
                 if flag:
                     possible_interfaces.append(p)
-            
+
             print("Those devices will be checked : {}".format(
                 ", ".join([p.description for p in possible_interfaces])))
 
@@ -190,7 +202,7 @@ class SerialWrapper:
             self.ser.port = p.device
             print("Testing : {}...".format(self.ser.port))
 
-            if self.open_serial(): # If the connection cannot be oppened, no need to read from it
+            if self.open_serial():  # If the connection cannot be oppened, no need to read from it
                 self.ser.reset_input_buffer()
 
                 line = self.readline()

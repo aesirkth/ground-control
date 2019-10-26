@@ -1,1 +1,1 @@
-from gui.lps import CommandButtons, MessageBox
+from gui.lps import CommandButtons, MessageBox, InterfaceStatus

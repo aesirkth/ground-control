@@ -248,10 +248,11 @@ class Interface:
         Does not stop until stop_read() is called
 
         """
-        self.is_reading = True
-        self.data = []
 
         self.serial.open_serial()
+        
+        self.is_reading = True
+        self.data = []
 
         while self.is_reading:
             line = self.serial.readline()
