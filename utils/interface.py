@@ -41,7 +41,7 @@ class Interface:
         each string is the received data, separated by a comma ","
     calibration : dict {key: value, }
         calibration data received from the Interface
-    messages : list [[datetime.datetime, str], ]
+    messages : list [(datetime.datetime, str), ]
         messages received from the Interface
 
     Examples
@@ -207,7 +207,7 @@ class Interface:
 
         """
         message = "{}\t{}\n".format(now, line)
-        self.messages.append([now, line])
+        self.messages.append((now, line))
         self.write_message(message)
         print("Message : {}".format("{} {}".format(now.time().replace(microsecond=0), line)))
 
@@ -230,6 +230,17 @@ class Interface:
 
                 elif line_type == 'START_MESS':
                     self.process_message(now, line_content)
+    
+    def send_command(self, command):
+        """ Send a command via serial link
+
+        Parameters
+        ----------
+        command : str
+            data to send as a string
+
+        """
+        self.serial.write(command)
 
     def start_read(self):
         """ Start reading and saving data from Interface device
@@ -237,10 +248,11 @@ class Interface:
         Does not stop until stop_read() is called
 
         """
-        self.is_reading = True
-        self.data = []
 
         self.serial.open_serial()
+
+        self.is_reading = True
+        self.data = []
 
         while self.is_reading:
             line = self.serial.readline()
