@@ -38,7 +38,7 @@ class CommandButtons(tk.Frame):
         """ Set the buttons inactive when the interface is not ready
 
         """
-        if self.interface.is_reading:
+        if self.interface.is_ready():
             self.button_A.config(state=tk.NORMAL)
             self.button_B.config(state=tk.NORMAL)
         else:
@@ -200,7 +200,7 @@ class InterfaceStatus(tk.Frame):
         """ Set the behaviour of the button to open or close the Serial link
 
         """
-        if self.interface.is_reading:
+        if self.interface.is_serial_open():
             self.button_var.set("Close link")
             self.read_button.config(command=self.stop_read)
         else:
