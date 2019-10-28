@@ -62,6 +62,7 @@ class SerialWrapper:
         self.ser = serial.Serial()
         self.ser.baudrate = baudrate
         self.ser.timeout = 0.1
+        self.buffer = bytearray()
 
         self.failed = False
         self.error = ""
@@ -191,6 +192,31 @@ class SerialWrapper:
             self.fail_mode(error)
             self.close_serial()
             return
+
+    def readlines(self):
+        """ Read the last received lines from the serial buffer
+        The lines are decoded to ascii and the newline character is removed
+        Incomplete lines are saved for later
+        Parameters
+        ----------
+        ser : Serial instance
+            the Serial instance to read a line from
+        Returns
+        -------
+        lines : [string, ]
+            the processed lines read from the serial buffer
+        """
+        i = max(1, min(2048, self.ser.in_waiting))
+        data = self.ser.read(i)
+        self.buffer.extend(data)
+
+        if self.buffer:
+            r = self.buffer.split(b'\n')
+            lines = r[:-1]
+            # Data after the last \n is an incomplete line, save for later
+            self.buffer = r[-1]
+            return [l.decode('utf-8', 'backslashreplace') for l in lines]
+        return []
 
     def write(self, data):
         """ Send data via serial link

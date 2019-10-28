@@ -257,9 +257,11 @@ class Interface:
         while self.is_reading:
             if self.serial.failed:
                 self.is_reading = False
-            line = self.serial.readline()
-            if line:
-                self.process_line(line)
+            else:
+                lines = self.serial.readlines()
+                for line in lines:
+                    self.process_line(line)
+
 
     def stop_read(self):
         """" Call this method to terminate serial reading
