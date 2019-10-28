@@ -38,7 +38,7 @@ class CommandButtons(tk.Frame):
         """ Set the buttons inactive when the interface is not ready
 
         """
-        if self.interface.is_reading:
+        if self.interface.get_device_status():
             self.button_A.config(state=tk.NORMAL)
             self.button_B.config(state=tk.NORMAL)
         else:
@@ -160,8 +160,14 @@ class InterfaceStatus(tk.Frame):
             self.interface.serial.ser.port))
         tk.Label(self, textvariable=self.port_var).grid(
             row=0, column=1, sticky=W)
+        # Label to display the error status
+        self.error_var = tk.StringVar()
+        self.error_var.set("")
+        tk.Label(self, textvariable=self.error_var).grid(
+            row=0, column=2, sticky=W+E)
 
         self.update_port()
+        self.update_error()
         self.update_button()
 
     def destroy(self):
@@ -196,11 +202,23 @@ class InterfaceStatus(tk.Frame):
         # Call this function again after 100 ms
         self.parent.after(100, self.update_port)
 
+    def update_error(self):
+        """ Update the error displayed
+
+        """
+        failed, message = self.interface.get_device_error()
+        if failed:
+            self.error_var.set("Status : {}".format(message))
+        else:
+            self.error_var.set("Status : Ok")
+        # Call this function again after 100 ms
+        self.parent.after(100, self.update_error)    
+
     def update_button(self):
         """ Set the behaviour of the button to open or close the Serial link
 
         """
-        if self.interface.is_reading:
+        if self.interface.get_serial_status():
             self.button_var.set("Close link")
             self.read_button.config(command=self.stop_read)
         else:
