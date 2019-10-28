@@ -167,6 +167,12 @@ class SerialWrapper:
             if line == self.bonjour:
                 self.is_ready = True
             return line
+        except serial.SerialException as e:
+            error = "Device disconnected"
+            self.fail_mode(error)
+            self.close_serial()
+            return
+
         except Exception as e:
             error = "{} : got serial error : {}".format(
                 self.bonjour, e)
