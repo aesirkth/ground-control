@@ -86,9 +86,17 @@ class SerialWrapper:
                     self.bonjour, self.ser.port))
                 self.failed = False
                 return True
+            except serial.SerialException as e:
+                if e.errno == 2:
+                    error = "Could not open port '{}'".format(self.ser.port)
+                else:
+                    error = e.strerror
+                self.fail_mode(error)
+                self.close_serial()
+                return False
             except Exception as e:
-                error = "{} : got serial error : {}".format(
-                    self.bonjour, e)
+                error = "{} : {}".format(
+                    self.bonjour, e.strerror)
                 self.fail_mode(error)
                 return False
 
