@@ -255,8 +255,11 @@ class Interface:
         self.data = []
 
         while self.is_reading:
+            if self.serial.failed:
+                self.is_reading = False
             line = self.serial.readline()
-            self.process_line(line)
+            if line:
+                self.process_line(line)
 
     def stop_read(self):
         """" Call this method to terminate serial reading
@@ -266,3 +269,41 @@ class Interface:
         """
         self.is_reading = False
         self.serial.close_serial()
+
+    def get_device_status(self):
+        """ Return the state of the Interface
+
+        Ready means that the device is operational ie. completed its boot sequence
+
+        Returns
+        -------
+        bool
+            True if the device is ready
+
+        """
+        return self.serial.is_ready
+    
+    def get_device_error(self):
+        """ Return the error status of the serial link
+
+        Returns
+        -------
+        failed : bool
+            True if there was a fatal error
+        message : str
+            content of the error message
+
+        """
+        failed, message = self.serial.get_serial_error()
+        return (failed, message)
+    
+    def get_serial_status(self):
+        """ Return the state of the serial link
+
+        Returns
+        -------
+        bool
+            True if the link is open
+
+        """
+        return self.serial.get_serial_status()
