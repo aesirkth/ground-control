@@ -283,6 +283,20 @@ class Interface:
         """
         return self.serial.is_ready
     
+    def get_device_error(self):
+        """ Return the error status of the serial link
+
+        Returns
+        -------
+        failed : bool
+            True if there was a fatal error
+        message : str
+            content of the error message
+
+        """
+        failed, message = self.serial.get_serial_error()
+        return (failed, message)
+    
     def get_serial_status(self):
         """ Return the state of the serial link
 

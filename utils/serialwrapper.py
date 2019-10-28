@@ -198,6 +198,20 @@ class SerialWrapper:
         """
         return self.ser.is_open
 
+    def get_serial_error(self):
+        """ Return the error status of the serial link
+
+        Returns
+        -------
+        failed : bool
+            True if there was a fatal error
+        message : str
+            content of the error message
+
+        """
+        failed, message = self.failed, self.error
+        return (failed, message)
+
     def find_device(self, bonjour):
         """ Test all connected serial devices to find the one that sends `bonjour` as the first transmitted line
 
