@@ -134,6 +134,7 @@ class SerialWrapper:
                     self.ser.close()
                     print("{} : serial connection closed ({})".format(
                         self.bonjour, self.ser.port))
+                self.is_ready = False
             return
         else:
             print("{} : cannot close serial connection, 'port' is not defined".format(
