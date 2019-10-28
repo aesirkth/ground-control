@@ -30,10 +30,12 @@ class SerialWrapper:
 
     Attributes
     ----------
-    serial_desc_substrings : (str, str, ...)
-        substring to look for in serial device description
-        Serial devices with no subtrings from `serial_desc_substrings` in their description will not
-        be oppened to avoid errors (they might be system devices not intended to be used that way)
+    failed : bool
+        True if a fatal error occured
+    error : str
+        String with the content of the last error
+    is_ready : bool
+        True if the device is ready to use (ie boot have been completed)
 
     Examples
     --------
@@ -48,16 +50,22 @@ class SerialWrapper:
     >>> s.close_serial()
 
     """
+    # Substring to look for in serial device description
+    # Serial devices with no subtrings from `serial_desc_substrings` in their description will not
+    # be oppened to avoid errors (they might be system devices not intended to be used that way)
     serial_desc_substrings = ("usb", "ch340", "arduino")
 
     def __init__(self, baudrate, bonjour="", port=""):
         self.bonjour = bonjour
         self.port = port
+
         self.ser = serial.Serial()
         self.ser.baudrate = baudrate
         self.ser.timeout = 0.1
+
         self.failed = False
         self.error = ""
+        self.is_ready = False
 
     def open_serial(self):
         """ Open the serial connection
@@ -155,6 +163,8 @@ class SerialWrapper:
             line = self.ser.readline()
             line = line.decode('utf-8', 'backslashreplace')
             line = line.replace('\n', "")
+            if line == self.bonjour:
+                self.is_ready = True
             return line
         except Exception as e:
             error = "{} : got serial error : {}".format(
@@ -176,6 +186,17 @@ class SerialWrapper:
             return
 
         self.ser.write(data.encode('utf-8'))
+
+    def is_open(self):
+        """ Return the state of the serial port
+
+        Returns
+        -------
+        bool
+            True if the serial port is open
+
+        """
+        return self.ser.is_open
 
     def find_device(self, bonjour):
         """ Test all connected serial devices to find the one that sends `bonjour` as the first transmitted line
@@ -247,6 +268,7 @@ class SerialWrapper:
                     # self.close_serial()
                     self.ser.timeout = timeout  # Restore the previous value
                     self.safe_mode()
+                    self.is_ready = True
                     return True
                 self.close_serial()
 
@@ -259,10 +281,22 @@ class SerialWrapper:
         return False
 
     def fail_mode(self, error):
+        """ Set the right value to Instance attributes in case a fatal error occured
+
+        Parameters
+        ----------
+        error : str
+            String with the error text
+
+        """
         self.error = error
         print(self.error)
         self.failed = True
+        self.is_ready = False
 
     def safe_mode(self):
+        """ Revert the Instance attributes to normal after error recovery
+
+        """
         self.error = ""
         self.failed = False
