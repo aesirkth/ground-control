@@ -187,7 +187,7 @@ class SerialWrapper:
 
         self.ser.write(data.encode('utf-8'))
 
-    def is_open(self):
+    def get_serial_status(self):
         """ Return the state of the serial port
 
         Returns

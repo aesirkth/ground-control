@@ -270,7 +270,7 @@ class Interface:
         self.is_reading = False
         self.serial.close_serial()
 
-    def is_ready(self):
+    def get_device_status(self):
         """ Return the state of the Interface
 
         Ready means that the device is operational ie. completed its boot sequence
@@ -283,13 +283,13 @@ class Interface:
         """
         return self.serial.is_ready
     
-    def is_serial_open(self):
+    def get_serial_status(self):
         """ Return the state of the serial link
 
         Returns
         -------
         bool
-            True is the link is open
+            True if the link is open
 
         """
-        return self.serial.is_open()
+        return self.serial.get_serial_status()
