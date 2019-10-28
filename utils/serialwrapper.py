@@ -96,7 +96,7 @@ class SerialWrapper:
                 return False
             except Exception as e:
                 error = "{} : {}".format(
-                    self.bonjour, e.strerror)
+                    self.bonjour, e)
                 self.fail_mode(error)
                 return False
 
@@ -180,8 +180,13 @@ class SerialWrapper:
             self.fail_mode(error)
             self.close_serial()
             return
+        # We get an error "an integer is required (got type NoneType)" when forcing GUI destruction without
+        # closing the serial port before (in the thread that reads data)
+        except TypeError as e:
+            # print(e)
+            return
         except Exception as e:
-            error = "{} : got serial error : {}".format(
+            error = "{} : {}".format(
                 self.bonjour, e)
             self.fail_mode(error)
             self.close_serial()
