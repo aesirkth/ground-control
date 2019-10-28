@@ -79,10 +79,9 @@ class SerialWrapper:
                 self.failed = False
                 return True
             except Exception as e:
-                self.error = "{} : got serial error : {}".format(
+                error = "{} : got serial error : {}".format(
                     self.bonjour, e)
-                print(self.error)
-                self.failed = True
+                self.fail_mode(error)
                 return False
 
         if not self.ser.port:
@@ -97,10 +96,9 @@ class SerialWrapper:
                 self.ser.port = self.port
                 return open_port()
             else:
-                self.error = "{} : Serial 'port' and 'bonjour' are not defined, cannot open port".format(
+                error = "{} : Serial 'port' and 'bonjour' are not defined, cannot open port".format(
                     self.bonjour)
-                print(self.error)
-                self.failed = True
+                self.fail_mode(error)
                 return False
 
         # This is true if the device has already been found/openned before
@@ -159,10 +157,9 @@ class SerialWrapper:
             line = line.replace('\n', "")
             return line
         except Exception as e:
-            self.error = "{} : got serial error : {}".format(
+            error = "{} : got serial error : {}".format(
                 self.bonjour, e)
-            print(self.error)
-            self.failed = True
+            self.fail_mode(error)
             self.close_serial()
             return
 
@@ -200,7 +197,7 @@ class SerialWrapper:
         # The timeout should be long enough to that the Interface device can reset and send BONJOUR before the reading ends
         timeout = self.ser.timeout
         self.ser.timeout = 2
-        self.ser.port = ""
+        self.ser.port = None
 
         # Get all the devices available on the computer
         available_ports = serial.tools.list_ports.comports()
@@ -227,15 +224,13 @@ class SerialWrapper:
                     ", ".join([p.description for p in possible_interfaces])))
 
             else:
-                self.error = "No serial device found"
-                print(self.error)
-                self.failed = True
+                error = "No serial device found"
+                self.fail_mode(error)
                 return False
 
         else:
-            self.error = "No serial device found"
-            print(self.error)
-            self.failed = True
+            error = "No serial device found"
+            self.fail_mode(error)
             return False
 
         # Check only devices that are expected to be Arduinos or alike
@@ -251,15 +246,23 @@ class SerialWrapper:
                         self.bonjour, self.ser.port))
                     # self.close_serial()
                     self.ser.timeout = timeout  # Restore the previous value
-                    self.failed = False
+                    self.safe_mode()
                     return True
                 self.close_serial()
 
-        self.error = "Failed to find device"
-        print(self.error)
-        self.failed = True
-        self.ser.port = ""
+        error = "Failed to find device"
+        self.fail_mode(error)
+        self.ser.port = None
         if available_ports:
             self.close_serial()
         self.ser.timeout = timeout  # Restore the previous value
         return False
+
+    def fail_mode(self, error):
+        self.error = error
+        print(self.error)
+        self.failed = True
+
+    def safe_mode(self):
+        self.error = ""
+        self.failed = False
