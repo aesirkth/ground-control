@@ -172,7 +172,6 @@ class SerialWrapper:
             self.fail_mode(error)
             self.close_serial()
             return
-
         except Exception as e:
             error = "{} : got serial error : {}".format(
                 self.bonjour, e)
