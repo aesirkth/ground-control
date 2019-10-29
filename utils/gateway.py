@@ -1,5 +1,5 @@
 """
-Class to read data from an Interface device and save it on storage
+Class to read data from an Gateway device and save it on storage
 
 """
 
@@ -9,52 +9,49 @@ import datetime
 from os import mkdir
 from os.path import isdir, join
 
-from .serialwrapper import SerialWrapper
 
+class Gateway:
+    """ Class to read data received from an Gateway device
 
-class Interface:
-    """ Class to read data received from an Interface device
+    The Gateway device is connected to the computer via a serial connection
 
-    The Interface device is connected to the computer via a serial connection
-
-    The data read from the Interface is stored in a CSV file in real time
+    The data read from the Gateway is stored in a CSV file in real time
     The time of reception of each line is stored along the received data
     in ISO format (YYYY-MM-DD HH:MM:SS.ffffff)
 
     Parameters
     ----------
-    baudrate : int
-        baudrate of the serial link
+    serial : Serial instance
+        Serial instance used to read data from the Gateway device
     path : path-like object
         path to the directory to store received data
-    bonjour : string
-        unique string sent by the targeted Interface when the connection is opened
+    name : str
+        name of the Gateway instance. This is used to name the files written on file storage
 
     Attributes
     ----------
-    ser : Serial instance
-        Serial instance used to read data from the Interface device
     is_reading : bool
         True if the instance is currently reading data from serial link
     data : list [[datetime.datetime, str, str, ], ]
-        data read from Interface
+        data read from Gateway
         each string is the received data, separated by a comma ","
     calibration : dict {key: value, }
-        calibration data received from the Interface
+        calibration data received from the Gateway
     messages : list [(datetime.datetime, str), ]
-        messages received from the Interface
+        messages received from the Gateway
 
     Examples
     --------
-    >>> telemetry = Telemetry(baudrate=115200, path="path/to/directory/", bonjour="TELEMETRY")
-    >>> telemetry.start_read()
+    >>> serial = SerialWrapper(baudrate=baudrate, bonjour = "TELEMETRY")
+    >>> lps = Gateway(serial=serial, path=path, name="telemetry")
+    >>> telemetry.start_read() # In another thread (use threading for example)
     >>> data = telemetry.data
     >>> mess = telemetry.messages
     ...
-    >>> telemetry.stop_read()
+    >>> telemetry.stop_read() # This terminates the above thread
 
     """
-
+    # This is described in the protocol description
     separators = {
         'START_HEAD': '@',
         'START_DATA': '#',
@@ -63,12 +60,13 @@ class Interface:
         'SEP_DATA': '&',
         'SEP_CALI': ':',
     }
-
     # We need to do searches both ways...
     separators_reversed = {value: key for key, value in separators.items()}
 
-    def __init__(self, baudrate, path, bonjour):
+    def __init__(self, serial, path, name):
+        self.serial = serial
         self.path = path
+        self.name = name
 
         self.is_reading = False
 
@@ -81,25 +79,24 @@ class Interface:
 
         self.data_file = "{}_{}_data.csv".format(
             self.date_created.replace(":", "-"),
-            bonjour.lower())
+            name)
         self.data_path = join(self.path, self.data_file)
 
         self.calibration_file = "{}_{}_calibration.yaml".format(
             self.date_created.replace(":", "-"),
-            bonjour.lower())
+            name)
         self.calibration_path = join(self.path, self.calibration_file)
 
         self.messages_file = "{}_{}_messages.log".format(
             self.date_created.replace(":", "-"),
-            bonjour.lower())
+            name)
         self.messages_path = join(self.path, self.messages_file)
 
+        # Create the folder to store the files if it does not already exist
         if not isdir(self.path):
             mkdir(self.path)
 
-        self.serial = SerialWrapper(baudrate=baudrate, bonjour=bonjour)
-
-    def write_data(self, dataArray):
+    def __write_data(self, dataArray):
         """ Append a line in the file located at `self.data_path`
 
         Each element of `dataArray` is written separated by a comma ','
@@ -115,7 +112,7 @@ class Interface:
             writer = csv.writer(file, delimiter=',')
             writer.writerow(dataArray)
 
-    def process_header(self, line):
+    def __process_header(self, line):
         """ Save header in memory
 
         The first item is the computer time of reception
@@ -128,11 +125,12 @@ class Interface:
         """
         # Don't write the header twice
         if not self.header:
-            self.header = ["Computer Time"] + line.split(self.separators['SEP_DATA'])
-            self.write_data(self.header)
+            self.header = ["Computer Time"] + \
+                line.split(self.separators['SEP_DATA'])
+            self.__write_data(self.header)
             print("Header : {}".format(self.header))
 
-    def process_data(self, now, line):
+    def __process_data(self, now, line):
         """ Save data in memory and on file storage
 
         The first item is the computer time of reception as a datetime.datetime object
@@ -149,16 +147,16 @@ class Interface:
         if self.header:
             data = [now] + line.split(self.separators['SEP_DATA'])
             self.data.append(data)
-            self.write_data(data)
+            self.__write_data(data)
 
-    def write_calibration(self):
+    def __write_calibration(self):
         """ Write the calibration data in the file located at `self.calibration_path`
 
         """
         with open(self.calibration_path, 'w') as file:
             file.write(yaml.dump(self.calibration))
 
-    def process_calibration(self, line):
+    def __process_calibration(self, line):
         """ Save calibration data in memory and on file storage
 
         Parameters
@@ -171,10 +169,10 @@ class Interface:
         if not self.calibration:
             self.calibration = {value.split(self.separators['SEP_CALI'])[0]: value.split(
                 self.separators['SEP_CALI'])[1] for value in line.split(self.separators['SEP_DATA'])}
-            self.write_calibration()
+            self.__write_calibration()
             print("Got calibration")
 
-    def write_message(self, message):
+    def __write_message(self, message):
         """ Append a line in the file located at `self.messages_path`
 
         If the file does not exit, it is created
@@ -188,7 +186,7 @@ class Interface:
         with open(self.messages_path, 'a+') as file:
             file.write(message)
 
-    def process_message(self, now, line):
+    def __process_message(self, now, line):
         """ Save a message line in memory and on file storage
 
         The message is saved in memory as a list [datetime.datetime, str]
@@ -206,12 +204,24 @@ class Interface:
             line received from telemetry, without start and end character
 
         """
-        message = "{}\t{}\n".format(now, line)
+        # This is saved in memory
         self.messages.append((now, line))
-        self.write_message(message)
-        print("Message : {}".format("{} {}".format(now.time().replace(microsecond=0), line)))
+        # This is written in file
+        message = "{}\t{}\n".format(now, line)
+        self.__write_message(message)
+        # This in printed in the output console
+        print("Message : {}".format("{} {}".format(
+            now.time().replace(microsecond=0), line)))
 
-    def process_line(self, line):
+    def __process_line(self, line):
+        """ Interpret a received line and send it to the right method for further processing
+
+        Parameters
+        ----------
+        line : str
+            line received from the serial link
+
+        """
         if len(line) > 0:
             line_start = line[0]
             line_content = line[1:]
@@ -220,17 +230,17 @@ class Interface:
                 now = datetime.datetime.now()
 
                 if line_type == 'START_DATA':
-                    self.process_data(now, line_content)
+                    self.__process_data(now, line_content)
 
                 elif line_type == 'START_HEAD':
-                    self.process_header(line_content)
+                    self.__process_header(line_content)
 
                 elif line_type == 'START_CALI':
-                    self.process_calibration(line_content)
+                    self.__process_calibration(line_content)
 
                 elif line_type == 'START_MESS':
-                    self.process_message(now, line_content)
-    
+                    self.__process_message(now, line_content)
+
     def send_command(self, command):
         """ Send a command via serial link
 
@@ -240,10 +250,11 @@ class Interface:
             data to send as a string
 
         """
-        self.serial.write(command)
+        if self.serial.get_status():
+            self.serial.write(command)
 
     def start_read(self):
-        """ Start reading and saving data from Interface device
+        """ Start reading and saving data from Gateway device
 
         Does not stop until stop_read() is called
 
@@ -260,8 +271,7 @@ class Interface:
             else:
                 lines = self.serial.readlines()
                 for line in lines:
-                    self.process_line(line)
-
+                    self.__process_line(line)
 
     def stop_read(self):
         """" Call this method to terminate serial reading
@@ -271,41 +281,3 @@ class Interface:
         """
         self.is_reading = False
         self.serial.close_serial()
-
-    def get_device_status(self):
-        """ Return the state of the Interface
-
-        Ready means that the device is operational ie. completed its boot sequence
-
-        Returns
-        -------
-        bool
-            True if the device is ready
-
-        """
-        return self.serial.is_ready
-    
-    def get_device_error(self):
-        """ Return the error status of the serial link
-
-        Returns
-        -------
-        failed : bool
-            True if there was a fatal error
-        message : str
-            content of the error message
-
-        """
-        failed, message = self.serial.get_serial_error()
-        return (failed, message)
-    
-    def get_serial_status(self):
-        """ Return the state of the serial link
-
-        Returns
-        -------
-        bool
-            True if the link is open
-
-        """
-        return self.serial.get_serial_status()

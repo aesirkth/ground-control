@@ -68,6 +68,109 @@ class SerialWrapper:
         self.error = ""
         self.is_ready = False
 
+    def __find_device(self, bonjour):
+        """ Test all connected serial devices to find the one that sends `bonjour` as the first transmitted line
+
+        `ser.port` is updated when the device is successfully found. It is set to an empty string otherwise
+
+        Parameters
+        ----------
+        bonjour : string
+            string that should be sent by the device we want to find
+
+        Returns
+        -------
+        success : bool
+            True if the device is found
+
+        """
+        # Change the timeout value to 2 seconds and save the old value
+        # The timeout should be long enough to that the Gateway device can reset and send BONJOUR before the reading ends
+        timeout = self.ser.timeout
+        self.ser.timeout = 2
+        self.ser.port = None
+
+        # Get all the devices available on the computer
+        available_ports = serial.tools.list_ports.comports()
+
+        print("Searching for available serial devices for [{}]...".format(
+            self.bonjour))
+
+        if available_ports:
+            print("Found available device(s) : {}".format(
+                ", ".join([p.description for p in available_ports])))
+
+            possible_gateways = []
+            # Extract devices that are expected to be Arduinos or alike from device list
+            for p in available_ports:
+                flag = False
+                for substring in self.serial_desc_substrings:
+                    if substring in p.description.lower():
+                        flag = True
+                if flag:
+                    possible_gateways.append(p)
+
+            if possible_gateways:
+                print("These devices will be checked : {}".format(
+                    ", ".join([p.description for p in possible_gateways])))
+
+            else:
+                error = "No serial device found"
+                self.__fail_mode(error)
+                return False
+
+        else:
+            error = "No serial device found"
+            self.__fail_mode(error)
+            return False
+
+        # Check only devices that are expected to be Arduinos or alike
+        for p in possible_gateways:
+            self.ser.port = p.device
+            print("Testing : {}...".format(self.ser.port))
+
+            if self.open_serial():  # If the connection cannot be oppened, no need to read from it
+                line = self.readline()
+
+                if line == bonjour:
+                    print("Found device ({}) on port : {}".format(
+                        self.bonjour, self.ser.port))
+                    # self.close_serial()
+                    self.ser.timeout = timeout  # Restore the previous value
+                    self.__safe_mode()
+                    self.is_ready = True
+                    return True
+                self.close_serial()
+
+        error = "Failed to find device"
+        self.__fail_mode(error)
+        self.ser.port = None
+        if available_ports:
+            self.close_serial()
+        self.ser.timeout = timeout  # Restore the previous value
+        return False
+
+    def __fail_mode(self, error):
+        """ Set the right value to Instance attributes in case a fatal error occured
+
+        Parameters
+        ----------
+        error : str
+            String with the error text
+
+        """
+        self.error = error
+        print(self.error)
+        self.failed = True
+        self.is_ready = False
+
+    def __safe_mode(self):
+        """ Revert the Instance attributes to normal after error recovery
+
+        """
+        self.error = ""
+        self.failed = False
+
     def open_serial(self):
         """ Open the serial connection
 
@@ -92,20 +195,20 @@ class SerialWrapper:
                     error = "Could not open port '{}'".format(self.ser.port)
                 else:
                     error = e.strerror
-                self.fail_mode(error)
+                self.__fail_mode(error)
                 self.close_serial()
                 return False
             except Exception as e:
                 error = "{} : {}".format(
                     self.bonjour, e)
-                self.fail_mode(error)
+                self.__fail_mode(error)
                 return False
 
         if not self.ser.port:
             if self.bonjour:
                 print("{} : Serial 'port' is not defined, using 'bonjour' to find device".format(
                     self.bonjour))
-                if self.find_device(self.bonjour):
+                if self.__find_device(self.bonjour):
                     return True
             elif self.port:
                 print("{} : Using 'port' {}".format(
@@ -115,7 +218,7 @@ class SerialWrapper:
             else:
                 error = "{} : Serial 'port' and 'bonjour' are not defined, cannot open port".format(
                     self.bonjour)
-                self.fail_mode(error)
+                self.__fail_mode(error)
                 return False
 
         # This is true if the device has already been found/openned before
@@ -150,6 +253,31 @@ class SerialWrapper:
                 self.bonjour))
             return
 
+    def get_status(self):
+        """ Return the state of the serial port
+
+        Returns
+        -------
+        bool
+            True if the serial port is open
+
+        """
+        return self.ser.is_open
+
+    def write(self, data):
+        """ Send data via serial link
+
+        Parameters
+        ----------
+        data : str
+            data to send as a string
+
+        """
+        if self.failed:
+            return
+
+        self.ser.write(data.encode('utf-8'))
+
     def readline(self):
         """ Read a line from serial link and return it as a string
 
@@ -178,7 +306,7 @@ class SerialWrapper:
             return line
         except serial.SerialException as e:
             error = "Device disconnected"
-            self.fail_mode(error)
+            self.__fail_mode(error)
             self.close_serial()
             return
         # We get an error "an integer is required (got type NoneType)" when forcing GUI destruction without
@@ -189,7 +317,7 @@ class SerialWrapper:
         except Exception as e:
             error = "{} : {}".format(
                 self.bonjour, e)
-            self.fail_mode(error)
+            self.__fail_mode(error)
             self.close_serial()
             return
 
@@ -207,155 +335,33 @@ class SerialWrapper:
             the processed lines read from the serial buffer
         """
         i = max(1, min(2048, self.ser.in_waiting))
-        data = self.ser.read(i)
-        self.buffer.extend(data)
+        try:
+            data = self.ser.read(i)
+            self.buffer.extend(data)
+        except serial.SerialException as e:
+            error = "Device disconnected"
+            self.__fail_mode(error)
+            self.close_serial()
+            return []
+        # We get an error "an integer is required (got type NoneType)" when forcing GUI destruction without
+        # closing the serial port before (in the thread that reads data)
+        except TypeError as e:
+            # print(e)
+            return []
+        except Exception as e:
+            error = "{} : {}".format(
+                self.bonjour, e)
+            self.__fail_mode(error)
+            self.close_serial()
+            return []
 
         if self.buffer:
             r = self.buffer.split(b'\n')
             lines = r[:-1]
+            lines = [l.decode('utf-8', 'backslashreplace') for l in lines]
+            if self.bonjour in lines:
+                self.is_ready = True
             # Data after the last \n is an incomplete line, save for later
             self.buffer = r[-1]
-            return [l.decode('utf-8', 'backslashreplace') for l in lines]
+            return lines
         return []
-
-    def write(self, data):
-        """ Send data via serial link
-
-        Parameters
-        ----------
-        data : str
-            data to send as a string
-
-        """
-        if self.failed:
-            return
-
-        self.ser.write(data.encode('utf-8'))
-
-    def get_serial_status(self):
-        """ Return the state of the serial port
-
-        Returns
-        -------
-        bool
-            True if the serial port is open
-
-        """
-        return self.ser.is_open
-
-    def get_serial_error(self):
-        """ Return the error status of the serial link
-
-        Returns
-        -------
-        failed : bool
-            True if there was a fatal error
-        message : str
-            content of the error message
-
-        """
-        failed, message = self.failed, self.error
-        return (failed, message)
-
-    def find_device(self, bonjour):
-        """ Test all connected serial devices to find the one that sends `bonjour` as the first transmitted line
-
-        `ser.port` is updated when the device is successfully found. It is set to an empty string otherwise
-
-        Parameters
-        ----------
-        bonjour : string
-            string that should be sent by the device we want to find
-
-        Returns
-        -------
-        success : bool
-            True if the device is found
-
-        """
-        # Change the timeout value to 2 seconds and save the old value
-        # The timeout should be long enough to that the Interface device can reset and send BONJOUR before the reading ends
-        timeout = self.ser.timeout
-        self.ser.timeout = 2
-        self.ser.port = None
-
-        # Get all the devices available on the computer
-        available_ports = serial.tools.list_ports.comports()
-
-        print("Searching for available serial devices for [{}]...".format(
-            self.bonjour))
-
-        if available_ports:
-            print("Found available device(s) : {}".format(
-                ", ".join([p.description for p in available_ports])))
-
-            possible_interfaces = []
-            # Extract devices that are expected to be Arduinos or alike from device list
-            for p in available_ports:
-                flag = False
-                for substring in self.serial_desc_substrings:
-                    if substring in p.description.lower():
-                        flag = True
-                if flag:
-                    possible_interfaces.append(p)
-
-            if possible_interfaces:
-                print("These devices will be checked : {}".format(
-                    ", ".join([p.description for p in possible_interfaces])))
-
-            else:
-                error = "No serial device found"
-                self.fail_mode(error)
-                return False
-
-        else:
-            error = "No serial device found"
-            self.fail_mode(error)
-            return False
-
-        # Check only devices that are expected to be Arduinos or alike
-        for p in possible_interfaces:
-            self.ser.port = p.device
-            print("Testing : {}...".format(self.ser.port))
-
-            if self.open_serial():  # If the connection cannot be oppened, no need to read from it
-                line = self.readline()
-
-                if line == bonjour:
-                    print("Found device ({}) on port : {}".format(
-                        self.bonjour, self.ser.port))
-                    # self.close_serial()
-                    self.ser.timeout = timeout  # Restore the previous value
-                    self.safe_mode()
-                    self.is_ready = True
-                    return True
-                self.close_serial()
-
-        error = "Failed to find device"
-        self.fail_mode(error)
-        self.ser.port = None
-        if available_ports:
-            self.close_serial()
-        self.ser.timeout = timeout  # Restore the previous value
-        return False
-
-    def fail_mode(self, error):
-        """ Set the right value to Instance attributes in case a fatal error occured
-
-        Parameters
-        ----------
-        error : str
-            String with the error text
-
-        """
-        self.error = error
-        print(self.error)
-        self.failed = True
-        self.is_ready = False
-
-    def safe_mode(self):
-        """ Revert the Instance attributes to normal after error recovery
-
-        """
-        self.error = ""
-        self.failed = False
