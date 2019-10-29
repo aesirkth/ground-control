@@ -24,27 +24,29 @@ class MainApplication(tk.Frame):
         Gateway instance correctly set for the LPS Gateway
 
     """
+
     def __init__(self, parent, gateway, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
-        self.lps = gateway
+        self.gateway = gateway
 
-        self.lps_messages = MessageBox(self, self.lps, borderwidth=2, relief="groove")
-        self.lps_controls = CommandButtons(self, self.lps)
-        self.lps_status = GatewayStatus(self, self.lps)
+        self.gateway_messages = MessageBox(
+            self, self.gateway, borderwidth=2, relief="groove")
+        self.gateway_controls = CommandButtons(self, self.gateway)
+        self.gateway_status = GatewayStatus(self, self.gateway)
 
-        self.lps_status.grid(
+        self.gateway_status.grid(
             row=0, column=1, sticky=W+E+N+S, padx=5, pady=5)
-        self.lps_controls.grid(
+        self.gateway_controls.grid(
             row=1, column=1, sticky=W+E+N+S, padx=5, pady=5)
-        self.lps_messages.grid(
+        self.gateway_messages.grid(
             row=2, column=1, sticky=W+E+N+S, padx=5, pady=5)
 
 
 if __name__ == "__main__":
     baudrate = 115200
     path = './data'
-    serial = SerialWrapper(baudrate=baudrate, bonjour = "LAUNCHPADSTATION")
+    serial = SerialWrapper(baudrate=baudrate, bonjour="LAUNCHPADSTATION")
     lps = Gateway(serial=serial, path=path, name="lps")
 
     root = tk.Tk()

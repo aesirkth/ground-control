@@ -51,7 +51,7 @@ class Gateway:
     >>> telemetry.stop_read() # This terminates the above thread
 
     """
-
+    # This is described in the protocol description
     separators = {
         'START_HEAD': '@',
         'START_DATA': '#',
@@ -60,12 +60,13 @@ class Gateway:
         'SEP_DATA': '&',
         'SEP_CALI': ':',
     }
-
     # We need to do searches both ways...
     separators_reversed = {value: key for key, value in separators.items()}
 
     def __init__(self, serial, path, name):
+        self.serial = serial
         self.path = path
+        self.name = name
 
         self.is_reading = False
 
@@ -91,12 +92,11 @@ class Gateway:
             name)
         self.messages_path = join(self.path, self.messages_file)
 
+        # Create the folder to store the files if it does not already exist
         if not isdir(self.path):
             mkdir(self.path)
 
-        self.serial = serial
-
-    def write_data(self, dataArray):
+    def __write_data(self, dataArray):
         """ Append a line in the file located at `self.data_path`
 
         Each element of `dataArray` is written separated by a comma ','
@@ -112,7 +112,7 @@ class Gateway:
             writer = csv.writer(file, delimiter=',')
             writer.writerow(dataArray)
 
-    def process_header(self, line):
+    def __process_header(self, line):
         """ Save header in memory
 
         The first item is the computer time of reception
@@ -125,11 +125,12 @@ class Gateway:
         """
         # Don't write the header twice
         if not self.header:
-            self.header = ["Computer Time"] + line.split(self.separators['SEP_DATA'])
-            self.write_data(self.header)
+            self.header = ["Computer Time"] + \
+                line.split(self.separators['SEP_DATA'])
+            self.__write_data(self.header)
             print("Header : {}".format(self.header))
 
-    def process_data(self, now, line):
+    def __process_data(self, now, line):
         """ Save data in memory and on file storage
 
         The first item is the computer time of reception as a datetime.datetime object
@@ -146,16 +147,16 @@ class Gateway:
         if self.header:
             data = [now] + line.split(self.separators['SEP_DATA'])
             self.data.append(data)
-            self.write_data(data)
+            self.__write_data(data)
 
-    def write_calibration(self):
+    def __write_calibration(self):
         """ Write the calibration data in the file located at `self.calibration_path`
 
         """
         with open(self.calibration_path, 'w') as file:
             file.write(yaml.dump(self.calibration))
 
-    def process_calibration(self, line):
+    def __process_calibration(self, line):
         """ Save calibration data in memory and on file storage
 
         Parameters
@@ -168,10 +169,10 @@ class Gateway:
         if not self.calibration:
             self.calibration = {value.split(self.separators['SEP_CALI'])[0]: value.split(
                 self.separators['SEP_CALI'])[1] for value in line.split(self.separators['SEP_DATA'])}
-            self.write_calibration()
+            self.__write_calibration()
             print("Got calibration")
 
-    def write_message(self, message):
+    def __write_message(self, message):
         """ Append a line in the file located at `self.messages_path`
 
         If the file does not exit, it is created
@@ -185,7 +186,7 @@ class Gateway:
         with open(self.messages_path, 'a+') as file:
             file.write(message)
 
-    def process_message(self, now, line):
+    def __process_message(self, now, line):
         """ Save a message line in memory and on file storage
 
         The message is saved in memory as a list [datetime.datetime, str]
@@ -203,12 +204,24 @@ class Gateway:
             line received from telemetry, without start and end character
 
         """
-        message = "{}\t{}\n".format(now, line)
+        # This is saved in memory
         self.messages.append((now, line))
-        self.write_message(message)
-        print("Message : {}".format("{} {}".format(now.time().replace(microsecond=0), line)))
+        # This is written in file
+        message = "{}\t{}\n".format(now, line)
+        self.__write_message(message)
+        # This in printed in the output console
+        print("Message : {}".format("{} {}".format(
+            now.time().replace(microsecond=0), line)))
 
-    def process_line(self, line):
+    def __process_line(self, line):
+        """ Interpret a received line and send it to the right method for further processing
+
+        Parameters
+        ----------
+        line : str
+            line received from the serial link
+
+        """
         if len(line) > 0:
             line_start = line[0]
             line_content = line[1:]
@@ -217,17 +230,17 @@ class Gateway:
                 now = datetime.datetime.now()
 
                 if line_type == 'START_DATA':
-                    self.process_data(now, line_content)
+                    self.__process_data(now, line_content)
 
                 elif line_type == 'START_HEAD':
-                    self.process_header(line_content)
+                    self.__process_header(line_content)
 
                 elif line_type == 'START_CALI':
-                    self.process_calibration(line_content)
+                    self.__process_calibration(line_content)
 
                 elif line_type == 'START_MESS':
-                    self.process_message(now, line_content)
-    
+                    self.__process_message(now, line_content)
+
     def send_command(self, command):
         """ Send a command via serial link
 
@@ -237,7 +250,8 @@ class Gateway:
             data to send as a string
 
         """
-        self.serial.write(command)
+        if self.serial.get_status():
+            self.serial.write(command)
 
     def start_read(self):
         """ Start reading and saving data from Gateway device
@@ -257,8 +271,7 @@ class Gateway:
             else:
                 lines = self.serial.readlines()
                 for line in lines:
-                    self.process_line(line)
-
+                    self.__process_line(line)
 
     def stop_read(self):
         """" Call this method to terminate serial reading

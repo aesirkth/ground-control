@@ -13,7 +13,7 @@ class LiveGraph(tk.Frame):
     def __init__(self, parent, gateway, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
-        self.telemetry = gateway
+        self.gateway = gateway
 
         self.fig = Figure(figsize=(4, 3), dpi=100)
         self.ax = self.fig.add_subplot(111)
@@ -37,7 +37,7 @@ class LiveGraph(tk.Frame):
         return self.line,
 
     def updatedata(self, data):
-        dataList = self.telemetry.data
+        dataList = self.gateway.data
         self.xdata, self.ydata = [], []
 
         xmin, xmax = self.ax.get_xlim()
@@ -71,25 +71,25 @@ class MainApplication(tk.Frame):
     def __init__(self, parent, gateway, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
-        self.lps = gateway
+        self.gateway = gateway
 
-        self.lps_messages = MessageBox(
-            self, self.lps, borderwidth=2, relief="groove")
-        self.graph = LiveGraph(self, self.lps)
-        self.lps_status = GatewayStatus(self, self.lps)
+        self.gateway_messages = MessageBox(
+            self, self.gateway, borderwidth=2, relief="groove")
+        self.graph = LiveGraph(self, self.gateway)
+        self.gateway_status = GatewayStatus(self, self.gateway)
 
-        self.lps_status.grid(
+        self.gateway_status.grid(
             row=0, column=1, sticky=W+E+N+S, padx=5, pady=5)
         self.graph.grid(
             row=0, rowspan=2, column=2, sticky=W+E+N+S, padx=5, pady=5)
-        self.lps_messages.grid(
+        self.gateway_messages.grid(
             row=1, column=1, sticky=W+E+N+S, padx=5, pady=5)
 
 
 if __name__ == "__main__":
     baudrate = 115200
     path = './data'
-    serial = SerialWrapper(baudrate=baudrate, bonjour = "TELEMETRY")
+    serial = SerialWrapper(baudrate=baudrate, bonjour="TELEMETRY")
     telemetry = Gateway(serial=serial, path=path, name="telemetry")
 
     root = tk.Tk()

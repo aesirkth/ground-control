@@ -32,9 +32,9 @@ class CommandButtons(tk.Frame):
         self.button_A.grid(row=1, column=1)
         self.button_B.grid(row=1, column=2)
 
-        self.update_buttons()
+        self.____update_buttons()
 
-    def update_buttons(self):
+    def ____update_buttons(self):
         """ Set the buttons inactive when the gateway is not ready
 
         """
@@ -45,7 +45,7 @@ class CommandButtons(tk.Frame):
             self.button_A.config(state=tk.DISABLED)
             self.button_B.config(state=tk.DISABLED)
         # Call this function again after 100 ms
-        self.parent.after(100, self.update_buttons)
+        self.parent.after(100, self.____update_buttons)
 
 
 class MessageBox(tk.Frame):
@@ -64,6 +64,7 @@ class MessageBox(tk.Frame):
         Gateway to read messages from
 
     """
+
     def __init__(self, parent, gateway, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
@@ -80,9 +81,9 @@ class MessageBox(tk.Frame):
         self.scroll_bar.config(command=self.message_box.yview)
         self.message_box.config(yscrollcommand=self.scroll_bar.set)
 
-        self.update_messages()
+        self.__update_messages()
 
-    def diff_list(self, list1, list2):
+    def __diff_list(self, list1, list2):
         """ Return the elements that are only in one of the lists
 
         The content of the lists must be hashable
@@ -103,7 +104,7 @@ class MessageBox(tk.Frame):
         diff = list(set(list1) - set(list2))
         return diff
 
-    def update_messages(self):
+    def __update_messages(self):
         """ Add new messages at the bottom of the Text box
 
         The Scrollbar goes to the bottom of the box every time a new message is received
@@ -112,7 +113,7 @@ class MessageBox(tk.Frame):
         # Get all messages received by the gateway
         all_messages = self.gateway.messages
         # Compare the previous list to the messages already displayed
-        new_messages = self.diff_list(all_messages, self.messages)
+        new_messages = self.__diff_list(all_messages, self.messages)
         # Sort new messages by date (the first element is a datetime object)
         new_messages = sorted(new_messages, key=lambda tup: tup[0])
 
@@ -128,7 +129,7 @@ class MessageBox(tk.Frame):
             # Update the list of messages that are already displayed
             self.messages = copy.copy(all_messages)
         # Call this function again after 100 ms
-        self.parent.after(100, self.update_messages)
+        self.parent.after(100, self.__update_messages)
 
 
 class GatewayStatus(tk.Frame):
@@ -145,6 +146,7 @@ class GatewayStatus(tk.Frame):
         Gateway to monitor
 
     """
+
     def __init__(self, parent, gateway, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
@@ -166,9 +168,9 @@ class GatewayStatus(tk.Frame):
         tk.Label(self, textvariable=self.error_var).grid(
             row=0, column=2, sticky=W+E)
 
-        self.update_port()
-        self.update_error()
-        self.update_button()
+        self.__update_port()
+        self.__update_error()
+        self.__update_button()
 
     def destroy(self):
         """" Catch the destruction of the widget and stop the Serial reading
@@ -177,10 +179,10 @@ class GatewayStatus(tk.Frame):
         the Serial link cannot be stopped
 
         """
-        self.stop_read()
+        self.__stop_read()
         tk.Frame.destroy(self)
 
-    def start_read(self):
+    def __start_read(self):
         """ Start serial reading from the gateway in a separate thread
 
         See utils.gateway.start_read()
@@ -189,20 +191,20 @@ class GatewayStatus(tk.Frame):
         t = threading.Thread(target=self.gateway.start_read)
         t.start()
 
-    def stop_read(self):
+    def __stop_read(self):
         # This stops the infinite loop in utils.gateway.start_read()
         self.gateway.stop_read()
 
-    def update_port(self):
+    def __update_port(self):
         """ Update the port name displayed
 
         """
         self.port_var.set("Port : {}".format(
             self.gateway.serial.ser.port))
         # Call this function again after 100 ms
-        self.parent.after(100, self.update_port)
+        self.parent.after(100, self.__update_port)
 
-    def update_error(self):
+    def __update_error(self):
         """ Update the error displayed
 
         """
@@ -213,17 +215,17 @@ class GatewayStatus(tk.Frame):
         else:
             self.error_var.set("Status : Ok")
         # Call this function again after 100 ms
-        self.parent.after(100, self.update_error)    
+        self.parent.after(100, self.__update_error)
 
-    def update_button(self):
+    def __update_button(self):
         """ Set the behaviour of the button to open or close the Serial link
 
         """
         if self.gateway.serial.get_status():
             self.button_var.set("Close link")
-            self.read_button.config(command=self.stop_read)
+            self.read_button.config(command=self.__stop_read)
         else:
             self.button_var.set("Open link")
-            self.read_button.config(command=self.start_read)
+            self.read_button.config(command=self.__start_read)
         # Call this function again after 100 ms
-        self.parent.after(100, self.update_button)
+        self.parent.after(100, self.__update_button)
