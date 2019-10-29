@@ -6,7 +6,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
 from gui import InterfaceStatus, MessageBox
-from utils import Interface
+from utils import Interface, SerialWrapper
 
 
 class LiveGraph(tk.Frame):
@@ -89,7 +89,8 @@ class MainApplication(tk.Frame):
 if __name__ == "__main__":
     baudrate = 115200
     path = './data'
-    lps = Interface(baudrate=baudrate, path=path, bonjour="TELEMETRY")
+    serial = SerialWrapper(baudrate=baudrate, bonjour = "TELEMETRY")
+    lps = Interface(serial=serial, path=path, name="telemetry")
 
     root = tk.Tk()
     root.title("Launch Pad Control")

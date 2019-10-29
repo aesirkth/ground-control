@@ -9,8 +9,6 @@ import datetime
 from os import mkdir
 from os.path import isdir, join
 
-from .serialwrapper import SerialWrapper
-
 
 class Interface:
     """ Class to read data received from an Interface device
@@ -23,17 +21,15 @@ class Interface:
 
     Parameters
     ----------
-    baudrate : int
-        baudrate of the serial link
+    serial : Serial instance
+        Serial instance used to read data from the Interface device
     path : path-like object
         path to the directory to store received data
-    bonjour : string
-        unique string sent by the targeted Interface when the connection is opened
+    name : str
+        name of the Interface instance. This is used to name the files written on file storage
 
     Attributes
     ----------
-    ser : Serial instance
-        Serial instance used to read data from the Interface device
     is_reading : bool
         True if the instance is currently reading data from serial link
     data : list [[datetime.datetime, str, str, ], ]
@@ -67,7 +63,7 @@ class Interface:
     # We need to do searches both ways...
     separators_reversed = {value: key for key, value in separators.items()}
 
-    def __init__(self, baudrate, path, bonjour):
+    def __init__(self, serial, path, name):
         self.path = path
 
         self.is_reading = False
@@ -81,23 +77,23 @@ class Interface:
 
         self.data_file = "{}_{}_data.csv".format(
             self.date_created.replace(":", "-"),
-            bonjour.lower())
+            name)
         self.data_path = join(self.path, self.data_file)
 
         self.calibration_file = "{}_{}_calibration.yaml".format(
             self.date_created.replace(":", "-"),
-            bonjour.lower())
+            name)
         self.calibration_path = join(self.path, self.calibration_file)
 
         self.messages_file = "{}_{}_messages.log".format(
             self.date_created.replace(":", "-"),
-            bonjour.lower())
+            name)
         self.messages_path = join(self.path, self.messages_file)
 
         if not isdir(self.path):
             mkdir(self.path)
 
-        self.serial = SerialWrapper(baudrate=baudrate, bonjour=bonjour)
+        self.serial = serial
 
     def write_data(self, dataArray):
         """ Append a line in the file located at `self.data_path`
