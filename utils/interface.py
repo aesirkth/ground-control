@@ -42,12 +42,13 @@ class Interface:
 
     Examples
     --------
-    >>> telemetry = Telemetry(baudrate=115200, path="path/to/directory/", bonjour="TELEMETRY")
-    >>> telemetry.start_read()
+    >>> serial = SerialWrapper(baudrate=baudrate, bonjour = "TELEMETRY")
+    >>> lps = Interface(serial=serial, path=path, name="telemetry")
+    >>> telemetry.start_read() # In another thread (use threading for example)
     >>> data = telemetry.data
     >>> mess = telemetry.messages
     ...
-    >>> telemetry.stop_read()
+    >>> telemetry.stop_read() # This terminates the above thread
 
     """
 

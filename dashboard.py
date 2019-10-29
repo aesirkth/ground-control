@@ -90,11 +90,11 @@ if __name__ == "__main__":
     baudrate = 115200
     path = './data'
     serial = SerialWrapper(baudrate=baudrate, bonjour = "TELEMETRY")
-    lps = Interface(serial=serial, path=path, name="telemetry")
+    telemetry = Interface(serial=serial, path=path, name="telemetry")
 
     root = tk.Tk()
     root.title("Launch Pad Control")
 
-    MainApplication(root, lps).pack(side="top", fill="both", expand=True)
+    MainApplication(root, telemetry).pack(side="top", fill="both", expand=True)
 
     root.mainloop()
