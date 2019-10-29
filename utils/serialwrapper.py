@@ -207,8 +207,25 @@ class SerialWrapper:
             the processed lines read from the serial buffer
         """
         i = max(1, min(2048, self.ser.in_waiting))
-        data = self.ser.read(i)
-        self.buffer.extend(data)
+        try:
+            data = self.ser.read(i)
+            self.buffer.extend(data)
+        except serial.SerialException as e:
+            error = "Device disconnected"
+            self.fail_mode(error)
+            self.close_serial()
+            return []
+        # We get an error "an integer is required (got type NoneType)" when forcing GUI destruction without
+        # closing the serial port before (in the thread that reads data)
+        except TypeError as e:
+            # print(e)
+            return []
+        except Exception as e:
+            error = "{} : {}".format(
+                self.bonjour, e)
+            self.fail_mode(error)
+            self.close_serial()
+            return []
 
         if self.buffer:
             r = self.buffer.split(b'\n')
