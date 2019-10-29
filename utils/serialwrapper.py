@@ -213,9 +213,12 @@ class SerialWrapper:
         if self.buffer:
             r = self.buffer.split(b'\n')
             lines = r[:-1]
+            lines = [l.decode('utf-8', 'backslashreplace') for l in lines]
+            if self.bonjour in lines:
+                self.is_ready = True
             # Data after the last \n is an incomplete line, save for later
             self.buffer = r[-1]
-            return [l.decode('utf-8', 'backslashreplace') for l in lines]
+            return lines
         return []
 
     def write(self, data):
