@@ -44,13 +44,13 @@ The Ground Station Computer can be one or two computers.
 
 ## Gateways
 
-Gatewayss are added between the Ground Station Computer(s) and the Rocket and between the Ground Station Computer(s) and the Launch Pad System. Their role is to allow wireless communication between the Ground Station Computer and the Rocket subsystems. The interfaces are only forwarders. There is no logic embeded into them.
+Gatewayss are added between the Ground Station Computer(s) and the Rocket and between the Ground Station Computer(s) and the Launch Pad System. Their role is to allow wireless communication between the Ground Station Computer and the Rocket subsystems. The gateways are only forwarders. There is no logic embeded into them.
 
 Here is a schematic of the data flow trough the gateways :
 
 ![telemetry_link](/doc/diagrams/gateway.png)
 
-`BONJOUR` is a unique string sent on serial connection initiation that is used to identify the Telemetry Interface and the LPS Interface amoung all the serial devices connected to the Dashboard Computer
+`BONJOUR` is a unique string sent on serial connection initiation that is used to identify the Telemetry Gateway and the LPS Gateway amoung all the serial devices connected to the Dashboard Computer
 
 >The diagram was made with [draw.io](https://www.draw.io)<br>
 >To make changes to it, edit the source file `/doc/diagrams/gateway.xml`
@@ -86,7 +86,7 @@ The raw telemetry data is processed on the fly on the Ground Station and not on 
 
 The LPS Control GUI is extremely simple.
 
-Click on "Open link" to open the Serial connection to to LPS Interface. Click on the buttons to send the desired command. The LPS replies to the commands by sending them back as messages. Such messages are displayed in the text box.
+Click on "Open link" to open the Serial connection to to LPS Gateway. Click on the buttons to send the desired command. The LPS replies to the commands by sending them back as messages. Such messages are displayed in the text box.
 
 ![lps_1](/doc/images/lps_control_1.png)
 ![lps_2](/doc/images/lps_control_2.png)
@@ -162,7 +162,7 @@ See [this issue](https://github.com/aesirkth/GroundStation/issues/4)
 ├── gui/
 │   └── widgets.py              # Widgets used in the LPS control GUI
 ├── utils/
-│   ├── gateway.py              # Class used to process data from Interface devices
+│   ├── gateway.py              # Class used to process data from the Gateways
 │   └── serialwrapper.py        # Class used to read/write data from serial link
 ├── dashboard.py                # Dashboard
 ├── lps_control.py              # GUI to control the Launch Pad Station
