@@ -1,16 +1,16 @@
-""" Simple Graphical User Interface that can control the Launch Pad Station
+""" Simple Graphical User Gateway that can control the Launch Pad Station
 
 This GUI can:
-    - Open and close the Serial link to the LPS Interface
-    - Send commands to the LPS Interface via simple buttons
-    - Display the messages received from the LPS Interface
+    - Open and close the Serial link to the LPS Gateway
+    - Send commands to the LPS Gateway via simple buttons
+    - Display the messages received from the LPS Gateway
 """
 
 import tkinter as tk
 from tkinter import E, N, S, W
 
-from gui import CommandButtons, InterfaceStatus, MessageBox
-from utils import Interface, SerialWrapper
+from gui import CommandButtons, GatewayStatus, MessageBox
+from utils import Gateway, SerialWrapper
 
 
 class MainApplication(tk.Frame):
@@ -20,18 +20,18 @@ class MainApplication(tk.Frame):
     ----------
     parent : Tkinter TK() instance
         TK() instance to hold the widgets
-    interface : Interface instance
-        Interface instance correctly set for the LPS Interface
+    gateway : Gateway instance
+        Gateway instance correctly set for the LPS Gateway
 
     """
-    def __init__(self, parent, interface, *args, **kwargs):
+    def __init__(self, parent, gateway, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
-        self.lps = interface
+        self.lps = gateway
 
         self.lps_messages = MessageBox(self, self.lps, borderwidth=2, relief="groove")
         self.lps_controls = CommandButtons(self, self.lps)
-        self.lps_status = InterfaceStatus(self, self.lps)
+        self.lps_status = GatewayStatus(self, self.lps)
 
         self.lps_status.grid(
             row=0, column=1, sticky=W+E+N+S, padx=5, pady=5)
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     baudrate = 115200
     path = './data'
     serial = SerialWrapper(baudrate=baudrate, bonjour = "LAUNCHPADSTATION")
-    lps = Interface(serial=serial, path=path, name="lps")
+    lps = Gateway(serial=serial, path=path, name="lps")
 
     root = tk.Tk()
     root.title("Launch Pad Control")

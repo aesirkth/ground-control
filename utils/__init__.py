@@ -1,2 +1,2 @@
-from utils.interface import Interface
+from utils.gateway import Gateway
 from utils.serialwrapper import SerialWrapper

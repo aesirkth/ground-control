@@ -1,1 +1,1 @@
-from gui.widgets import CommandButtons, MessageBox, InterfaceStatus
+from gui.widgets import CommandButtons, MessageBox, GatewayStatus

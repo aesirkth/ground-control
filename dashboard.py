@@ -5,15 +5,15 @@ import matplotlib.animation as animation
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
-from gui import InterfaceStatus, MessageBox
-from utils import Interface, SerialWrapper
+from gui import GatewayStatus, MessageBox
+from utils import Gateway, SerialWrapper
 
 
 class LiveGraph(tk.Frame):
-    def __init__(self, parent, interface, *args, **kwargs):
+    def __init__(self, parent, gateway, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
-        self.telemetry = interface
+        self.telemetry = gateway
 
         self.fig = Figure(figsize=(4, 3), dpi=100)
         self.ax = self.fig.add_subplot(111)
@@ -63,20 +63,20 @@ class MainApplication(tk.Frame):
     ----------
     parent : Tkinter TK() instance
         TK() instance to hold the widgets
-    interface : Interface instance
-        Interface instance correctly set for the LPS Interface
+    gateway : Gateway instance
+        Gateway instance correctly set for the LPS Gateway
 
     """
 
-    def __init__(self, parent, interface, *args, **kwargs):
+    def __init__(self, parent, gateway, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
-        self.lps = interface
+        self.lps = gateway
 
         self.lps_messages = MessageBox(
             self, self.lps, borderwidth=2, relief="groove")
         self.graph = LiveGraph(self, self.lps)
-        self.lps_status = InterfaceStatus(self, self.lps)
+        self.lps_status = GatewayStatus(self, self.lps)
 
         self.lps_status.grid(
             row=0, column=1, sticky=W+E+N+S, padx=5, pady=5)
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     baudrate = 115200
     path = './data'
     serial = SerialWrapper(baudrate=baudrate, bonjour = "TELEMETRY")
-    telemetry = Interface(serial=serial, path=path, name="telemetry")
+    telemetry = Gateway(serial=serial, path=path, name="telemetry")
 
     root = tk.Tk()
     root.title("Launch Pad Control")

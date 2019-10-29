@@ -1,5 +1,5 @@
 """
-Class to read data from an Interface device and save it on storage
+Class to read data from an Gateway device and save it on storage
 
 """
 
@@ -10,40 +10,40 @@ from os import mkdir
 from os.path import isdir, join
 
 
-class Interface:
-    """ Class to read data received from an Interface device
+class Gateway:
+    """ Class to read data received from an Gateway device
 
-    The Interface device is connected to the computer via a serial connection
+    The Gateway device is connected to the computer via a serial connection
 
-    The data read from the Interface is stored in a CSV file in real time
+    The data read from the Gateway is stored in a CSV file in real time
     The time of reception of each line is stored along the received data
     in ISO format (YYYY-MM-DD HH:MM:SS.ffffff)
 
     Parameters
     ----------
     serial : Serial instance
-        Serial instance used to read data from the Interface device
+        Serial instance used to read data from the Gateway device
     path : path-like object
         path to the directory to store received data
     name : str
-        name of the Interface instance. This is used to name the files written on file storage
+        name of the Gateway instance. This is used to name the files written on file storage
 
     Attributes
     ----------
     is_reading : bool
         True if the instance is currently reading data from serial link
     data : list [[datetime.datetime, str, str, ], ]
-        data read from Interface
+        data read from Gateway
         each string is the received data, separated by a comma ","
     calibration : dict {key: value, }
-        calibration data received from the Interface
+        calibration data received from the Gateway
     messages : list [(datetime.datetime, str), ]
-        messages received from the Interface
+        messages received from the Gateway
 
     Examples
     --------
     >>> serial = SerialWrapper(baudrate=baudrate, bonjour = "TELEMETRY")
-    >>> lps = Interface(serial=serial, path=path, name="telemetry")
+    >>> lps = Gateway(serial=serial, path=path, name="telemetry")
     >>> telemetry.start_read() # In another thread (use threading for example)
     >>> data = telemetry.data
     >>> mess = telemetry.messages
@@ -240,7 +240,7 @@ class Interface:
         self.serial.write(command)
 
     def start_read(self):
-        """ Start reading and saving data from Interface device
+        """ Start reading and saving data from Gateway device
 
         Does not stop until stop_read() is called
 

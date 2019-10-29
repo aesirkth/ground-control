@@ -280,7 +280,7 @@ class SerialWrapper:
 
         """
         # Change the timeout value to 2 seconds and save the old value
-        # The timeout should be long enough to that the Interface device can reset and send BONJOUR before the reading ends
+        # The timeout should be long enough to that the Gateway device can reset and send BONJOUR before the reading ends
         timeout = self.ser.timeout
         self.ser.timeout = 2
         self.ser.port = None
@@ -295,7 +295,7 @@ class SerialWrapper:
             print("Found available device(s) : {}".format(
                 ", ".join([p.description for p in available_ports])))
 
-            possible_interfaces = []
+            possible_gateways = []
             # Extract devices that are expected to be Arduinos or alike from device list
             for p in available_ports:
                 flag = False
@@ -303,11 +303,11 @@ class SerialWrapper:
                     if substring in p.description.lower():
                         flag = True
                 if flag:
-                    possible_interfaces.append(p)
+                    possible_gateways.append(p)
 
-            if possible_interfaces:
+            if possible_gateways:
                 print("These devices will be checked : {}".format(
-                    ", ".join([p.description for p in possible_interfaces])))
+                    ", ".join([p.description for p in possible_gateways])))
 
             else:
                 error = "No serial device found"
@@ -320,7 +320,7 @@ class SerialWrapper:
             return False
 
         # Check only devices that are expected to be Arduinos or alike
-        for p in possible_interfaces:
+        for p in possible_gateways:
             self.ser.port = p.device
             print("Testing : {}...".format(self.ser.port))
 
