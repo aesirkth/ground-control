@@ -2,19 +2,19 @@
 
 
 # Table of contents <!-- omit in toc -->
-- [Purpose](#purpose)
-- [General description](#general-description)
-  - [Interfaces](#interfaces)
-  - [Sensors](#sensors)
-- [Functionalities](#functionalities)
-  - [Dashboard](#dashboard)
-  - [LPS Control](#lps-control)
-- [How to use ?](#how-to-use-)
-  - [Development conditions](#development-conditions)
-  - [Flight conditions](#flight-conditions)
-- [Transmission protocol](#transmission-protocol)
-- [File storage](#file-storage)
-- [Folder structure](#folder-structure)
+- [Purpose](#Purpose)
+- [General description](#General-description)
+  - [Gateways](#Gateways)
+  - [Sensors](#Sensors)
+- [Functionalities](#Functionalities)
+  - [Dashboard](#Dashboard)
+  - [LPS Control](#LPS-Control)
+- [How to use ?](#How-to-use)
+  - [Development conditions](#Development-conditions)
+  - [Flight conditions](#Flight-conditions)
+- [Transmission protocol](#Transmission-protocol)
+- [File storage](#File-storage)
+- [Folder structure](#Folder-structure)
 
 
 # Purpose
@@ -36,24 +36,24 @@ Here is a diagram of the data links between these main systems :
 
 ![data_link](/doc/diagrams/data_links.png)
 
-The Dashboard can be one or two computers
+The Ground Station Computer can be one or two computers.
 
 >The diagram was made with [draw.io](https://www.draw.io)<br>
 >To make changes to it, edit the source file `/doc/diagrams/data_links.xml`
 
 
-## Interfaces
+## Gateways
 
-Interfaces are added between the Ground Station Computer(s) and the Rocket and between the Ground Station Computer(s) and the Launch Pad System. Their role is to allow wireless communication between the Dashboard and the Rocket subsystems. The interfaces are only forwarders. There is no logic embeded into them.
+Gatewayss are added between the Ground Station Computer(s) and the Rocket and between the Ground Station Computer(s) and the Launch Pad System. Their role is to allow wireless communication between the Ground Station Computer and the Rocket subsystems. The interfaces are only forwarders. There is no logic embeded into them.
 
-Here is a schematic of the data flow trough the interfaces :
+Here is a schematic of the data flow trough the gateways :
 
-![telemetry_link](/doc/diagrams/interface_link.png)
+![telemetry_link](/doc/diagrams/gateway.png)
 
 `BONJOUR` is a unique string sent on serial connection initiation that is used to identify the Telemetry Interface and the LPS Interface amoung all the serial devices connected to the Dashboard Computer
 
 >The diagram was made with [draw.io](https://www.draw.io)<br>
->To make changes to it, edit the source file `/doc/diagrams/interface_link.xml`
+>To make changes to it, edit the source file `/doc/diagrams/gateway.xml`
 
 
 ## Sensors
@@ -71,7 +71,9 @@ The following sensors are embedded on the Rocket :
 
 ## Dashboard
 
-The Ground Station Dashboard can display in real time the telemetry data sent from the rocket during the flight. The received data is stored on the Ground Station hard drive for future use.
+`dashboard.py`
+
+The Dashboard can display in real time the telemetry data sent from the rocket during the flight. The received data is stored on the Ground Station hard drive for future use.
 
 The telemetry data is received via radio link by an Arduino board and sent to the computer in real time via serial link. The radio link is unidirectional : it is not possible to send data to the rocket during the flight.
 
@@ -79,6 +81,8 @@ The raw telemetry data is processed on the fly on the Ground Station and not on 
 
 
 ## LPS Control
+
+`lps_control.py`
 
 The LPS Control GUI is extremely simple.
 
@@ -106,7 +110,7 @@ python3 -m pip install -r requirements.txt
 Upload `dummy_interface.ino` to an Arduino board. Make sure to uncomment one of these two lines before :
 
 ```c
-// Uncomment one of these to select the target interface
+// Uncomment one of these to select the target gateway
 // #define lps
 // #define telemetry
 ```
@@ -158,7 +162,7 @@ See [this issue](https://github.com/aesirkth/GroundStation/issues/4)
 ├── gui/
 │   └── widgets.py              # Widgets used in the LPS control GUI
 ├── utils/
-│   ├── interface.py            # Class used to process data from Interface devices
+│   ├── gateway.py              # Class used to process data from Interface devices
 │   └── serialwrapper.py        # Class used to read/write data from serial link
 ├── dashboard.py                # Dashboard
 ├── lps_control.py              # GUI to control the Launch Pad Station
