@@ -129,7 +129,7 @@ Install `python 3.7.4`
 Install the required python packages
 
 ```sh
-python3.7 -m pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 **Run the GUI**
@@ -139,7 +139,7 @@ Make sure the board is connected to your computer
 Run `dashboard.py` for the complete interface
 
 ```
-python3.7 ./dashboard.py
+python ./dashboard.py
 ```
 
 Or
@@ -147,7 +147,7 @@ Or
 Run `lps_control.py` to only control the Launch Pad Station
 
 ```
-python3 ./lps_control.py
+python ./lps_control.py
 ```
 
 Enjoy
