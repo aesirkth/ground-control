@@ -107,7 +107,7 @@ Install the required python packages
 python3 -m pip install -r requirements.txt
 ```
 
-Upload `dummy_interface.ino` to an Arduino board. Make sure to uncomment one of these two lines before :
+Upload `dummy_gateway.ino` to an Arduino board. Make sure to uncomment one of these two lines before :
 
 ```c
 // Uncomment one of these to select the target gateway
@@ -157,8 +157,8 @@ See [this issue](https://github.com/aesirkth/GroundStation/issues/4)
 ├── README.md                   # This file
 ├── data/                       # (Ungitted) folder to store the received telemetry
 ├── doc/                        # The documentation goes there
-├── dummy_interface/
-│   └── dummy_interface.ino     # Example telemetry code for arduino
+├── dummy_gateway/
+│   └── dummy_gateway.ino       # Code to emulate a working gateway
 ├── gui/
 │   └── widgets.py              # Widgets used in the LPS control GUI
 ├── utils/

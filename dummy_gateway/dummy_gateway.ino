@@ -19,7 +19,7 @@ This code simulates a gateway to the Rocket or to the Launch Pad System and feed
 to be used for development/testing purposes
 */
 
-// Uncomment one of these to select the target interface
+// Uncomment one of these to select the target gateway
 // #define lps
 #define telemetry
 
@@ -59,7 +59,7 @@ void setup()
 {
   Serial.begin(BAUDRATE);
 
-  // This is sent by the interface immediately after initialization
+  // This is sent by the gateway immediately after initialization
   bonjour();
   // Everything after this is a simulation of what is received by the telemetry receiver/lps
   // and forwarded to the Dashboard
