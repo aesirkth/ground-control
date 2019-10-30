@@ -174,6 +174,7 @@ class Gateway:
             self.calibration = {value.split(self.separators['SEP_CALI'])[0]: value.split(
                 self.separators['SEP_CALI'])[1] for value in line.split(self.separators['SEP_DATA'])}
             self.__write_calibration()
+            self.sensors.update_calibration(self.calibration)
             print("Got calibration")
 
     def __write_message(self, message):

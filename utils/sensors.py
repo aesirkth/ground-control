@@ -6,6 +6,11 @@ class ImuTest:
         self.idx_time = idx_time
         self.idx_velocity = idx_velocity
 
+        self.calibration_data = {
+            "BMP80_dig_T1": None,
+        }
+        self.got_calibration = False
+
         self.data = pd.DataFrame(columns=['time', 'velocity'])
 
     def update(self, data):
@@ -16,6 +21,14 @@ class ImuTest:
             'time': time,
             'velocity': velocity
         }, ignore_index=True)
+    
+    def calibrate(self, calibration):
+        for cal in self.calibration_data:
+            if cal in calibration:
+                self.calibration_data[cal] = calibration[cal]
+        # Check if all calibration data has been received
+        if not None in self.calibration_data.values():
+            self.got_calibration = True
 
 
 class Sensors:
@@ -26,3 +39,7 @@ class Sensors:
     def update_sensors(self, data):
         if self.imu:
             self.imu.update(data)
+    
+    def update_calibration(self, calibration):
+        if self.imu:
+            self.imu.calibrate(calibration)
