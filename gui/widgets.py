@@ -1,6 +1,5 @@
 import copy
 import datetime
-import threading
 import tkinter as tk
 from tkinter import E, N, S, W
 
@@ -183,21 +182,8 @@ class GatewayStatus(tk.Frame):
         the Serial link cannot be stopped
 
         """
-        self.__stop_read()
-        tk.Frame.destroy(self)
-
-    def __start_read(self):
-        """ Start serial reading from the gateway in a separate thread
-
-        See utils.gateway.start_read()
-
-        """
-        t = threading.Thread(target=self.gateway.start_read)
-        t.start()
-
-    def __stop_read(self):
-        # This stops the infinite loop in utils.gateway.start_read()
         self.gateway.stop_read()
+        tk.Frame.destroy(self)
 
     def __update_port(self):
         """ Update the port name displayed
@@ -227,10 +213,10 @@ class GatewayStatus(tk.Frame):
         """
         if self.gateway.serial.get_status():
             self.button_var.set("Close link")
-            self.read_button.config(command=self.__stop_read)
+            self.read_button.config(command=self.gateway.stop_read)
         else:
             self.button_var.set("Open link")
-            self.read_button.config(command=self.__start_read)
+            self.read_button.config(command=self.gateway.start_read)
         # Call this function again after 100 ms
         self.parent.after(100, self.__update_button)
 

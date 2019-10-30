@@ -4,10 +4,12 @@ Class to read data from a Gateway device and save it on storage
 """
 
 import csv
-import yaml
 import datetime
+import threading
 from os import mkdir
 from os.path import isdir, join
+
+import yaml
 
 
 class Gateway:
@@ -264,19 +266,22 @@ class Gateway:
         Does not stop until stop_read() is called
 
         """
+        def read_tread():
+            while self.is_reading:
+                if self.serial.failed:
+                    self.is_reading = False
+                else:
+                    lines = self.serial.readlines()
+                    for line in lines:
+                        self.__process_line(line)
 
         self.serial.open_serial()
 
         self.is_reading = True
         self.data = []
 
-        while self.is_reading:
-            if self.serial.failed:
-                self.is_reading = False
-            else:
-                lines = self.serial.readlines()
-                for line in lines:
-                    self.__process_line(line)
+        t = threading.Thread(target=read_tread)
+        t.start()
 
     def stop_read(self):
         """" Call this method to terminate serial reading
