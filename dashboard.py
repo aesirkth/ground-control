@@ -47,7 +47,7 @@ if __name__ == "__main__":
                         path=path, name="telemetry")
 
     root = tk.Tk()
-    root.title("Launch Pad Control")
+    root.title("Sigmundr Dashboard")
 
     MainApplication(parent=root, gateway=telemetry, sensors=sensors).pack(
         side="top", fill="both", expand=True)
