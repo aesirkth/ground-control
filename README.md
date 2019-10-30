@@ -171,6 +171,7 @@ Enjoy
 │   └── widgets.py              # Widgets used in the LPS control GUI
 ├── utils/
 │   ├── gateway.py              # Class used to process data from the Gateways
+│   ├── sensors.py              # Class used to process data from the sensors
 │   └── serialwrapper.py        # Class used to read/write data from serial link
 ├── dashboard.py                # Dashboard
 ├── lps_control.py              # GUI to control the Launch Pad Station
