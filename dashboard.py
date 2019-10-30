@@ -9,44 +9,47 @@ from gui import GatewayStatus, MessageBox
 from utils import Gateway, Sensors, SerialWrapper
 
 
-class LiveGraph(tk.Frame):
-    def __init__(self, parent, gateway, sensor, *args, **kwargs):
+class LiveTimeGraph(tk.Frame):
+    def __init__(self, parent, gateway, sensor, field, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
         self.sensor = sensor
+        self.field = field
 
         self.fig = Figure(figsize=(4, 3), dpi=100)
         self.ax = self.fig.add_subplot(111)
         self.line, = self.ax.plot([], [], lw=2)
         self.ax.grid()
-        self.xdata, self.ydata = [], []
+        self.time = []
+        self.data = []
 
         self.canvas = FigureCanvasTkAgg(self.fig, self)
         self.canvas.draw()
         self.canvas.get_tk_widget().grid(row=1, column=1)
 
-        ani = animation.FuncAnimation(self.fig, self.updatedata, blit=True, interval=10,
-                                      repeat=False, init_func=self.initfigure)
+        ani = animation.FuncAnimation(self.fig, self.__update_data, blit=True, interval=10,
+                                      repeat=False, init_func=self.__init_figure)
 
-    def initfigure(self):
+    def __init_figure(self):
         self.ax.set_ylim(0, 50)
         self.ax.set_xlim(0, 10000)
-        del self.xdata[:]
-        del self.ydata[:]
-        self.line.set_data(self.xdata, self.ydata)
+        del self.time[:]
+        del self.data[:]
+        self.line.set_data(self.time, self.data)
         return self.line,
 
-    def updatedata(self, data):
-        xmin, xmax = self.ax.get_xlim()
+    def __update_data(self, data):
+        tmin, tmax = self.ax.get_xlim()
 
-        self.xdata, self.ydata = self.sensor.data.time.tolist(), self.sensor.data.velocity.tolist()
+        self.time = self.sensor.data.time.tolist()
+        self.data = self.sensor.data[self.field].tolist()
 
-        if self.xdata:
-            if max(self.xdata) > xmax:
-                self.ax.set_xlim(xmin, 2*xmax)
+        if self.time:
+            if max(self.time) > tmax:
+                self.ax.set_xlim(tmin, 2*tmax)
 
-        self.line.set_data(self.xdata, self.ydata)
+        self.line.set_data(self.time, self.data)
 
         return self.line,
 
@@ -70,9 +73,10 @@ class MainApplication(tk.Frame):
         self.sensors = sensors
 
         self.gateway_messages = MessageBox(
-            self, self.gateway, borderwidth=2, relief="groove")
-        self.graph = LiveGraph(self, self.gateway, self.sensors.imu)
-        self.gateway_status = GatewayStatus(self, self.gateway)
+            self, gateway=self.gateway, borderwidth=2, relief="groove")
+        self.graph = LiveTimeGraph(
+            self, gateway=self.gateway, sensor=self.sensors.imu, field="velocity")
+        self.gateway_status = GatewayStatus(self, gateway=self.gateway)
 
         self.gateway_status.grid(
             row=0, column=1, sticky=W+E+N+S, padx=5, pady=5)
@@ -85,6 +89,7 @@ class MainApplication(tk.Frame):
 if __name__ == "__main__":
     baudrate = 115200
     path = './data'
+
     serial = SerialWrapper(baudrate=baudrate, bonjour="TELEMETRY")
     sensors = Sensors(imu="Test")
     telemetry = Gateway(serial=serial, sensors=sensors,
@@ -93,7 +98,7 @@ if __name__ == "__main__":
     root = tk.Tk()
     root.title("Launch Pad Control")
 
-    MainApplication(root, telemetry, sensors).pack(
+    MainApplication(parent=root, gateway=telemetry, sensors=sensors).pack(
         side="top", fill="both", expand=True)
 
     root.mainloop()

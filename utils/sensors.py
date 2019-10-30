@@ -19,9 +19,10 @@ class ImuTest:
 
 
 class Sensors:
-    def __init__(self, imu):
+    def __init__(self, imu=None):
         if imu == "Test":
             self.imu = ImuTest(idx_time=1, idx_velocity=2)
 
     def update_sensors(self, data):
-        self.imu.update(data)
+        if self.imu:
+            self.imu.update(data)

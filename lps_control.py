@@ -10,7 +10,7 @@ import tkinter as tk
 from tkinter import E, N, S, W
 
 from gui import CommandButtons, GatewayStatus, MessageBox
-from utils import Gateway, SerialWrapper
+from utils import Gateway, Sensors, SerialWrapper
 
 
 class MainApplication(tk.Frame):
@@ -46,8 +46,10 @@ class MainApplication(tk.Frame):
 if __name__ == "__main__":
     baudrate = 115200
     path = './data'
+
     serial = SerialWrapper(baudrate=baudrate, bonjour="LAUNCHPADSTATION")
-    lps = Gateway(serial=serial, path=path, name="lps")
+    sensors = Sensors()
+    lps = Gateway(serial=serial, sensors=sensors, path=path, name="lps")
 
     root = tk.Tk()
     root.title("Launch Pad Control")

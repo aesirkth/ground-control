@@ -1,5 +1,5 @@
 """
-Class to read data from an Gateway device and save it on storage
+Class to read data from a Gateway device and save it on storage
 
 """
 
@@ -11,7 +11,7 @@ from os.path import isdir, join
 
 
 class Gateway:
-    """ Class to read data received from an Gateway device
+    """ Class to read data received from a Gateway device
 
     The Gateway device is connected to the computer via a serial connection
 
@@ -23,6 +23,8 @@ class Gateway:
     ----------
     serial : Serial instance
         Serial instance used to read data from the Gateway device
+    sensors : Sensors instance
+        Sensors instance used to process the received data
     path : path-like object
         path to the directory to store received data
     name : str
