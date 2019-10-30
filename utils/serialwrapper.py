@@ -145,8 +145,6 @@ class SerialWrapper:
         error = "Failed to find device"
         self.__fail_mode(error)
         self.ser.port = None
-        if available_ports:
-            self.close_serial()
         self.ser.timeout = timeout  # Restore the previous value
         return False
 
@@ -247,11 +245,7 @@ class SerialWrapper:
                     print("{} : serial connection closed ({})".format(
                         self.bonjour, self.ser.port))
                 self.is_ready = False
-            return
-        else:
-            print("{} : cannot close serial connection, 'port' is not defined".format(
-                self.bonjour))
-            return
+        return
 
     def get_status(self):
         """ Return the state of the serial port
