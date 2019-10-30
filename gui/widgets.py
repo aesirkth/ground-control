@@ -1,8 +1,11 @@
 import copy
 import datetime
-import threading
 import tkinter as tk
 from tkinter import E, N, S, W
+
+import matplotlib.animation as animation
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 
 
 class CommandButtons(tk.Frame):
@@ -179,21 +182,8 @@ class GatewayStatus(tk.Frame):
         the Serial link cannot be stopped
 
         """
-        self.__stop_read()
-        tk.Frame.destroy(self)
-
-    def __start_read(self):
-        """ Start serial reading from the gateway in a separate thread
-
-        See utils.gateway.start_read()
-
-        """
-        t = threading.Thread(target=self.gateway.start_read)
-        t.start()
-
-    def __stop_read(self):
-        # This stops the infinite loop in utils.gateway.start_read()
         self.gateway.stop_read()
+        tk.Frame.destroy(self)
 
     def __update_port(self):
         """ Update the port name displayed
@@ -223,9 +213,86 @@ class GatewayStatus(tk.Frame):
         """
         if self.gateway.serial.get_status():
             self.button_var.set("Close link")
-            self.read_button.config(command=self.__stop_read)
+            self.read_button.config(command=self.gateway.stop_read)
         else:
             self.button_var.set("Open link")
-            self.read_button.config(command=self.__start_read)
+            self.read_button.config(command=self.gateway.start_read)
         # Call this function again after 100 ms
         self.parent.after(100, self.__update_button)
+
+
+class LiveTimeGraph(tk.Frame):
+    """ TKinter frame that holds a matplotlib graph that is frequently updated
+
+    The graph is plotted against time. The sensor must have a data.time attribute.
+
+    Parameters
+    ----------
+    parent : TKinter Frame
+        parent frame
+    gateway : Gateway instance
+        Gateway to monitor
+    sensor : attribute of a Sensors instance
+        sensor to display data from
+    field : str
+        name of the data field to display
+
+    """
+    def __init__(self, parent, gateway, sensor, field, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensor = sensor
+        self.field = field
+
+        self.fig = Figure(figsize=(4, 3), dpi=100)
+        self.ax = self.fig.add_subplot(111)
+        self.line, = self.ax.plot([], [], lw=2)
+        self.ax.grid()
+        self.time = []
+        self.data = []
+
+        self.canvas = FigureCanvasTkAgg(self.fig, self)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().grid(row=1, column=1)
+
+        ani = animation.FuncAnimation(self.fig, self.__update_data, blit=True, interval=10,
+                                      repeat=False, init_func=self.__init_figure)
+
+    def __init_figure(self):
+        """ Set the initial values and settings of the figure
+
+        """
+        self.ax.set_ylim(0, 50)
+        self.ax.set_xlim(0, 10000)
+        del self.time[:]
+        del self.data[:]
+        self.line.set_data(self.time, self.data)
+        return self.line,
+
+    def __update_data(self, data):
+        """ Refresh the figure content
+
+        Parameters
+        ----------
+        data : unused
+            default parameter given by animation.FuncAnimation
+        
+        Returns
+        -------
+        tupple
+            content of the figure for matplotlib        
+
+        """
+        tmin, tmax = self.ax.get_xlim()
+
+        self.time = self.sensor.data.time.tolist()
+        self.data = self.sensor.data[self.field].tolist()
+
+        if self.time:
+            if max(self.time) > tmax:
+                self.ax.set_xlim(tmin, 2*tmax)
+
+        self.line.set_data(self.time, self.data)
+
+        return self.line,

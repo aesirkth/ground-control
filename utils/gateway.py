@@ -1,17 +1,19 @@
 """
-Class to read data from an Gateway device and save it on storage
+Class to read data from a Gateway device and save it on storage
 
 """
 
 import csv
-import yaml
 import datetime
+import threading
 from os import mkdir
 from os.path import isdir, join
 
+import yaml
+
 
 class Gateway:
-    """ Class to read data received from an Gateway device
+    """ Class to read data received from a Gateway device
 
     The Gateway device is connected to the computer via a serial connection
 
@@ -23,6 +25,8 @@ class Gateway:
     ----------
     serial : Serial instance
         Serial instance used to read data from the Gateway device
+    sensors : Sensors instance
+        Sensors instance used to process the received data
     path : path-like object
         path to the directory to store received data
     name : str
@@ -63,8 +67,9 @@ class Gateway:
     # We need to do searches both ways...
     separators_reversed = {value: key for key, value in separators.items()}
 
-    def __init__(self, serial, path, name):
+    def __init__(self, serial, sensors, path, name):
         self.serial = serial
+        self.sensors = sensors
         self.path = path
         self.name = name
 
@@ -147,6 +152,7 @@ class Gateway:
         if self.header:
             data = [now] + line.split(self.separators['SEP_DATA'])
             self.data.append(data)
+            self.sensors.update_sensors(data)
             self.__write_data(data)
 
     def __write_calibration(self):
@@ -170,6 +176,7 @@ class Gateway:
             self.calibration = {value.split(self.separators['SEP_CALI'])[0]: value.split(
                 self.separators['SEP_CALI'])[1] for value in line.split(self.separators['SEP_DATA'])}
             self.__write_calibration()
+            self.sensors.update_calibration(self.calibration)
             print("Got calibration")
 
     def __write_message(self, message):
@@ -259,19 +266,23 @@ class Gateway:
         Does not stop until stop_read() is called
 
         """
+        def read_tread():
+            while self.is_reading:
+                if self.serial.failed:
+                    self.is_reading = False
+                else:
+                    lines = self.serial.readlines()
+                    for line in lines:
+                        self.__process_line(line)
 
         self.serial.open_serial()
 
         self.is_reading = True
         self.data = []
+        self.sensors.reset()
 
-        while self.is_reading:
-            if self.serial.failed:
-                self.is_reading = False
-            else:
-                lines = self.serial.readlines()
-                for line in lines:
-                    self.__process_line(line)
+        t = threading.Thread(target=read_tread)
+        t.start()
 
     def stop_read(self):
         """" Call this method to terminate serial reading

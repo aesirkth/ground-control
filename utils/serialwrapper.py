@@ -24,7 +24,7 @@ class SerialWrapper:
     baudrate : int
         the baudrate of the connection
     bonjour : string, optional
-        unique string sent by the targeted device when the connection is opened
+        unique string sent by the targeted gateway when the connection is opened
     port : string, optional
         port to open
 
@@ -68,7 +68,7 @@ class SerialWrapper:
         self.error = ""
         self.is_ready = False
 
-    def __find_device(self, bonjour):
+    def __find_gateway(self, bonjour):
         """ Test all connected serial devices to find the one that sends `bonjour` as the first transmitted line
 
         `ser.port` is updated when the device is successfully found. It is set to an empty string otherwise
@@ -145,8 +145,6 @@ class SerialWrapper:
         error = "Failed to find device"
         self.__fail_mode(error)
         self.ser.port = None
-        if available_ports:
-            self.close_serial()
         self.ser.timeout = timeout  # Restore the previous value
         return False
 
@@ -186,49 +184,50 @@ class SerialWrapper:
                 self.ser.open()
                 self.ser.reset_input_buffer()
                 self.ser.reset_output_buffer()
+                self.failed = False
+                self.buffer = bytearray()
                 print("{} : serial connection opened ({})".format(
                     self.bonjour, self.ser.port))
-                self.failed = False
+                error = ""
                 return True
             except serial.SerialException as e:
                 if e.errno == 2:
                     error = "Could not open port '{}'".format(self.ser.port)
                 else:
                     error = e.strerror
-                self.__fail_mode(error)
-                self.close_serial()
-                return False
             except Exception as e:
                 error = "{} : {}".format(
                     self.bonjour, e)
-                self.__fail_mode(error)
-                return False
-
-        if not self.ser.port:
-            if self.bonjour:
-                print("{} : Serial 'port' is not defined, using 'bonjour' to find device".format(
-                    self.bonjour))
-                if self.__find_device(self.bonjour):
-                    return True
-            elif self.port:
-                print("{} : Using 'port' {}".format(
-                    self.bonjour, self.port))
-                self.ser.port = self.port
-                return open_port()
-            else:
-                error = "{} : Serial 'port' and 'bonjour' are not defined, cannot open port".format(
-                    self.bonjour)
-                self.__fail_mode(error)
-                return False
+            finally:
+                if error:
+                    self.__fail_mode(error)
+                    self.close_serial()
+                    return False
 
         # This is true if the device has already been found/openned before
-        else:
+        if self.ser.port:
             if self.ser.is_open:
                 print("{} : serial connection is already open, cannot open again ({})".format(
                     self.bonjour, self.ser.port))
                 return True
             else:
                 return open_port()
+
+        else:
+            if self.port:
+                print("{} : Using 'port' {}".format(
+                    self.bonjour, self.port))
+                self.ser.port = self.port
+                return open_port()
+            elif self.bonjour:
+                print("{} : Serial 'port' is not defined, using 'bonjour' to find device".format(
+                    self.bonjour))
+                return self.__find_gateway(self.bonjour)
+            else:
+                error = "{} : Serial 'port' and 'bonjour' are not defined, cannot open port".format(
+                    self.bonjour)
+                self.__fail_mode(error)
+                return False
 
     def close_serial(self):
         """ Close the serial connection
@@ -247,11 +246,6 @@ class SerialWrapper:
                     print("{} : serial connection closed ({})".format(
                         self.bonjour, self.ser.port))
                 self.is_ready = False
-            return
-        else:
-            print("{} : cannot close serial connection, 'port' is not defined".format(
-                self.bonjour))
-            return
 
     def get_status(self):
         """ Return the state of the serial port
@@ -303,65 +297,78 @@ class SerialWrapper:
             line = line.replace('\n', "")
             if line == self.bonjour:
                 self.is_ready = True
-            return line
+            error = ""
+        # This mostly means that the device is disconnected
         except serial.SerialException as e:
             error = "Device disconnected"
-            self.__fail_mode(error)
-            self.close_serial()
-            return
         # We get an error "an integer is required (got type NoneType)" when forcing GUI destruction without
         # closing the serial port before (in the thread that reads data)
         except TypeError as e:
-            # print(e)
-            return
+            error = "Catched program closing"
         except Exception as e:
             error = "{} : {}".format(
                 self.bonjour, e)
-            self.__fail_mode(error)
-            self.close_serial()
-            return
+        finally:
+            if error:
+                self.__fail_mode(error)
+                self.close_serial()
+                return
+            else:
+                return line
 
     def readlines(self):
         """ Read the last received lines from the serial buffer
+
         The lines are decoded to ascii and the newline character is removed
         Incomplete lines are saved for later
+
         Parameters
         ----------
         ser : Serial instance
             the Serial instance to read a line from
+
         Returns
         -------
         lines : [string, ]
             the processed lines read from the serial buffer
         """
+        if self.failed:
+            return []
+
+        # Get the number of bytes in the buffer
         i = max(1, min(2048, self.ser.in_waiting))
+        # Read the buffer
         try:
             data = self.ser.read(i)
             self.buffer.extend(data)
+            error = ""
+        # This mostly means that the device is disconnected
         except serial.SerialException as e:
             error = "Device disconnected"
-            self.__fail_mode(error)
-            self.close_serial()
-            return []
         # We get an error "an integer is required (got type NoneType)" when forcing GUI destruction without
         # closing the serial port before (in the thread that reads data)
         except TypeError as e:
-            # print(e)
-            return []
+            error = "Catched program closing"
         except Exception as e:
             error = "{} : {}".format(
                 self.bonjour, e)
-            self.__fail_mode(error)
-            self.close_serial()
-            return []
+        finally:
+            if error:
+                self.__fail_mode(error)
+                self.close_serial()
+                return []
 
+        # Do not run this if no new data has been retrieved
         if self.buffer:
+            # Convert the buffer into a list of bytearray (one bytearray for each line)
             r = self.buffer.split(b'\n')
+            # Data after the last \n is an incomplete line, save for later
+            self.buffer = r[-1]
+            # This is the complete lines
             lines = r[:-1]
             lines = [l.decode('utf-8', 'backslashreplace') for l in lines]
             if self.bonjour in lines:
                 self.is_ready = True
-            # Data after the last \n is an incomplete line, save for later
-            self.buffer = r[-1]
             return lines
-        return []
+        else:
+            return []
