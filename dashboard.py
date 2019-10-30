@@ -6,14 +6,15 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
 from gui import GatewayStatus, MessageBox
-from utils import Gateway, SerialWrapper
+from utils import Gateway, Sensors, SerialWrapper
 
 
 class LiveGraph(tk.Frame):
-    def __init__(self, parent, gateway, *args, **kwargs):
+    def __init__(self, parent, gateway, sensor, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
+        self.sensor = sensor
 
         self.fig = Figure(figsize=(4, 3), dpi=100)
         self.ax = self.fig.add_subplot(111)
@@ -37,16 +38,10 @@ class LiveGraph(tk.Frame):
         return self.line,
 
     def updatedata(self, data):
-        dataList = self.gateway.data
-        self.xdata, self.ydata = [], []
-
         xmin, xmax = self.ax.get_xlim()
 
-        for eachLine in dataList:
-            if len(eachLine) > 1:
-                x, y = eachLine[1:3]
-                self.xdata.append(int(x))
-                self.ydata.append(int(y))
+        self.xdata, self.ydata = self.sensor.data.time.tolist(), self.sensor.data.velocity.tolist()
+
         if self.xdata:
             if max(self.xdata) > xmax:
                 self.ax.set_xlim(xmin, 2*xmax)
@@ -68,14 +63,15 @@ class MainApplication(tk.Frame):
 
     """
 
-    def __init__(self, parent, gateway, *args, **kwargs):
+    def __init__(self, parent, gateway, sensors, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
+        self.sensors = sensors
 
         self.gateway_messages = MessageBox(
             self, self.gateway, borderwidth=2, relief="groove")
-        self.graph = LiveGraph(self, self.gateway)
+        self.graph = LiveGraph(self, self.gateway, self.sensors.imu)
         self.gateway_status = GatewayStatus(self, self.gateway)
 
         self.gateway_status.grid(
@@ -90,11 +86,14 @@ if __name__ == "__main__":
     baudrate = 115200
     path = './data'
     serial = SerialWrapper(baudrate=baudrate, bonjour="TELEMETRY")
-    telemetry = Gateway(serial=serial, path=path, name="telemetry")
+    sensors = Sensors(imu="Test")
+    telemetry = Gateway(serial=serial, sensors=sensors,
+                        path=path, name="telemetry")
 
     root = tk.Tk()
     root.title("Launch Pad Control")
 
-    MainApplication(root, telemetry).pack(side="top", fill="both", expand=True)
+    MainApplication(root, telemetry, sensors).pack(
+        side="top", fill="both", expand=True)
 
     root.mainloop()

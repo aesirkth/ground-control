@@ -63,8 +63,9 @@ class Gateway:
     # We need to do searches both ways...
     separators_reversed = {value: key for key, value in separators.items()}
 
-    def __init__(self, serial, path, name):
+    def __init__(self, serial, sensors, path, name):
         self.serial = serial
+        self.sensors = sensors
         self.path = path
         self.name = name
 
@@ -147,6 +148,7 @@ class Gateway:
         if self.header:
             data = [now] + line.split(self.separators['SEP_DATA'])
             self.data.append(data)
+            self.sensors.update_sensors(data)
             self.__write_data(data)
 
     def __write_calibration(self):
