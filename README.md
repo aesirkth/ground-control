@@ -37,7 +37,7 @@ The software in this repository is everything needed to make the Ground Station 
 - A computer running Windows or Linux (not tested on MacOS)
 - One or two Arduino board with a USB port (for development)
 - One Arduino board with a USB port connected to an `RFM96W` LoRa tranceiver (to communicate with the Launch Pad Station)
-- One Arduino board with a USB port connected to a `RFD900` Radio Modem (to receive telemetry data from the Rocket)
+- One `RFD900` Radio Modem and FTDI cable (to receive telemetry data from the Rocket)
 
 
 # General description
@@ -83,13 +83,17 @@ There is also a simplified version of the dashboard that only controls the Launc
 
 Gateways are added between the Ground Station Computer and the Rocket and between the Ground Station Computer(s) and the Launch Pad System. Their role is to allow wireless communication between the Ground Station Computer and the Rocket subsystems. The gateways are only forwarders. There is no logic embedded into them.
 
-Here is a schematic of the data flow trough the gateways :
+Here is a schematic of the data flow through the gateways :
 
 ![telemetry_link](/doc/diagrams/gateway.png)
 >The diagram was made with [draw.io](https://www.draw.io)<br>
 >To make changes to it, edit the source file `/doc/diagrams/gateway.xml`
 
-`BONJOUR` is a unique string sent on serial connection initiation that is used to identify the Telemetry Gateway and the LPS Gateway amoung all the serial devices connected to the Ground Station Computer.
+In phase 1 : the computer finds the gateway
+
+In phase 2 : actual communication through the gateway
+
+`BONJOUR` is a unique string sent on serial connection initiation that is used to identify the Telemetry Gateway and the LPS Gateway among all the serial devices connected to the Ground Station Computer.
 
 
 ### Wiring
