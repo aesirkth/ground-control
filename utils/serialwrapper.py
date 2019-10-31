@@ -3,6 +3,8 @@ Class to read and write data from and to a serial connection
 
 """
 
+import time
+
 import serial
 import serial.tools.list_ports
 
@@ -160,6 +162,29 @@ class SerialWrapper:
         if rdf900:
             print("Searching for a RFD900 modem")
             # Insert logic to identify RFD900 module here
+            for d in safe_devices:
+                self.ser.port = d.device
+                print("Testing : {}...".format(self.ser.port))
+
+                if self.open_serial():  # If the connection cannot be oppened, no need to read from it
+                    time.sleep(1)
+                    # Enter `AT` mode
+                    self.write('+++')
+                    time.sleep(1)
+                    line = self.readline()
+
+                    if line == "OK":
+                        print("{} : Found device on port : {}".format(
+                            self.name, self.ser.port))
+                        # self.close_serial()
+                        self.ser.timeout = timeout  # Restore the previous value
+                        # Reboot the modem
+                        self.write('ATZ')
+                        self.__safe_mode()
+                        self.is_ready = True
+                        return True
+                    else:
+                        self.close_serial()
 
         elif bonjour:
             print("Searching for a Gateway using the bonjour string : {}".format(bonjour))
@@ -230,6 +255,8 @@ class SerialWrapper:
                     self.name, self.ser.port))
                 error = ""
                 self.__safe_mode()
+                if self.rfd900:
+                    self.is_ready = True
                 return True
             except serial.SerialException as e:
                 if e.errno == 2:
