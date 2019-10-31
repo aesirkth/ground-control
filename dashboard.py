@@ -41,7 +41,7 @@ if __name__ == "__main__":
     baudrate = 115200
     path = './data'
 
-    serial = SerialWrapper(baudrate=baudrate, bonjour="TELEMETRY")
+    serial = SerialWrapper(baudrate=baudrate, name="Telemetry", bonjour="TELEMETRY")
     sensors = Sensors(imu="Test")
     telemetry = Gateway(serial=serial, sensors=sensors,
                         path=path, name="telemetry")
