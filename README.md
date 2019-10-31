@@ -101,7 +101,11 @@ In phase 2 : actual communication through the gateway
 
 #### Telemetry Gateway
 
->TODO
+Connect the FTDI cable to the `RFD900`. The black cable should be connected to pin `1`. Connect a jumper between pin `4` and pin `6`.
+
+See the pin layout and the FTDI cable connection in the [RFD900 Datasheet](http://files.rfdesign.com.au/Files/documents/RFD900%20DataSheet.pdf).
+
+See the software requirements in the [RFD900 Software Manual](http://files.rfdesign.com.au/Files/documents/Software%20manual.pdf).
 
 
 #### LPS Gateway
