@@ -169,7 +169,7 @@ class SerialWrapper:
                 if self.open_serial():  # If the connection cannot be oppened, no need to read from it
                     time.sleep(1)
                     # Enter `AT` mode
-                    self.write('+++')
+                    self.write('+++\n')
                     time.sleep(1)
                     line = self.readline()
 
@@ -179,7 +179,7 @@ class SerialWrapper:
                         # self.close_serial()
                         self.ser.timeout = timeout  # Restore the previous value
                         # Reboot the modem
-                        self.write('ATZ')
+                        self.write('ATZ\n')
                         self.__safe_mode()
                         self.is_ready = True
                         return True
