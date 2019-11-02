@@ -14,6 +14,8 @@
     - [LPS Gateway](#lps-gateway)
 - [How to install ?](#how-to-install-)
   - [Development](#development)
+    - [Telemetry link](#telemetry-link)
+    - [Launch Pad Station link](#launch-pad-station-link)
   - [Flight conditions](#flight-conditions)
 - [Folder structure](#folder-structure)
 
@@ -112,16 +114,6 @@ See [RFD900](/doc/RFD900.md)
 
 ## Development
 
-**Create a fake gateway**
-
-Upload `dummy_gateway.ino` to any Arduino board with a USB port. Make sure to uncomment one of these two lines before :
-
-```c
-// Uncomment one of these to select the target gateway
-// #define lps
-// #define telemetry
-```
-
 **Install the GUI requirements**
 
 Install `python 3.7.4`
@@ -134,26 +126,73 @@ Install the required python packages
 python -m pip install -r requirements.txt
 ```
 
+### Telemetry link
+
+**Create a fake Telemetry Gateway**
+
+Upload `dummy_gateway.ino` to any Arduino board with a USB port. Make sure to uncomment one of these two lines before :
+
+```c
+// Uncomment one of these to select the target gateway
+// #define lps
+#define telemetry
+```
+
+
 **Run the GUI**
 
 Make sure the board is connected to your computer
 
-Run `dashboard.py` for the complete interface
+Make sure `dashboard.py` is set to use the fake gateway
+
+```py
+if __name__ == "__main__":
+    # Use this with a RFD900 modem
+    # serial = SerialWrapper(baudrate=57600, name="Telemetry", rfd900=True)
+    # Use this for testing with an Arduino board and `dummy_telemetry.ino`
+    serial = SerialWrapper(baudrate=115200, name="Telemetry", bonjour="TELEMETRY")
+```
+
+Run `dashboard.py`
 
 ```
 python ./dashboard.py
 ```
 
-Or
+Enjoy
 
-Run `lps_control.py` to only control the Launch Pad Station
+
+### Launch Pad Station link
+
+**Create a fake LPS Gateway**
+
+Upload `dummy_gateway.ino` to any Arduino board with a USB port. Make sure to uncomment one of these two lines before :
+
+```c
+// Uncomment one of these to select the target gateway
+#define lps
+// #define telemetry
+```
+
+
+**Run the GUI**
+
+Make sure the board is connected to your computer
+
+Make sure `lps_control.py` is set to use the fake gateway
+
+```py
+if __name__ == "__main__":
+    serial = SerialWrapper(baudrate=115200, name="LPS", bonjour="LAUNCHPADSTATION")
+```
+
+Run `lps_control.py`
 
 ```
 python ./lps_control.py
 ```
 
 Enjoy
-
 
 ## Flight conditions
 
