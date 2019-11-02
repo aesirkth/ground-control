@@ -148,7 +148,7 @@ Make sure `dashboard.py` is set to use the fake gateway
 ```py
 if __name__ == "__main__":
     # Use this with a RFD900 modem
-    # serial = SerialWrapper(baudrate=57600, name="Telemetry", rfd900=True)
+    # serial = SerialWrapper(baudrate=115200, name="Telemetry", rfd900=True)
     # Use this for testing with an Arduino board and `dummy_telemetry.ino`
     serial = SerialWrapper(baudrate=115200, name="Telemetry", bonjour="TELEMETRY")
 ```
