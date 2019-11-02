@@ -2,21 +2,20 @@
 
 
 # Table of contents <!-- omit in toc -->
-- [Purpose](#Purpose)
-- [Requirements](#Requirements)
-- [General description](#General-description)
-  - [Sensors](#Sensors)
-- [Ground Station](#Ground-Station)
-  - [Ground Station Computer](#Ground-Station-Computer)
-  - [Gateways](#Gateways)
-    - [Purpose](#Purpose-1)
-    - [Wiring](#Wiring)
-      - [Telemetry Gateway](#Telemetry-Gateway)
-      - [LPS Gateway](#LPS-Gateway)
-- [How to install ?](#How-to-install-)
-  - [Development](#Development)
-  - [Flight conditions](#Flight-conditions)
-- [Folder structure](#Folder-structure)
+- [Purpose](#purpose)
+- [Requirements](#requirements)
+- [General description](#general-description)
+  - [Sensors](#sensors)
+- [Ground Station](#ground-station)
+  - [Ground Station Computer](#ground-station-computer)
+  - [Gateways](#gateways)
+    - [Purpose](#purpose-1)
+    - [Telemetry Gateway](#telemetry-gateway)
+    - [LPS Gateway](#lps-gateway)
+- [How to install ?](#how-to-install-)
+  - [Development](#development)
+  - [Flight conditions](#flight-conditions)
+- [Folder structure](#folder-structure)
 
 
 # Purpose
@@ -93,22 +92,17 @@ In phase 1 : the computer finds the gateway
 
 In phase 2 : actual communication through the gateway
 
-`BONJOUR` is a unique string sent on serial connection initiation that is used to identify the Telemetry Gateway and the LPS Gateway among all the serial devices connected to the Ground Station Computer.
+`BONJOUR` is a unique string sent on serial connection initiation that is used to identify the LPS Gateway among all the serial devices connected to the Ground Station Computer. The Telemetry Gatewa is found by trying to initiate the AT command mode.
 
 
-### Wiring
+### Telemetry Gateway
+
+The Telemetry Gateway is a `RFD900` modem.
+
+See [RFD900](/doc/RFD900.md)
 
 
-#### Telemetry Gateway
-
-Connect the FTDI cable to the `RFD900`. The black cable should be connected to pin `1`. Connect a jumper between pin `4` and pin `6`.
-
-See the pin layout and the FTDI cable connection in the [RFD900 Datasheet](http://files.rfdesign.com.au/Files/documents/RFD900%20DataSheet.pdf).
-
-See the software requirements in the [RFD900 Software Manual](http://files.rfdesign.com.au/Files/documents/Software%20manual.pdf).
-
-
-#### LPS Gateway
+### LPS Gateway
 
 >TODO
 
