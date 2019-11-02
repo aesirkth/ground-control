@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
     serial = SerialWrapper(baudrate=baudrate, name="LPS", bonjour="LAUNCHPADSTATION")
     sensors = Sensors()
-    lps = Gateway(serial=serial, sensors=sensors, path=path, name="lps")
+    lps = Gateway(serial=serial, sensors=sensors, path=path)
 
     root = tk.Tk()
     root.title("Launch Pad Control")

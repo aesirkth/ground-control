@@ -43,8 +43,7 @@ if __name__ == "__main__":
 
     serial = SerialWrapper(baudrate=baudrate, name="Telemetry", rfd900=True)
     sensors = Sensors(imu="Test")
-    telemetry = Gateway(serial=serial, sensors=sensors,
-                        path=path, name="telemetry")
+    telemetry = Gateway(serial=serial, sensors=sensors, path=path)
 
     root = tk.Tk()
     root.title("Sigmundr Dashboard")

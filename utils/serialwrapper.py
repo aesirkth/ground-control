@@ -25,8 +25,12 @@ class SerialWrapper:
     ----------
     baudrate : int
         the baudrate of the connection
+    name : str
+        name of the instance, used when printing instance status
     bonjour : string, optional
         unique string sent by the targeted gateway when the connection is opened
+    rfd900 : bool, optional
+        True to automatically find a RFD900 modem among the serial devices
     port : string, optional
         port to open
 
@@ -41,12 +45,12 @@ class SerialWrapper:
 
     Examples
     --------
-    >>> s = SerialWrapper(baudrate=112500, bonjour="TELEMETRY")
+    >>> s = SerialWrapper(baudrate=57600, name="Telemetry", rfd900=True)
     >>> s.open_serial()
     >>> line = s.readline()
     >>> s.close_serial()
 
-    >>> s = SerialWrapper(baudrate=112500, port="COM4")
+    >>> s = SerialWrapper(baudrate=57600, name="Telemetry", port="COM4")
     >>> s.open_serial()
     >>> line = s.readline()
     >>> s.close_serial()
@@ -55,6 +59,7 @@ class SerialWrapper:
     # Substring to look for in serial device description
     # Serial devices with no subtrings from `serial_desc_substrings` in their description will not
     # be oppened to avoid errors (they might be system devices not intended to be used that way)
+    # Use lower case
     serial_desc_substrings = ("usb", "ch340", "arduino")
 
     def __init__(self, baudrate, name, bonjour="", rfd900=False, port=""):

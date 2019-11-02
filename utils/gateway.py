@@ -23,14 +23,12 @@ class Gateway:
 
     Parameters
     ----------
-    serial : Serial instance
-        Serial instance used to read data from the Gateway device
+    serial : SerialWrapper instance
+        SerialWrapper instance used to read data from the Gateway device
     sensors : Sensors instance
         Sensors instance used to process the received data
     path : path-like object
         path to the directory to store received data
-    name : str
-        name of the Gateway instance. This is used to name the files written on file storage
 
     Attributes
     ----------
@@ -46,13 +44,14 @@ class Gateway:
 
     Examples
     --------
-    >>> serial = SerialWrapper(baudrate=baudrate, bonjour = "TELEMETRY")
-    >>> lps = Gateway(serial=serial, path=path, name="telemetry")
-    >>> telemetry.start_read() # In another thread (use threading for example)
+    >>> serial = SerialWrapper(baudrate=57600, name="Telemetry", rfd900=True)
+    >>> sensors = Sensors(imu="Test")
+    >>> telemetry = Gateway(serial=serial, sensors=sensors, path="./data")
+    >>> telemetry.start_read()
     >>> data = telemetry.data
     >>> mess = telemetry.messages
     ...
-    >>> telemetry.stop_read() # This terminates the above thread
+    >>> telemetry.stop_read() # This terminates the thread in start_read()
 
     """
     # This is described in the protocol description
@@ -67,11 +66,12 @@ class Gateway:
     # We need to do searches both ways...
     separators_reversed = {value: key for key, value in separators.items()}
 
-    def __init__(self, serial, sensors, path, name):
+    def __init__(self, serial, sensors, path):
         self.serial = serial
         self.sensors = sensors
         self.path = path
-        self.name = name
+        # This is the same as the serial for consistency
+        self.name = self.serial.name
 
         self.is_reading = False
 
@@ -84,17 +84,17 @@ class Gateway:
 
         self.data_file = "{}_{}_data.csv".format(
             self.date_created.replace(":", "-"),
-            name)
+            self.name)
         self.data_path = join(self.path, self.data_file)
 
         self.calibration_file = "{}_{}_calibration.yaml".format(
             self.date_created.replace(":", "-"),
-            name)
+            self.name)
         self.calibration_path = join(self.path, self.calibration_file)
 
         self.messages_file = "{}_{}_messages.log".format(
             self.date_created.replace(":", "-"),
-            name)
+            self.name)
         self.messages_path = join(self.path, self.messages_file)
 
         # Create the folder to store the files if it does not already exist
