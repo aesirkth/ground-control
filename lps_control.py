@@ -44,12 +44,11 @@ class MainApplication(tk.Frame):
 
 
 if __name__ == "__main__":
-    baudrate = 115200
-    path = './data'
+    serial = SerialWrapper(baudrate=115200, name="LPS", bonjour="LAUNCHPADSTATION")
 
-    serial = SerialWrapper(baudrate=baudrate, bonjour="LAUNCHPADSTATION")
     sensors = Sensors()
-    lps = Gateway(serial=serial, sensors=sensors, path=path, name="lps")
+
+    lps = Gateway(serial=serial, sensors=sensors, path="./data")
 
     root = tk.Tk()
     root.title("Launch Pad Control")

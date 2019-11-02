@@ -2,21 +2,22 @@
 
 
 # Table of contents <!-- omit in toc -->
-- [Purpose](#Purpose)
-- [Requirements](#Requirements)
-- [General description](#General-description)
-  - [Sensors](#Sensors)
-- [Ground Station](#Ground-Station)
-  - [Ground Station Computer](#Ground-Station-Computer)
-  - [Gateways](#Gateways)
-    - [Purpose](#Purpose-1)
-    - [Wiring](#Wiring)
-      - [Telemetry Gateway](#Telemetry-Gateway)
-      - [LPS Gateway](#LPS-Gateway)
-- [How to install ?](#How-to-install-)
-  - [Development](#Development)
-  - [Flight conditions](#Flight-conditions)
-- [Folder structure](#Folder-structure)
+- [Purpose](#purpose)
+- [Requirements](#requirements)
+- [General description](#general-description)
+  - [Sensors](#sensors)
+- [Ground Station](#ground-station)
+  - [Ground Station Computer](#ground-station-computer)
+  - [Gateways](#gateways)
+    - [Purpose](#purpose-1)
+    - [Telemetry Gateway](#telemetry-gateway)
+    - [LPS Gateway](#lps-gateway)
+- [How to install ?](#how-to-install-)
+  - [Development](#development)
+    - [Telemetry link](#telemetry-link)
+    - [Launch Pad Station link](#launch-pad-station-link)
+  - [Flight conditions](#flight-conditions)
+- [Folder structure](#folder-structure)
 
 
 # Purpose
@@ -37,7 +38,7 @@ The software in this repository is everything needed to make the Ground Station 
 - A computer running Windows or Linux (not tested on MacOS)
 - One or two Arduino board with a USB port (for development)
 - One Arduino board with a USB port connected to an `RFM96W` LoRa tranceiver (to communicate with the Launch Pad Station)
-- One Arduino board with a USB port connected to a `RFD900` Radio Modem (to receive telemetry data from the Rocket)
+- One `RFD900` Radio Modem and FTDI cable (to receive telemetry data from the Rocket)
 
 
 # General description
@@ -83,24 +84,27 @@ There is also a simplified version of the dashboard that only controls the Launc
 
 Gateways are added between the Ground Station Computer and the Rocket and between the Ground Station Computer(s) and the Launch Pad System. Their role is to allow wireless communication between the Ground Station Computer and the Rocket subsystems. The gateways are only forwarders. There is no logic embedded into them.
 
-Here is a schematic of the data flow trough the gateways :
+Here is a schematic of the data flow through the gateways :
 
 ![telemetry_link](/doc/diagrams/gateway.png)
 >The diagram was made with [draw.io](https://www.draw.io)<br>
 >To make changes to it, edit the source file `/doc/diagrams/gateway.xml`
 
-`BONJOUR` is a unique string sent on serial connection initiation that is used to identify the Telemetry Gateway and the LPS Gateway amoung all the serial devices connected to the Ground Station Computer.
+In phase 1 : the computer finds the gateway
+
+In phase 2 : actual communication through the gateway
+
+`BONJOUR` is a unique string sent on serial connection initiation that is used to identify the LPS Gateway among all the serial devices connected to the Ground Station Computer. The Telemetry Gatewa is found by trying to initiate the AT command mode.
 
 
-### Wiring
+### Telemetry Gateway
+
+The Telemetry Gateway is a `RFD900` modem.
+
+See [RFD900](/doc/RFD900.md)
 
 
-#### Telemetry Gateway
-
->TODO
-
-
-#### LPS Gateway
+### LPS Gateway
 
 >TODO
 
@@ -109,16 +113,6 @@ Here is a schematic of the data flow trough the gateways :
 
 
 ## Development
-
-**Create a fake gateway**
-
-Upload `dummy_gateway.ino` to any Arduino board with a USB port. Make sure to uncomment one of these two lines before :
-
-```c
-// Uncomment one of these to select the target gateway
-// #define lps
-// #define telemetry
-```
 
 **Install the GUI requirements**
 
@@ -132,26 +126,73 @@ Install the required python packages
 python -m pip install -r requirements.txt
 ```
 
+### Telemetry link
+
+**Create a fake Telemetry Gateway**
+
+Upload `dummy_gateway.ino` to any Arduino board with a USB port. Make sure to uncomment one of these two lines before :
+
+```c
+// Uncomment one of these to select the target gateway
+// #define lps
+#define telemetry
+```
+
+
 **Run the GUI**
 
 Make sure the board is connected to your computer
 
-Run `dashboard.py` for the complete interface
+Make sure `dashboard.py` is set to use the fake gateway
+
+```py
+if __name__ == "__main__":
+    # Use this with a RFD900 modem
+    # serial = SerialWrapper(baudrate=115200, name="Telemetry", rfd900=True)
+    # Use this for testing with an Arduino board and `dummy_telemetry.ino`
+    serial = SerialWrapper(baudrate=115200, name="Telemetry", bonjour="TELEMETRY")
+```
+
+Run `dashboard.py`
 
 ```
 python ./dashboard.py
 ```
 
-Or
+Enjoy
 
-Run `lps_control.py` to only control the Launch Pad Station
+
+### Launch Pad Station link
+
+**Create a fake LPS Gateway**
+
+Upload `dummy_gateway.ino` to any Arduino board with a USB port. Make sure to uncomment one of these two lines before :
+
+```c
+// Uncomment one of these to select the target gateway
+#define lps
+// #define telemetry
+```
+
+
+**Run the GUI**
+
+Make sure the board is connected to your computer
+
+Make sure `lps_control.py` is set to use the fake gateway
+
+```py
+if __name__ == "__main__":
+    serial = SerialWrapper(baudrate=115200, name="LPS", bonjour="LAUNCHPADSTATION")
+```
+
+Run `lps_control.py`
 
 ```
 python ./lps_control.py
 ```
 
 Enjoy
-
 
 ## Flight conditions
 

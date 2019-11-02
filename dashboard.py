@@ -38,13 +38,14 @@ class MainApplication(tk.Frame):
 
 
 if __name__ == "__main__":
-    baudrate = 115200
-    path = './data'
+    # Use this with a RFD900 modem
+    serial = SerialWrapper(baudrate=115200, name="Telemetry", rfd900=True)
+    # Use this for testing with an Arduino board and `dummy_telemetry.ino`
+    # serial = SerialWrapper(baudrate=115200, name="Telemetry", bonjour="TELEMETRY")
 
-    serial = SerialWrapper(baudrate=baudrate, bonjour="TELEMETRY")
     sensors = Sensors(imu="Test")
-    telemetry = Gateway(serial=serial, sensors=sensors,
-                        path=path, name="telemetry")
+    
+    telemetry = Gateway(serial=serial, sensors=sensors, path="./data")
 
     root = tk.Tk()
     root.title("Sigmundr Dashboard")

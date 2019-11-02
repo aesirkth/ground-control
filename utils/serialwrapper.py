@@ -3,6 +3,8 @@ Class to read and write data from and to a serial connection
 
 """
 
+import time
+
 import serial
 import serial.tools.list_ports
 
@@ -23,8 +25,12 @@ class SerialWrapper:
     ----------
     baudrate : int
         the baudrate of the connection
+    name : str
+        name of the instance, used when printing instance status
     bonjour : string, optional
         unique string sent by the targeted gateway when the connection is opened
+    rfd900 : bool, optional
+        True to automatically find a RFD900 modem among the serial devices
     port : string, optional
         port to open
 
@@ -39,12 +45,12 @@ class SerialWrapper:
 
     Examples
     --------
-    >>> s = SerialWrapper(baudrate=112500, bonjour="TELEMETRY")
+    >>> s = SerialWrapper(baudrate=57600, name="Telemetry", rfd900=True)
     >>> s.open_serial()
     >>> line = s.readline()
     >>> s.close_serial()
 
-    >>> s = SerialWrapper(baudrate=112500, port="COM4")
+    >>> s = SerialWrapper(baudrate=57600, name="Telemetry", port="COM4")
     >>> s.open_serial()
     >>> line = s.readline()
     >>> s.close_serial()
@@ -53,10 +59,13 @@ class SerialWrapper:
     # Substring to look for in serial device description
     # Serial devices with no subtrings from `serial_desc_substrings` in their description will not
     # be oppened to avoid errors (they might be system devices not intended to be used that way)
+    # Use lower case
     serial_desc_substrings = ("usb", "ch340", "arduino")
 
-    def __init__(self, baudrate, bonjour="", port=""):
+    def __init__(self, baudrate, name, bonjour="", rfd900=False, port=""):
+        self.name = name
         self.bonjour = bonjour
+        self.rfd900 = rfd900
         self.port = port
 
         self.ser = serial.Serial()
@@ -68,15 +77,57 @@ class SerialWrapper:
         self.error = ""
         self.is_ready = False
 
-    def __find_gateway(self, bonjour):
+    def __get_available_devices(self):
+        """ Retrieve all the available serial device on the computer
+
+        Returns
+        -------
+        devices : list
+            a list containing ListPortInfo objects
+
+        """
+        devices = serial.tools.list_ports.comports()
+        return devices
+
+    def __filter_safe_devices(self, devices):
+        """ Remove all non safe devices from a ListPortInfo list
+
+        Parameters
+        ----------
+        devices : list
+            a list containing ListPortInfo objects
+
+        Returns
+        -------
+        safe_devices : list
+            a list containing ListPortInfo objects
+
+        """
+        safe_devices = []
+
+        for d in devices:
+            flag = False
+            for substring in self.serial_desc_substrings:
+                if substring in d.description.lower():
+                    flag = True
+            if flag:
+                safe_devices.append(d)
+
+        return safe_devices
+
+    def __find_gateway(self, bonjour="", rfd900=False):
         """ Test all connected serial devices to find the one that sends `bonjour` as the first transmitted line
 
         `ser.port` is updated when the device is successfully found. It is set to an empty string otherwise
+
+        If both `bonjour` and `rfd900` are used, `rfd900` is used to find the device
 
         Parameters
         ----------
         bonjour : string
             string that should be sent by the device we want to find
+        rfd900 : bool
+            True if a RFD900 modem should be searched for
 
         Returns
         -------
@@ -91,28 +142,17 @@ class SerialWrapper:
         self.ser.port = None
 
         # Get all the devices available on the computer
-        available_ports = serial.tools.list_ports.comports()
+        available_devices = self.__get_available_devices()
 
-        print("Searching for available serial devices for [{}]...".format(
-            self.bonjour))
+        print("{} : Searching for available serial devices...".format(self.name))
 
-        if available_ports:
-            print("Found available device(s) : {}".format(
-                ", ".join([p.description for p in available_ports])))
+        if available_devices:
+            # Check only devices that are expected to be Arduinos or alike
+            safe_devices = self.__filter_safe_devices(available_devices)
 
-            possible_gateways = []
-            # Extract devices that are expected to be Arduinos or alike from device list
-            for p in available_ports:
-                flag = False
-                for substring in self.serial_desc_substrings:
-                    if substring in p.description.lower():
-                        flag = True
-                if flag:
-                    possible_gateways.append(p)
-
-            if possible_gateways:
+            if safe_devices:
                 print("These devices will be checked : {}".format(
-                    ", ".join([p.description for p in possible_gateways])))
+                    ", ".join([p.description for p in safe_devices])))
 
             else:
                 error = "No serial device found"
@@ -124,23 +164,57 @@ class SerialWrapper:
             self.__fail_mode(error)
             return False
 
-        # Check only devices that are expected to be Arduinos or alike
-        for p in possible_gateways:
-            self.ser.port = p.device
-            print("Testing : {}...".format(self.ser.port))
+        if rfd900:
+            print("Searching for a RFD900 modem")
+            # Insert logic to identify RFD900 module here
+            for d in safe_devices:
+                self.ser.port = d.device
+                print("Testing : {}...".format(self.ser.port))
 
-            if self.open_serial():  # If the connection cannot be oppened, no need to read from it
-                line = self.readline()
+                if self.open_serial():  # If the connection cannot be oppened, no need to read from it
+                    # Dirty but the RFD900 needs 1s with no data input before the "+++" to enter AT command mode
+                    # In practice the port is unused before we open it so this pause is not really needed
+                    # But just to be sure...
+                    time.sleep(1)
+                    # Try to enter AT command mode
+                    self.write('+++')
+                    # Wait one second and see the "OK" has been sent by the device
+                    time.sleep(1)
+                    lines = self.readlines()
+                    # Exit AT command mode
+                    self.write('ATO\r')
 
-                if line == bonjour:
-                    print("Found device ({}) on port : {}".format(
-                        self.bonjour, self.ser.port))
-                    # self.close_serial()
-                    self.ser.timeout = timeout  # Restore the previous value
-                    self.__safe_mode()
-                    self.is_ready = True
-                    return True
-                self.close_serial()
+                    if 'OK\r' in lines:
+                        print("{} : Found device on port : {}".format(
+                            self.name, self.ser.port))
+                        # self.close_serial()
+                        self.ser.timeout = timeout  # Restore the previous value
+                        self.__safe_mode()
+                        self.is_ready = True
+                        return True
+                    else:
+                        self.close_serial()
+
+        elif bonjour:
+            print("Searching for a Gateway using the bonjour string : {}".format(bonjour))
+
+            for d in safe_devices:
+                self.ser.port = d.device
+                print("Testing : {}...".format(self.ser.port))
+
+                if self.open_serial():  # If the connection cannot be oppened, no need to read from it
+                    line = self.readline()
+
+                    if line == bonjour:
+                        print("{} : Found device ({}) on port : {}".format(
+                            self.name, self.bonjour, self.ser.port))
+                        # self.close_serial()
+                        self.ser.timeout = timeout  # Restore the previous value
+                        self.__safe_mode()
+                        self.is_ready = True
+                        return True
+                    else:
+                        self.close_serial()
 
         error = "Failed to find device"
         self.__fail_mode(error)
@@ -187,8 +261,11 @@ class SerialWrapper:
                 self.failed = False
                 self.buffer = bytearray()
                 print("{} : serial connection opened ({})".format(
-                    self.bonjour, self.ser.port))
+                    self.name, self.ser.port))
                 error = ""
+                self.__safe_mode()
+                if self.rfd900:
+                    self.is_ready = True
                 return True
             except serial.SerialException as e:
                 if e.errno == 2:
@@ -208,7 +285,7 @@ class SerialWrapper:
         if self.ser.port:
             if self.ser.is_open:
                 print("{} : serial connection is already open, cannot open again ({})".format(
-                    self.bonjour, self.ser.port))
+                    self.name, self.ser.port))
                 return True
             else:
                 return open_port()
@@ -216,16 +293,18 @@ class SerialWrapper:
         else:
             if self.port:
                 print("{} : Using 'port' {}".format(
-                    self.bonjour, self.port))
+                    self.name, self.port))
                 self.ser.port = self.port
                 return open_port()
+            elif self.rfd900:
+                print("{} : Port not defined, looking for device".format(self.name))
+                return self.__find_gateway(rfd900=self.rfd900)
             elif self.bonjour:
-                print("{} : Serial 'port' is not defined, using 'bonjour' to find device".format(
-                    self.bonjour))
-                return self.__find_gateway(self.bonjour)
+                print("{} : Port not defined, looking for device".format(self.name))
+                return self.__find_gateway(bonjour=self.bonjour)
             else:
-                error = "{} : Serial 'port' and 'bonjour' are not defined, cannot open port".format(
-                    self.bonjour)
+                error = "{} : Serial 'port' and 'bonjour' and 'rfd900' are not defined, cannot open port".format(
+                    self.name)
                 self.__fail_mode(error)
                 return False
 
@@ -240,11 +319,11 @@ class SerialWrapper:
                     self.ser.reset_output_buffer()
                     self.ser.close()
                     print("{} : serial connection closed ({})".format(
-                        self.bonjour, self.ser.port))
+                        self.name, self.ser.port))
                 except:
                     self.ser.close()
                     print("{} : serial connection closed ({})".format(
-                        self.bonjour, self.ser.port))
+                        self.name, self.ser.port))
                 self.is_ready = False
 
     def get_status(self):
