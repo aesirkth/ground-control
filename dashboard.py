@@ -38,10 +38,10 @@ class MainApplication(tk.Frame):
 
 
 if __name__ == "__main__":
-    baudrate = 115200
+    baudrate = 57600
     path = './data'
 
-    serial = SerialWrapper(baudrate=baudrate, name="Telemetry", bonjour="TELEMETRY")
+    serial = SerialWrapper(baudrate=baudrate, name="Telemetry", rfd900=True)
     sensors = Sensors(imu="Test")
     telemetry = Gateway(serial=serial, sensors=sensors,
                         path=path, name="telemetry")
