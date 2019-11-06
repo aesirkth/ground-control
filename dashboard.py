@@ -1,3 +1,4 @@
+import sys
 import tkinter as tk
 from tkinter import E, N, S, W
 
@@ -38,10 +39,18 @@ class MainApplication(tk.Frame):
 
 
 if __name__ == "__main__":
-    # Use this with a RFD900 modem
-    serial = SerialWrapper(baudrate=115200, name="Telemetry", rfd900=True)
-    # Use this for testing with an Arduino board and `dummy_telemetry.ino`
-    # serial = SerialWrapper(baudrate=115200, name="Telemetry", bonjour="TELEMETRY")
+    # Get the first argument given
+    if len(sys.argv) >= 2:
+        if sys.argv[1] == "rfd":
+            # Use this with a RFD900 modem
+            serial = SerialWrapper(baudrate=115200, name="Telemetry", rfd900=True)
+        elif sys.argv[1] == "gw":
+            # Use this for testing with an Arduino board and `dummy_telemetry.ino`
+            serial = SerialWrapper(baudrate=115200, name="Telemetry", bonjour="TELEMETRY")
+        else:
+            serial = SerialWrapper(baudrate=115200, name="Telemetry", bonjour="TELEMETRY")
+    else:
+        serial = SerialWrapper(baudrate=115200, name="Telemetry", bonjour="TELEMETRY")
 
     sensors = Sensors(imu="Test")
     
