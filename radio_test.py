@@ -15,41 +15,55 @@ def signal_handler(sig, frame):
         print("Number of received frames : {}".format(n_frames))
         print("Number of errors : {}".format(n_errors))
         print("Number of missed frames : {}".format(n_missed))
+        radio.serial.close_serial()
+        time.sleep(0.1)
     sys.exit(0)
 
 
 def sender(radio):
     i = 0
-    print('Started sending data')
-    while True:
-        # Encoded using utf-8 in send_command(). Should use 1 Byte/symbol
-        frame = "{:0<7}:ababababababababababababababababababababa".format(i) # 50 symbols
-        radio.send_command(frame)
-        i += 1
-        if i >= 1e7:
-            i = 0
-        # This should give an output bit rate < 4 kbps
-        time.sleep(0.1)
+    if radio.serial.open_serial():
+        print('Started sending data')
+        while True:
+            # Encoded using utf-8 in send_command(). Should use 1 Byte/symbol
+            frame = "{:0>7}:abababababababababababababababababababab\n".format(i) # 50 symbols
+            radio.send_command(frame)
+            i += 1
+            if i >= 1e7:
+                i = 0
+            # This should give an output bit rate < 4 kbps
+            time.sleep(0.1)
+    else:
+        print("Failed to open port")
 
 
 def receiver(radio):
     global n_frames, n_errors, n_missed
-    c = -1
+    c = None
     if radio.serial.open_serial():
         while True:
             
                 frames = radio.serial.readlines()
                 for frame in frames:
-                    n_frames += 1
-                    count, test = frame.split(":")
-                    if int(count) != c+1:
-                        n_missed += 1
-                    c = int(count)
-                    if c >= 1e7 - 1:
-                        c = -1
+                    print(frame)
+                    try:
+                        count, test = frame.replace("+++", "").split(":")
+                        count = int(count)
+                        n_frames += 1
+                        if c != None:
+                            if count != c+1:
+                                n_missed += count - c+1
+                            c = int(count)
+                            if c >= 1e7 - 1:
+                                c = -1
+                        else:
+                            c = count
 
-                    if test != "ababababababababababababababababababababa":
-                        n_errors += 1
+                        if test != "abababababababababababababababababababab":
+                            n_errors += 1
+                    except Exception as e:
+                        print("Except", e)
+                        pass
     else:
         print("Failed to open port")
 
