@@ -78,7 +78,7 @@ class MessageBox(tk.Frame):
 
         # TextBox and Scrollbar
         self.scroll_bar = tk.Scrollbar(self)
-        self.message_box = tk.Text(self, height=10, width=60)
+        self.message_box = tk.Text(self, height=10, width=50)
         self.scroll_bar.grid(row=1, column=2, sticky=W+E+N+S)
         self.message_box.grid(row=1, column=1, sticky=W+E+N+S)
         self.scroll_bar.config(command=self.message_box.yview)
@@ -147,18 +147,21 @@ class GatewayStatus(tk.Frame):
         parent frame
     gateway : Gateway instance
         Gateway to monitor
-
+    field : GS or TM/FPV
     """
 
-    def __init__(self, parent, gateway, *args, **kwargs):
+    def __init__(self, parent, gateway, field, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
+        self.field = field
 
+        # Name to separate the buttons
+        tk.Label(self,text=self.field).grid(row=0,column=0)
         # Button to open/close the Serial link
         self.button_var = tk.StringVar()
         self.read_button = tk.Button(self, textvariable=self.button_var)
-        self.read_button.grid(row=0, column=0)
+        self.read_button.grid(row=1, column=0)
         # Label to display the gateway's port name
         self.port_var = tk.StringVar()
         self.port_var.set("Port : {}".format(
@@ -169,7 +172,7 @@ class GatewayStatus(tk.Frame):
         self.error_var = tk.StringVar()
         self.error_var.set("")
         tk.Label(self, textvariable=self.error_var).grid(
-            row=0, column=2, sticky=W+E)
+            row=1, column=1, sticky=W+E)
 
         self.__update_port()
         self.__update_error()
@@ -296,3 +299,107 @@ class LiveTimeGraph(tk.Frame):
         self.line.set_data(self.time, self.data)
 
         return self.line,
+
+
+class SensorIndicator(tk.Frame):
+    """ TKinter frame that holds a TKinter square of color and a label for sensor.name
+
+    The box changes color depending on status of sensor. The sensor must have a self.status attribute.
+
+    Parameters
+    ----------
+    parent : TKinter Frame
+        parent frame
+    gateway : Gateway instance
+        Gateway to monitor
+    sensor : attribute of a Sensors instance
+        sensor to display status from
+    field : str
+        name of the sensor to display
+
+    """
+
+    def __init__(self, parent, gateway, sensor, field, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensor = sensor
+        self.field = field
+
+        # Button to make a colored "box" for sensor
+        # Style will be reflected on this button
+        self.btn = tk.Button(self, text='', bg='red', state=tk.DISABLED, width=20)
+        self.btn = tk.Button(self)
+        self.btn.grid(row=0, column=1)
+        # Label to display the gateway's port name
+        self.label = tk.Label(self, text=self.field)
+        self.label.grid(
+            row=0, column=2, padx=5)
+
+        self.__update_button()
+
+    def __update_button(self):
+        """ Set the style of the button depending on the status of sensor.
+
+        """
+        if self.sensor.got_calibration:
+            #if self.field == "Telemetry Status":
+            #    self.btn.config(bg='green', height=2, width=3, state=tk.DISABLED)
+            #    self.sensor.got_calibration = False
+            #else:
+            self.btn.config(bg='green', height=1, width=2, state=tk.DISABLED)
+            self.sensor.got_calibration = False
+        else:
+            #if self.field == "Telemetry Status":
+            #    self.btn.config(bg='red', height=2, width=3, state=tk.DISABLED)
+            #    self.sensor.got_calibration = True
+            # else:
+            self.btn.config(bg='red', height=1, width=2, state=tk.DISABLED)
+            self.sensor.got_calibration = True
+        # Call this function again after 500 ms
+        # Is this needed for the button? How often will this be checked? Just after calibration?
+        self.parent.after(500, self.__update_button)
+
+
+class generalData(tk.Frame):
+    """ TKinter frame that holds a label and displays changeable string
+
+        The label is the name of measured value. The int/scalar shows the value for the value.
+
+        Parameters
+        ----------
+        parent : TKinter Frame
+            parent frame
+        gateway : Gateway instance
+            Gateway to monitor
+        data : data from functions calculating or directly from the TM.
+            data to display value from
+        field : str
+            name of the data to display
+
+    """
+    def __init__(self, parent, gateway, data, field, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.data = data
+        self.field = field
+
+        self.label = tk.Label(self, text=self.field + ": ")
+        self.label.grid(row=0, col=1)
+        self.data_var = tk.StringVar()
+        self.show_data = tk.Label(self, text=self.data_var)
+        self.show_data.grid(row=0, col=2)
+
+    def __update_value(self):
+        if self.field == "Battery":
+            self.data_var.set(self.gateway.data) # This has to be changed to point to battery value.
+        elif self.field == "|V|":
+            self.data_var.set(self.gateway.data)  # This has to be changed to point to calculated |V|.
+        elif self.field == "Longitude":
+            self.data_var.set(self.gateway.data)  # This has to be changed to point to longitude value.
+        elif self.field == "Latitude":
+            self.data_var.set(self.gateway.data)  # This has to be changed to point to latitude value.
+        # Add an else of some sort, don't know where to print the error.
+        else:
+            print("General data could not be categorized")

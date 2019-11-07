@@ -2,7 +2,7 @@ import sys
 import tkinter as tk
 from tkinter import E, N, S, W
 
-from gui import GatewayStatus, LiveTimeGraph, MessageBox
+from gui import GatewayStatus, LiveTimeGraph, MessageBox, SensorIndicator
 from utils import Gateway, Sensors, SerialWrapper
 
 
@@ -28,14 +28,41 @@ class MainApplication(tk.Frame):
             self, gateway=self.gateway, borderwidth=2, relief="groove")
         self.graph = LiveTimeGraph(
             self, gateway=self.gateway, sensor=self.sensors.imu, field="velocity")
-        self.gateway_status = GatewayStatus(self, gateway=self.gateway)
+        self.gateway_status = GatewayStatus(self, gateway=self.gateway, field="GS")
+        self.tm_status = GatewayStatus(self, gateway=self.gateway, field="FM/FPV")
+        self.imu1_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="IMU1")
+        self.imu2_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="IMU2")
+        self.bmd1_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="BMP1")
+        self.bmd2_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="BMP2")
+        self.gps_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="GPS")
+        self.pito_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="Pitotube")
+        self.magneto_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="Magnetometer")
+        self.tm_indicator = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="Telemetry Status")
 
         self.gateway_status.grid(
             row=0, column=1, sticky=W+E+N+S, padx=5, pady=5)
+        self.tm_status.grid(
+            row=0, column=2, sticky=W+E+N+S, padx=5, pady=5)
         self.graph.grid(
-            row=0, rowspan=2, column=2, sticky=W+E+N+S, padx=5, pady=5)
+            row=0, rowspan=2, column=3, sticky=W+E+N+S, padx=5, pady=5)
         self.gateway_messages.grid(
-            row=1, column=1, sticky=W+E+N+S, padx=5, pady=5)
+            row=1, rowspan=2, column=1, columnspan=2, sticky=W+E+N+S, padx=5, pady=5)
+        self.imu1_status.grid(
+            row=3, column=1, sticky=W, padx=10, pady=5)
+        self.imu2_status.grid(
+            row=4, column=1, sticky=W, padx=10, pady=5)
+        self.bmd1_status.grid(
+            row=5, column=1, sticky=W, padx=10, pady=5)
+        self.bmd2_status.grid(
+            row=6, column=1, sticky=W, padx=10, pady=5)
+        self.gps_status.grid(
+            row=3, column=2, sticky=W, padx=20, pady=5)
+        self.pito_status.grid(
+            row=4, column=2, sticky=W, padx=20, pady=5)
+        self.magneto_status.grid(
+            row=5, column=2, sticky=W, padx=20, pady=5)
+        self.tm_indicator.grid(
+            row=7, column=1, sticky=W, padx=20, pady=5)
 
 
 if __name__ == "__main__":

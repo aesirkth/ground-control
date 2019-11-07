@@ -8,9 +8,10 @@ class ImuTest:
     }
     default_data = pd.DataFrame(columns=['time', 'velocity'])
 
-    def __init__(self, idx_time, idx_velocity):
+    def __init__(self, idx_time, idx_velocity, name):
         self.idx_time = idx_time
         self.idx_velocity = idx_velocity
+        self.name = name
 
         self.reset()
 
@@ -40,7 +41,7 @@ class ImuTest:
 class Sensors:
     def __init__(self, imu=None):
         if imu == "Test":
-            self.imu = ImuTest(idx_time=1, idx_velocity=2)
+            self.imu = ImuTest(idx_time=1, idx_velocity=2, name="IMU")
         else:
             self.imu = None
 
