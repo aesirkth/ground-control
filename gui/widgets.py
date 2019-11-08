@@ -216,10 +216,20 @@ class GatewayStatus(tk.Frame):
         """
         if self.gateway.serial.get_status():
             self.button_var.set("Close link")
-            self.read_button.config(command=self.gateway.stop_read)
+            if self.field == "GS":
+                self.read_button.config(command=self.gateway.stop_read)
+            elif self.field == "TM/FPS":
+                self.read_button.config(command=self.gateway.send_command("Close Tx"))
+            else:
+                print("Change name of field for button")
         else:
             self.button_var.set("Open link")
-            self.read_button.config(command=self.gateway.start_read)
+            if self.field == "GS":
+                self.read_button.config(command=self.gateway.start_read)
+            elif self.field == "TM/FPS":
+                self.read_button.config(command=self.gateway.send_command("Open Tx"))
+            else:
+                print("Change name of field for button")
         # Call this function again after 100 ms
         self.parent.after(100, self.__update_button)
 
@@ -403,3 +413,22 @@ class generalData(tk.Frame):
         # Add an else of some sort, don't know where to print the error.
         else:
             print("General data could not be categorized")
+
+
+def generalData(self):
+    """ TKinter frame that holds a label and displays changeable string
+
+    The label is the name of measured value. The int/scalar shows the value for the value.
+
+    Parameters
+    ----------
+    parent : TKinter Frame
+        parent frame
+    gateway : Gateway instance
+        Gateway to monitor
+    data : data from functions calculating or directly from the TM.
+        data to display value from
+    field : str
+        name of the data to display
+
+    """

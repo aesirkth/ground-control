@@ -37,7 +37,12 @@ class MainApplication(tk.Frame):
         self.gps_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="GPS")
         self.pito_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="Pitotube")
         self.magneto_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="Magnetometer")
-        self.tm_indicator = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="Telemetry Status")
+        self.tm_indicator = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu,
+                                            field="Telemetry Status")
+        self.calibration_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu,
+                                                  field="Calibration")
+        self.parachute_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu,
+                                                  field="Parachute Deployed")
 
         self.gateway_status.grid(
             row=0, column=1, sticky=W+E+N+S, padx=5, pady=5)
@@ -62,7 +67,11 @@ class MainApplication(tk.Frame):
         self.magneto_status.grid(
             row=5, column=2, sticky=W, padx=20, pady=5)
         self.tm_indicator.grid(
-            row=7, column=1, sticky=W, padx=20, pady=5)
+            row=7, column=1, sticky=W, padx=10, pady=15)
+        self.calibration_status.grid(
+            row=7, column=2, sticky=W, padx=20, pady=15)
+        self.parachute_status.grid(
+            row=8, column=1, sticky=W, padx=10, pady=0)
 
 
 if __name__ == "__main__":
