@@ -70,7 +70,7 @@ class SerialWrapper:
 
         self.ser = serial.Serial()
         self.ser.baudrate = baudrate
-        self.ser.timeout = 0.5
+        self.ser.timeout = 0.1
         self.buffer = bytearray()
 
         self.failed = False
@@ -175,11 +175,11 @@ class SerialWrapper:
                     # Dirty but the RFD900 needs 1s with no data input before the "+++" to enter AT command mode
                     # In practice the port is unused before we open it so this pause is not really needed
                     # But just to be sure...
-                    time.sleep(1.5)
+                    time.sleep(1)
                     # Try to enter AT command mode
                     self.write('+++')
                     # Wait one second and see the "OK" has been sent by the device
-                    time.sleep(1.5)
+                    time.sleep(1)
                     lines = self.readlines()
                     # Exit AT command mode
                     self.write('ATO\r')
