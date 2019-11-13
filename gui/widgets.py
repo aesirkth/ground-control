@@ -262,6 +262,8 @@ class LiveTimeGraph(tk.Frame):
         self.ax = self.fig.add_subplot(111)
         self.line, = self.ax.plot([], [], lw=2)
         self.ax.grid()
+        #self.fig.set_label(self.field)
+        #self.fig.tight_layout()
         self.time = []
         self.data = []
 
@@ -278,6 +280,7 @@ class LiveTimeGraph(tk.Frame):
         """
         self.ax.set_ylim(0, 50)
         self.ax.set_xlim(0, 10000)
+
         del self.time[:]
         del self.data[:]
         self.line.set_data(self.time, self.data)
@@ -339,7 +342,7 @@ class SensorIndicator(tk.Frame):
         # Button to make a colored "box" for sensor
         # Style will be reflected on this button
         self.btn = tk.Button(self, text='', bg='red', state=tk.DISABLED, width=20)
-        self.btn = tk.Button(self)
+        # self.btn = tk.Button(self)
         self.btn.grid(row=0, column=1)
         # Label to display the gateway's port name
         self.label = tk.Label(self, text=self.field)
@@ -368,10 +371,10 @@ class SensorIndicator(tk.Frame):
             self.sensor.got_calibration = True
         # Call this function again after 500 ms
         # Is this needed for the button? How often will this be checked? Just after calibration?
-        self.parent.after(500, self.__update_button)
+        self.parent.after(100, self.__update_button)
 
 
-class generalData(tk.Frame):
+class GeneralData(tk.Frame):
     """ TKinter frame that holds a label and displays changeable string
 
         The label is the name of measured value. The int/scalar shows the value for the value.
@@ -382,7 +385,7 @@ class generalData(tk.Frame):
             parent frame
         gateway : Gateway instance
             Gateway to monitor
-        data : data from functions calculating or directly from the TM.
+        data(sensor?) : data from functions calculating or directly from the TM.
             data to display value from
         field : str
             name of the data to display
@@ -396,10 +399,12 @@ class generalData(tk.Frame):
         self.field = field
 
         self.label = tk.Label(self, text=self.field + ": ")
-        self.label.grid(row=0, col=1)
+        self.label.grid(row=0, column=1)
         self.data_var = tk.StringVar()
         self.show_data = tk.Label(self, text=self.data_var)
-        self.show_data.grid(row=0, col=2)
+        self.show_data.grid(row=0, column=2)
+
+        self.__update_value()
 
     def __update_value(self):
         if self.field == "Battery":
@@ -413,22 +418,63 @@ class generalData(tk.Frame):
         # Add an else of some sort, don't know where to print the error.
         else:
             print("General data could not be categorized")
+        self.parent.after(100, self.__update_value)
 
+class EngineControl(tk.Frame):
+    """ TKinter frame that holds a label and button with changeable string
 
-def generalData(self):
-    """ TKinter frame that holds a label and displays changeable string
-
-    The label is the name of measured value. The int/scalar shows the value for the value.
+    The label is what's being controlled. The button controls output to LoRa.
 
     Parameters
     ----------
     parent : TKinter Frame
         parent frame
-    gateway : Gateway instance
+    gateway : Gateway instance (LPS)
         Gateway to monitor
-    data : data from functions calculating or directly from the TM.
-        data to display value from
     field : str
-        name of the data to display
+        name of controlled LPS function
 
     """
+
+    def __init__(self, parent, gateway, sensor, field, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensor = sensor
+        self.field = field
+
+        # Button to make a colored "box" for sensor
+        # Style will be reflected on this button
+        self.text_var = tk.StringVar()
+        self.text_var.set("Start")
+        self.btn = tk.Button(self, text=self.field, height=4, width=10)
+        self.btn.grid(row=0, column=1)
+        # Label to display the gateway's port name
+        self.label = tk.Label(self, text=self.field)
+        self.label.grid(
+            row=1, column=1, pady=10)
+
+        self.__update_button()
+
+    def __update_button(self):
+        """ Set the behaviour of the button to open or close the Serial link
+
+        """
+        if self.gateway.serial.get_status():
+            self.text_var.set("Stop")
+            if self.field == "Fueling":
+                self.btn.config(command=self.gateway.send_command("Start Fuel"))
+            elif self.field == "Ignite":
+                self.btn.config(command=self.gateway.send_command("Ignite"))
+            else:
+                print("Change name of field for action")
+        else:
+            self.text_var.set("Start")
+            if self.field == "Fueling":
+                self.btn.config(command=self.gateway.send_command("Stop Fuel"))
+            elif self.field == "Ignite":
+                self.btn.config(command=self.gateway.send_command("Should we send something here?"))
+            else:
+                print("Change name of field for action")
+        # Call this function again after 100 ms
+        self.parent.after(100, self.__update_button)

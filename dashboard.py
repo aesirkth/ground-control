@@ -2,7 +2,7 @@ import sys
 import tkinter as tk
 from tkinter import E, N, S, W
 
-from gui import GatewayStatus, LiveTimeGraph, MessageBox, SensorIndicator
+from gui import GatewayStatus, LiveTimeGraph, MessageBox, SensorIndicator, GeneralData, EngineControl
 from utils import Gateway, Sensors, SerialWrapper
 
 
@@ -26,10 +26,10 @@ class MainApplication(tk.Frame):
 
         self.gateway_messages = MessageBox(
             self, gateway=self.gateway, borderwidth=2, relief="groove")
-        self.graph = LiveTimeGraph(
+        self.speed_graph = LiveTimeGraph(
             self, gateway=self.gateway, sensor=self.sensors.imu, field="velocity")
         self.gateway_status = GatewayStatus(self, gateway=self.gateway, field="GS")
-        self.tm_status = GatewayStatus(self, gateway=self.gateway, field="FM/FPV")
+        # self.tm_status = GatewayStatus(self, gateway=self.gateway, field="FM/FPV")
         self.imu1_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="IMU1")
         self.imu2_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="IMU2")
         self.bmd1_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="BMP1")
@@ -43,13 +43,18 @@ class MainApplication(tk.Frame):
                                                   field="Calibration")
         self.parachute_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu,
                                                   field="Parachute Deployed")
+        self.fuel_control = EngineControl(self, gateway=self.gateway, sensor=self.sensors.imu, field="Fueling")
+        # self.ignition_control = EngineControl(self, gateway=self.gateway, sensor=self.sensors.imu, field="Ignition")
+        self.abs_vel = GeneralData(self, gateway=self.gateway, data=self.gateway.data, field="|V|")
 
         self.gateway_status.grid(
             row=0, column=1, sticky=W+E+N+S, padx=5, pady=5)
-        self.tm_status.grid(
-            row=0, column=2, sticky=W+E+N+S, padx=5, pady=5)
-        self.graph.grid(
-            row=0, rowspan=2, column=3, sticky=W+E+N+S, padx=5, pady=5)
+        # self.tm_status.grid(
+        #    row=0, column=2, sticky=W+E+N+S, padx=5, pady=5)
+        self.abs_vel.grid(
+            row=0, column=3, sticky=W, padx=10, pady=15)
+        self.speed_graph.grid(
+            row=1, rowspan=3, column=3, sticky=W+E+N+S, padx=5, pady=5)
         self.gateway_messages.grid(
             row=1, rowspan=2, column=1, columnspan=2, sticky=W+E+N+S, padx=5, pady=5)
         self.imu1_status.grid(
@@ -72,6 +77,10 @@ class MainApplication(tk.Frame):
             row=7, column=2, sticky=W, padx=20, pady=15)
         self.parachute_status.grid(
             row=8, column=1, sticky=W, padx=10, pady=0)
+        self.fuel_control.grid(
+            row=9, column=1, padx=20, pady=20)
+        # self.ignition_control.grid(
+        #    row=9, column=2, padx=20, pady=20)
 
 
 if __name__ == "__main__":
