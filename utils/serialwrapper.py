@@ -416,11 +416,11 @@ class SerialWrapper:
 
         # Get the number of bytes in the buffer
         i = max(1, min(2048, self.ser.in_waiting))
+        error = ""
         # Read the buffer
         try:
             data = self.ser.read(i)
             self.buffer.extend(data)
-            error = ""
         # This mostly means that the device is disconnected
         except serial.SerialException as e:
             error = "Device disconnected"
