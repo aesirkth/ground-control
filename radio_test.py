@@ -6,6 +6,8 @@ to the RFD900 that acts as a sender. Press 'Ctrl+C' to stop sending
 Use `python radio_test.py receiver` on the receiver side. The number of reception
 errors is recorded. Press 'Ctrl+C' to stop receiving and display the error rate
 
+NB: the error count does not work
+
 """
 
 import signal
