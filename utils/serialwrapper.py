@@ -395,7 +395,7 @@ class SerialWrapper:
             else:
                 return line
 
-    def readlines(self):
+    def readlines(self, decode=False):
         """ Read the last received lines from the serial buffer
 
         The lines are decoded to ascii and the newline character is removed
@@ -440,12 +440,13 @@ class SerialWrapper:
         # Do not run this if no new data has been retrieved
         if self.buffer:
             # Convert the buffer into a list of bytearray (one bytearray for each line)
-            r = self.buffer.split(b'\n')
+            r = self.buffer.split(b'\r\n')
             # Data after the last \n is an incomplete line, save for later
             self.buffer = r[-1]
             # This is the complete lines
             lines = r[:-1]
-            lines = [l.decode('utf-8', 'backslashreplace') for l in lines]
+            if decode:
+                lines = [l.decode('utf-8', 'backslashreplace') for l in lines]
             if self.bonjour in lines:
                 self.is_ready = True
             return lines

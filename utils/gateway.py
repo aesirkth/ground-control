@@ -273,7 +273,7 @@ class Gateway:
                 else:
                     lines = self.serial.readlines()
                     for line in lines:
-                        self.__process_line(line)
+                        self.sensors.update_sensors(line)
 
         self.serial.open_serial()
 

@@ -17,7 +17,7 @@ class GenericSensor:
         self.set_default_values()
 
     def set_default_values(self):
-        columns = ['Time'] + list(self.fields.keys())
+        columns = ['Time'] + ['Seconds_since_start'] + list(self.fields.keys())
         self.raw_data = pd.DataFrame(columns=columns)
 
     def extract_samples(self, frame):
@@ -44,12 +44,29 @@ class GenericSensor:
         for i in range(self.nb_samples):
             sample = samples[i*self.sample_size: (i+1)*self.sample_size]
 
-            time_value = {'Time': time}
             raw_values = {field: self.get_field_value(
                 sample, field) for field in self.fields.keys()}
+
+            try:
+                start_time = datetime.datetime.combine(datetime.date.today(), self.raw_data.Time.iloc[0])
+                
+                if not time is None:
+                    now = datetime.datetime.combine(datetime.date.today(), time)
+
+                    delta = now - start_time
+                    delta = delta.total_seconds()
+                else:
+                    delta = 0
+            except:
+                delta = 0
+
+            time_value = {'Time': time, 'Seconds_since_start': delta}
+
             values = {**time_value, **raw_values}
 
             self.raw_data = self.raw_data.append(values, ignore_index=True)
+            return values
+
 
 class ErrMsg(GenericSensor):
     fields = {
@@ -172,7 +189,6 @@ class ErrMsg(GenericSensor):
 
     def update_data(self, frame, time=None):
         self.update_raw_data(frame, time)
-        print(self.raw_data)
 
 
 class RTC(GenericSensor):
@@ -198,10 +214,10 @@ class RTC(GenericSensor):
             'byte_order': 'big',
             'signed': False,
         },
-        'millisecond': {
+        'microsecond': {
             'start': 3,
             'size': 1,
-            'conversion_function': lambda x: x*1000/256.,  # ms
+            'conversion_function': lambda x: x*1000*1000/256.,  # ms
             'byte_order': 'big',
             'signed': False,
         },
@@ -212,13 +228,12 @@ class RTC(GenericSensor):
 
     def update_data(self, frame, time=None):
         self.update_raw_data(frame, time)
-        print(self.raw_data)
     
     def get_last_time(self):
         hour = int(self.raw_data.hour.iloc[-1])
         minute = int(self.raw_data.minute.iloc[-1])
         second = int(self.raw_data.second.iloc[-1])
-        microsecond = int(self.raw_data.millisecond.iloc[-1]*1000)
+        microsecond = int(self.raw_data.microsecond.iloc[-1])
         last_time = datetime.time(hour, minute, second, microsecond)
         return last_time
 
@@ -239,7 +254,6 @@ class Timer(GenericSensor):
 
     def update_data(self, frame, time=None):
         self.update_raw_data(frame, time)
-        print(self.raw_data)
 
 
 class Batteries(GenericSensor):
@@ -265,7 +279,6 @@ class Batteries(GenericSensor):
 
     def update_data(self, frame, time=None):
         self.update_raw_data(frame, time)
-        print(self.raw_data)
 
 
 class IMU(GenericSensor):
@@ -326,7 +339,6 @@ class IMU(GenericSensor):
 
     def update_data(self, frame, time=None):
         self.update_raw_data(frame, time)
-        print(self.raw_data)
 
 
 class BMP(GenericSensor):
@@ -352,7 +364,6 @@ class BMP(GenericSensor):
 
     def update_data(self, frame, time=None):
         self.update_raw_data(frame, time)
-        print(self.raw_data)
 
 
 class MAG(GenericSensor):
@@ -385,7 +396,6 @@ class MAG(GenericSensor):
 
     def update_data(self, frame, time=None):
         self.update_raw_data(frame, time)
-        print(self.raw_data)
 
 
 class PITOT(GenericSensor):
@@ -404,7 +414,6 @@ class PITOT(GenericSensor):
 
     def update_data(self, frame, time=None):
         self.update_raw_data(frame, time)
-        print(self.raw_data)
 
 
 class Sigmundr:
@@ -434,3 +443,6 @@ class Sigmundr:
         self.bmp3.update_data(frame, time)
         self.mag.update_data(frame, time)
         self.pitot.update_data(frame, time)
+    
+    def reset(self):
+        pass
