@@ -7,7 +7,7 @@ frame = b'\x01'
 # Status
 frame += b'\x00'
 # Err_msg
-frame += b'\x00\x00'
+frame += b'\x04\x03'
 # RTC
 frame += b'\x01\x02\x01\x0B'
 # Timer
