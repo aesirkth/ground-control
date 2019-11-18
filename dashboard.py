@@ -2,7 +2,7 @@ import sys
 import tkinter as tk
 from tkinter import E, N, S, W
 
-from gui import GatewayStatus, LiveTimeGraph, MessageBox, SensorIndicator, GeneralData, EngineControl
+from gui import GatewayStatus, LiveTimeGraph, SensorIndicator, GeneralData, EngineControl
 from utils import Gateway, Sensors, SerialWrapper
 
 
@@ -24,18 +24,16 @@ class MainApplication(tk.Frame):
         self.gateway = gateway
         self.sensors = sensors
 
-        self.gateway_messages = MessageBox(
-            self, gateway=self.gateway, borderwidth=2, relief="groove")
         self.speed_graph = LiveTimeGraph(
             self, gateway=self.gateway, sensor=self.sensors.imu, field="velocity")
         self.gateway_status = GatewayStatus(self, gateway=self.gateway, field="GS")
         # self.tm_status = GatewayStatus(self, gateway=self.gateway, field="FM/FPV")
-        self.imu1_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="IMU1")
         self.imu2_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="IMU2")
-        self.bmd1_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="BMP1")
+        self.imu3_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="IMU3")
         self.bmd2_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="BMP2")
+        self.bmd3_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="BMP3")
         self.gps_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="GPS")
-        self.pito_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="Pitotube")
+        self.SD_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="SD-Card")
         self.magneto_status = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu, field="Magnetometer")
         self.tm_indicator = SensorIndicator(self, gateway=self.gateway, sensor=self.sensors.imu,
                                             field="Telemetry Status")
@@ -52,33 +50,31 @@ class MainApplication(tk.Frame):
         # self.tm_status.grid(
         #    row=0, column=2, sticky=W+E+N+S, padx=5, pady=5)
         self.abs_vel.grid(
-            row=0, column=3, sticky=W, padx=10, pady=15)
+            row=0, column=3, sticky=W, padx=10, pady=5)
         self.speed_graph.grid(
-            row=1, rowspan=3, column=3, sticky=W+E+N+S, padx=5, pady=5)
-        self.gateway_messages.grid(
-            row=1, rowspan=2, column=1, columnspan=2, sticky=W+E+N+S, padx=5, pady=5)
-        self.imu1_status.grid(
-            row=3, column=1, sticky=W, padx=10, pady=5)
+            row=1, rowspan=7, column=3, sticky=W+E+N+S, padx=5, pady=5)
         self.imu2_status.grid(
-            row=4, column=1, sticky=W, padx=10, pady=5)
-        self.bmd1_status.grid(
-            row=5, column=1, sticky=W, padx=10, pady=5)
+            row=2, column=1, sticky=W, padx=10, pady=0)
+        self.imu3_status.grid(
+            row=3, column=1, sticky=W, padx=10, pady=0)
         self.bmd2_status.grid(
-            row=6, column=1, sticky=W, padx=10, pady=5)
+            row=4, column=1, sticky=W, padx=10, pady=0)
+        self.bmd3_status.grid(
+            row=5, column=1, sticky=W, padx=10, pady=0)
         self.gps_status.grid(
-            row=3, column=2, sticky=W, padx=20, pady=5)
-        self.pito_status.grid(
-            row=4, column=2, sticky=W, padx=20, pady=5)
+            row=2, column=2, sticky=W, padx=20, pady=0)
+        self.SD_status.grid(
+            row=3, column=2, sticky=W, padx=20, pady=0)
         self.magneto_status.grid(
-            row=5, column=2, sticky=W, padx=20, pady=5)
+            row=4, column=2, sticky=W, padx=20, pady=0)
         self.tm_indicator.grid(
-            row=7, column=1, sticky=W, padx=10, pady=15)
+            row=6, column=1, sticky=W, padx=10, pady=5)
         self.calibration_status.grid(
-            row=7, column=2, sticky=W, padx=20, pady=15)
+            row=6, column=2, sticky=W, padx=20, pady=5)
         self.parachute_status.grid(
-            row=8, column=1, sticky=W, padx=10, pady=0)
+            row=7, column=1, sticky=W, padx=10, pady=5)
         self.fuel_control.grid(
-            row=9, column=1, padx=20, pady=20)
+            row=8, column=1, padx=20, pady=20)
         # self.ignition_control.grid(
         #    row=9, column=2, padx=20, pady=20)
 
