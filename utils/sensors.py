@@ -8,11 +8,11 @@ class GenericSensor:
 
     """
 
-    def __init__(self, position, nb_samples, fields):
-        self.position = position
+    def __init__(self, start_position, nb_samples, fields, sample_size):
+        self.start_position = start_position
         self.nb_samples = nb_samples
         self.fields = fields
-        self.sample_size = sum( (field['size'] for _, field in self.fields.items()) )  # Byte
+        self.sample_size = sample_size
 
         self.set_default_values()
 
@@ -21,30 +21,34 @@ class GenericSensor:
         self.raw_data = pd.DataFrame(columns=columns)
 
     def extract_samples(self, frame):
-        samples = frame[self.position:self.position +
-                        self.sample_size*self.nb_samples]
+        frame = frame[self.start_position:self.start_position+self.sample_size*self.nb_samples]
+
+        samples = []
+        for i in range(0, len(frame), self.sample_size):
+            sample = frame[i: i+self.sample_size]
+            samples.append(sample)
+   
         return samples
 
-    def get_field_value(self, sample, field):
+    def extract_field_value(self, sample, field):
         start = self.fields[field]['start']
         size = self.fields[field]['size']
+        convert = self.fields[field]['conversion_function']
         byte_order = self.fields[field]['byte_order']
         signed = self.fields[field]['signed']
-        convert = self.fields[field]['conversion_function']
 
-        value_bytes = sample[start: start + size]
-        value_int = int.from_bytes(value_bytes, byte_order, signed=signed)
-        value = convert(value_int)
+        field_bytes = sample[start: start + size]
+        field_int = int.from_bytes(field_bytes, byte_order, signed=signed)
+        value = convert(field_int)
 
         return value
 
     def update_raw_data(self, frame, time):
         samples = self.extract_samples(frame)
 
-        for i in range(self.nb_samples):
-            sample = samples[i*self.sample_size: (i+1)*self.sample_size]
+        for sample in samples:
 
-            raw_values = {field: self.get_field_value(
+            raw_values = {field: self.extract_field_value(
                 sample, field) for field in self.fields.keys()}
 
             try:
@@ -183,9 +187,10 @@ class ErrMsg(GenericSensor):
             'signed': False,
         },
     }
+    sample_size = 2
 
-    def __init__(self, position, nb_samples):
-        super().__init__(position, nb_samples, self.fields)
+    def __init__(self, start_position, nb_samples):
+        super().__init__(start_position, nb_samples, self.fields, self.sample_size)
 
     def update_data(self, frame, time=None):
         self.update_raw_data(frame, time)
@@ -222,9 +227,10 @@ class RTC(GenericSensor):
             'signed': False,
         },
     }
+    sample_size = 4
 
-    def __init__(self, position, nb_samples):
-        super().__init__(position, nb_samples, self.fields)
+    def __init__(self, start_position, nb_samples):
+        super().__init__(start_position, nb_samples, self.fields, self.sample_size)
 
     def update_data(self, frame, time=None):
         self.update_raw_data(frame, time)
@@ -248,9 +254,10 @@ class Timer(GenericSensor):
             'signed': False,
         },
     }
+    sample_size = 4
 
-    def __init__(self, position, nb_samples):
-        super().__init__(position, nb_samples, self.fields)
+    def __init__(self, start_position, nb_samples):
+        super().__init__(start_position, nb_samples, self.fields, self.sample_size)
 
     def update_data(self, frame, time=None):
         self.update_raw_data(frame, time)
@@ -273,9 +280,10 @@ class Batteries(GenericSensor):
             'signed': False,
         },
     }
+    sample_size = 4
 
-    def __init__(self, position, nb_samples):
-        super().__init__(position, nb_samples, self.fields)
+    def __init__(self, start_position, nb_samples):
+        super().__init__(start_position, nb_samples, self.fields, self.sample_size)
 
     def update_data(self, frame, time=None):
         self.update_raw_data(frame, time)
@@ -333,9 +341,10 @@ class IMU(GenericSensor):
             'signed': True,
         },
     }
+    sample_size = 14
 
-    def __init__(self, position, nb_samples):
-        super().__init__(position, nb_samples, self.fields)
+    def __init__(self, start_position, nb_samples):
+        super().__init__(start_position, nb_samples, self.fields, self.sample_size)
 
     def update_data(self, frame, time=None):
         self.update_raw_data(frame, time)
@@ -358,9 +367,10 @@ class BMP(GenericSensor):
             'signed': True,
         },
     }
+    sample_size = 8
 
-    def __init__(self, position, nb_samples):
-        super().__init__(position, nb_samples, self.fields)
+    def __init__(self, start_position, nb_samples):
+        super().__init__(start_position, nb_samples, self.fields, self.sample_size)
 
     def update_data(self, frame, time=None):
         self.update_raw_data(frame, time)
@@ -390,9 +400,10 @@ class MAG(GenericSensor):
             'signed': True,
         },
     }
+    sample_size = 6
 
-    def __init__(self, position, nb_samples):
-        super().__init__(position, nb_samples, self.fields)
+    def __init__(self, start_position, nb_samples):
+        super().__init__(start_position, nb_samples, self.fields, self.sample_size)
 
     def update_data(self, frame, time=None):
         self.update_raw_data(frame, time)
@@ -408,9 +419,10 @@ class PITOT(GenericSensor):
             'signed': False,
         },
     }
+    sample_size = 2
 
-    def __init__(self, position, nb_samples):
-        super().__init__(position, nb_samples, self.fields)
+    def __init__(self, start_position, nb_samples):
+        super().__init__(start_position, nb_samples, self.fields, self.sample_size)
 
     def update_data(self, frame, time=None):
         self.update_raw_data(frame, time)

@@ -34,3 +34,4 @@ frame += b'\x00\x00'
 sigmundr.update_sensors(frame)
 
 # print(sigmundr.imu.data.Acc_X)
+print(sigmundr.rtc.raw_data)
