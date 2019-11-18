@@ -10,7 +10,7 @@ import serial
 import serial.tools.list_ports
 
 
-class SerialWrapper:
+class DummySerialWrapper:
 
     def __init__(self, name):
         self.name = name
