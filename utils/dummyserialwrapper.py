@@ -78,7 +78,7 @@ class DummySerialWrapper:
         return frame
 
     def readlines(self, decode=False):
-        time.sleep(0.1)
+        time.sleep(0.02)
         # Frame number
         frame = b'\x01'
         # Status
@@ -90,7 +90,7 @@ class DummySerialWrapper:
         delay = now - self.start_time
         hour = delay.seconds/3600
         minute = (delay.seconds%3600)/60
-        second = delay.seconds
+        second = delay.seconds%60
         millisecond = delay.microseconds/1000
         frame += bytes([int(hour)])
         frame += bytes([int(minute)])
