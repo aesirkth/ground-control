@@ -292,6 +292,7 @@ class LiveTimeGraph(tk.Frame):
         if self.time:
             if max(self.time) > tmax:
                 self.ax.set_xlim(tmin, 2*tmax)
+                self.canvas.draw()
 
         self.line.set_data(self.time, self.data)
 
