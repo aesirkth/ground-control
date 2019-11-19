@@ -18,8 +18,9 @@ class GenericSensor:
         self.set_default_values()
 
     def set_default_values(self):
-        columns = ['Time'] + ['Seconds_since_start'] + list(self.fields.keys())
-        self.raw_data = pd.DataFrame(columns=columns)
+        fields = ['Time'] + ['Seconds_since_start'] + list(self.fields.keys())
+        # self.raw_data = pd.DataFrame(columns=columns)
+        self.raw_data = {key: [] for key in fields}
 
     def extract_samples(self, frame):
         frame = frame[self.start_position:self.start_position+self.sample_size*self.nb_samples]
@@ -49,32 +50,29 @@ class GenericSensor:
 
         for sample in samples:
 
-            raw_values = {field: self.extract_field_value(
-                sample, field) for field in self.fields.keys()}
+            for field in self.fields.keys():
+                value = self.extract_field_value(sample, field)
+                self.raw_data[field].append(value)
 
             # time is None when updating the RTC values
             if self.is_rtc:
-                hour = raw_values['hour']
-                minute = raw_values['minute']
-                second = raw_values['second']
-                microsecond = int(raw_values['microsecond'])
+                hour = self.raw_data['hour'][-1]
+                minute = self.raw_data['minute'][-1]
+                second = self.raw_data['second'][-1]
+                microsecond = int(self.raw_data['microsecond'][-1])
                 time = datetime.time(hour, minute, second, microsecond)
 
-            if self.raw_data.shape[0] > 0:
-                start_time = datetime.datetime.combine(datetime.date.today(), self.raw_data.Time.iloc[0])
+            if self.raw_data['Time']:
+                start_time = datetime.datetime.combine(datetime.date.today(), self.raw_data['Time'][0])
                     
                 now = datetime.datetime.combine(datetime.date.today(), time)
                 delta = now - start_time
                 delta = delta.total_seconds()
             else:
-                delta = 0
+                delta = 0.
             
-            time_values = {'Time': time, 'Seconds_since_start': delta}
-
-            values = {**time_values, **raw_values}
-
-            self.raw_data = self.raw_data.append(values, ignore_index=True)
-            return values
+            self.raw_data['Time'].append(time)
+            self.raw_data['Seconds_since_start'].append(delta)
 
 
 class ErrMsg(GenericSensor):
@@ -241,7 +239,7 @@ class RTC(GenericSensor):
         self.update_raw_data(frame, time)
     
     def get_latest_timestamp(self):
-        latest_timestamp = self.raw_data.Time.iloc[-1]
+        latest_timestamp = self.raw_data['Time'][-1]
         return latest_timestamp
 
 

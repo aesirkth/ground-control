@@ -286,8 +286,8 @@ class LiveTimeGraph(tk.Frame):
         """
         tmin, tmax = self.ax.get_xlim()
 
-        self.time = self.sensor.raw_data.Seconds_since_start.tolist()
-        self.data = self.sensor.raw_data[self.field].tolist()
+        self.time = self.sensor.raw_data['Seconds_since_start']
+        self.data = self.sensor.raw_data[self.field]
 
         if self.time:
             if max(self.time) > tmax:
