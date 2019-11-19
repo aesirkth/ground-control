@@ -45,34 +45,34 @@ class GenericSensor:
 
         return value
 
-    def update_raw_data(self, frame, time=None):
+    def update_raw_data(self, frame, frame_time=None):
         samples = self.extract_samples(frame)
 
-        for sample in samples:
+        for i, sample in enumerate(samples):
 
             for field in self.fields.keys():
                 value = self.extract_field_value(sample, field)
                 self.raw_data[field].append(value)
 
-            # time is None when updating the RTC values
+            # frame_time is None when updating the RTC values
             if self.is_rtc:
-                hour = self.raw_data['hour'][-1]
-                minute = self.raw_data['minute'][-1]
-                second = self.raw_data['second'][-1]
-                microsecond = int(self.raw_data['microsecond'][-1])
-                time = datetime.time(hour, minute, second, microsecond)
+                hour = self.raw_data['Hour'][-1]
+                minute = self.raw_data['Minute'][-1]
+                second = self.raw_data['Second'][-1]
+                microsecond = int(self.raw_data['Microsecond'][-1])
+                frame_time = datetime.time(hour, minute, second, microsecond)
 
             if self.raw_data['Time']:
                 start_time = datetime.datetime.combine(datetime.date.today(), self.raw_data['Time'][0])
                     
-                now = datetime.datetime.combine(datetime.date.today(), time)
+                now = datetime.datetime.combine(datetime.date.today(), frame_time)
                 delta = now - start_time
                 delta = delta.total_seconds()
             else:
                 delta = 0.
             
-            self.raw_data['Time'].append(time)
-            self.raw_data['Seconds_since_start'].append(delta)
+            self.raw_data['Time'].append(frame_time)
+            self.raw_data['Seconds_since_start'].append(delta*(i+1)/self.nb_samples)
 
 
 class ErrMsg(GenericSensor):
@@ -195,34 +195,34 @@ class ErrMsg(GenericSensor):
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
 
-    def update_data(self, frame, time=None):
-        self.update_raw_data(frame, time)
+    def update_data(self, frame, frame_time=None):
+        self.update_raw_data(frame, frame_time)
 
 
 class RTC(GenericSensor):
     fields = {
-        'hour': {
+        'Hour': {
             'start': 0,
             'size': 1,  # Byte
             'conversion_function': lambda x: x,  # h
             'byte_order': 'big',
             'signed': False,
         },
-        'minute': {
+        'Minute': {
             'start': 1,
             'size': 1,
             'conversion_function': lambda x: x,  # min
             'byte_order': 'big',
             'signed': False,
         },
-        'second': {
+        'Second': {
             'start': 2,
             'size': 1,
             'conversion_function': lambda x: x,  # s
             'byte_order': 'big',
             'signed': False,
         },
-        'microsecond': {
+        'Microsecond': {
             'start': 3,
             'size': 1,
             'conversion_function': lambda x: x*1000*1000/256.,  # ms
@@ -235,8 +235,8 @@ class RTC(GenericSensor):
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
 
-    def update_data(self, frame, time=None):
-        self.update_raw_data(frame, time)
+    def update_data(self, frame, frame_time=None):
+        self.update_raw_data(frame, frame_time)
     
     def get_latest_timestamp(self):
         latest_timestamp = self.raw_data['Time'][-1]
@@ -258,8 +258,8 @@ class Timer(GenericSensor):
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
 
-    def update_data(self, frame, time=None):
-        self.update_raw_data(frame, time)
+    def update_data(self, frame, frame_time=None):
+        self.update_raw_data(frame, frame_time)
 
 
 class Batteries(GenericSensor):
@@ -284,8 +284,8 @@ class Batteries(GenericSensor):
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
 
-    def update_data(self, frame, time=None):
-        self.update_raw_data(frame, time)
+    def update_data(self, frame, frame_time=None):
+        self.update_raw_data(frame, frame_time)
 
 
 class IMU(GenericSensor):
@@ -345,8 +345,8 @@ class IMU(GenericSensor):
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
 
-    def update_data(self, frame, time=None):
-        self.update_raw_data(frame, time)
+    def update_data(self, frame, frame_time=None):
+        self.update_raw_data(frame, frame_time)
 
 
 class BMP(GenericSensor):
@@ -371,8 +371,8 @@ class BMP(GenericSensor):
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
 
-    def update_data(self, frame, time=None):
-        self.update_raw_data(frame, time)
+    def update_data(self, frame, frame_time=None):
+        self.update_raw_data(frame, frame_time)
 
 
 class MAG(GenericSensor):
@@ -404,8 +404,8 @@ class MAG(GenericSensor):
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
 
-    def update_data(self, frame, time=None):
-        self.update_raw_data(frame, time)
+    def update_data(self, frame, frame_time=None):
+        self.update_raw_data(frame, frame_time)
 
 
 class PITOT(GenericSensor):
@@ -423,8 +423,8 @@ class PITOT(GenericSensor):
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
 
-    def update_data(self, frame, time=None):
-        self.update_raw_data(frame, time)
+    def update_data(self, frame, frame_time=None):
+        self.update_raw_data(frame, frame_time)
 
 
 class Sigmundr:
@@ -445,15 +445,23 @@ class Sigmundr:
 
     def update_sensors(self, frame):
         self.rtc.update_data(frame)
-        time = self.rtc.get_latest_timestamp()
-        self.errmsg.update_data(frame, time)
-        self.timer.update_data(frame, time)
-        self.batteries.update_data(frame, time)
-        self.imu.update_data(frame, time)
-        self.bmp2.update_data(frame, time)
-        self.bmp3.update_data(frame, time)
-        self.mag.update_data(frame, time)
-        self.pitot.update_data(frame, time)
+        frame_time = self.rtc.get_latest_timestamp()
+        self.errmsg.update_data(frame, frame_time)
+        self.timer.update_data(frame, frame_time)
+        self.batteries.update_data(frame, frame_time)
+        self.imu.update_data(frame, frame_time)
+        self.bmp2.update_data(frame, frame_time)
+        self.bmp3.update_data(frame, frame_time)
+        self.mag.update_data(frame, frame_time)
+        self.pitot.update_data(frame, frame_time)
     
     def reset(self):
-        pass
+        self.errmsg.set_default_values()
+        self.rtc.set_default_values()
+        self.timer.set_default_values()
+        self.batteries.set_default_values()
+        self.imu.set_default_values()
+        self.bmp2.set_default_values()
+        self.bmp3.set_default_values()
+        self.mag.set_default_values()
+        self.pitot.set_default_values()
