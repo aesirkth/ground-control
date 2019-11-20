@@ -184,7 +184,7 @@ class SerialWrapper:
                     # Exit AT command mode
                     self.write('ATO\r')
 
-                    if 'OK\r' in lines:
+                    if b'OK' in lines:
                         print("{} : Found device on port : {}".format(
                             self.name, self.ser.port))
                         # self.close_serial()
