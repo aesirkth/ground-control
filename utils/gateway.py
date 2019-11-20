@@ -9,8 +9,6 @@ import threading
 from os import mkdir
 from os.path import isdir, join
 
-import yaml
-
 
 class Gateway:
     """ Class to read data received from a Gateway device
