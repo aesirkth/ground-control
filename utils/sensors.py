@@ -6,18 +6,18 @@ class GenericSensor:
 
     """
 
-    def __init__(self, start_position, fields, sample_size, nb_samples=1, is_rtc=False):
+    def __init__(self, start_position, fields, sample_size, nb_samples=1, sample_rate=0, is_rtc=False):
         self.start_position = start_position
         self.fields = fields
-        self.sample_size = sample_size
+        self.sample_size = sample_size  # Byte
         self.nb_samples = nb_samples
+        self.sample_rate = sample_rate  # Hz
         self.is_rtc = is_rtc
 
         self.set_default_values()
 
     def set_default_values(self):
         fields = ['Time'] + ['Seconds_since_start'] + list(self.fields.keys())
-        # self.raw_data = pd.DataFrame(columns=columns)
         self.raw_data = {key: [] for key in fields}
 
     def extract_samples(self, frame):
@@ -70,7 +70,10 @@ class GenericSensor:
                 delta = 0.
             
             self.raw_data['Time'].append(frame_time)
-            self.raw_data['Seconds_since_start'].append(delta*(i+1)/self.nb_samples)
+            if self.sample_rate:
+                self.raw_data['Seconds_since_start'].append(delta-(self.nb_samples-i+1)/self.sample_rate)
+            else:
+                self.raw_data['Seconds_since_start'].append(delta)
 
 
 class ErrMsg(GenericSensor):
@@ -435,7 +438,7 @@ class Sigmundr:
         self.rtc = RTC(4, is_rtc=True)
         self.timer = Timer(8)
         self.batteries = Batteries(12)
-        self.imu = IMU(16, nb_samples=4)
+        self.imu = IMU(16, nb_samples=4, sample_rate=200)
         self.bmp2 = BMP(72)
         self.bmp3 = BMP(80)
         self.mag = MAG(88)

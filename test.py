@@ -39,7 +39,7 @@ frame += b'\x00'
 # Err_msg
 frame += b'\x04\x03'
 # RTC
-frame += b'\x01\x02\x01\x10'
+frame += b'\x01\x02\x01\x11'
 # Timer
 frame += b'\x10\x27\x00\x00' # 5s
 # Battery1
@@ -62,8 +62,5 @@ frame += b'\x00\x00'
 
 sigmundr.update_sensors(frame)
 
-# print(sigmundr.imu.raw_data)
-# print(sigmundr.rtc.raw_data)
-
-for b in frame:
-    print(str(b))
+print(sigmundr.imu.raw_data)
+print(sigmundr.rtc.raw_data)
