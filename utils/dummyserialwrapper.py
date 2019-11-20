@@ -78,7 +78,7 @@ class DummySerialWrapper:
         return frame
 
     def readlines(self, decode=False):
-        time.sleep(0.02)
+        time.sleep(0.1)
         # Frame number
         frame = b'\x01'
         # Status
