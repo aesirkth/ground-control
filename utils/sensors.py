@@ -1,7 +1,5 @@
 import datetime
 
-import pandas as pd
-
 
 class GenericSensor:
     """ This is a generic class to deal with most sensors
