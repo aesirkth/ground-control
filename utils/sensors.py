@@ -328,12 +328,15 @@ class RTC(GenericSensor):
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
 
+        self.reset()
+    
+    def reset(self):
+        self.data = {'Time': datetime.time(0, 0, 0, 0)}
+        self.set_default_values()
+    
     def update_data(self, frame, frame_time=None):
         self.update_raw_data(frame, frame_time)
-    
-    def get_latest_timestamp(self):
-        latest_timestamp = self.raw_data['Time'][-1]
-        return latest_timestamp
+        self.data['Time'] = self.raw_data['Time'][-1]
 
 
 class Timer(GenericSensor):
@@ -354,8 +357,15 @@ class Timer(GenericSensor):
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
 
+        self.reset()
+    
+    def reset(self):
+        self.data = {'Timer': 0}
+        self.set_default_values()
+
     def update_data(self, frame, frame_time=None):
         self.update_raw_data(frame, frame_time)
+        self.data['Timer'] = self.raw_data['Timer'][-1]
 
 
 class Batteries(GenericSensor):
@@ -383,8 +393,16 @@ class Batteries(GenericSensor):
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
 
+        self.reset()
+    
+    def reset(self):
+        self.data = {field: 0 for field in self.fields.keys()}
+        self.set_default_values()
+
     def update_data(self, frame, frame_time=None):
         self.update_raw_data(frame, frame_time)
+        for field in self.fields.keys():
+            self.data[field] = self.raw_data[field][-1]
 
 
 class ICM20602(GenericSensor):
@@ -450,6 +468,12 @@ class ICM20602(GenericSensor):
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
 
+        self.reset()
+    
+    def reset(self):
+        self.data = {}
+        self.set_default_values()
+
     def update_data(self, frame, frame_time=None):
         self.update_raw_data(frame, frame_time)
 
@@ -480,6 +504,12 @@ class BMP280(GenericSensor):
 
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
+
+        self.reset()
+    
+    def reset(self):
+        self.data = {}
+        self.set_default_values()
 
     def update_data(self, frame, frame_time=None):
         self.update_raw_data(frame, frame_time)
@@ -517,6 +547,12 @@ class LIS3MDLTR(GenericSensor):
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
 
+        self.reset()
+    
+    def reset(self):
+        self.data = {}
+        self.set_default_values()
+
     def update_data(self, frame, frame_time=None):
         self.update_raw_data(frame, frame_time)
 
@@ -540,6 +576,12 @@ class ABP(GenericSensor):
 
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
+
+        self.reset()
+    
+    def reset(self):
+        self.data = {}
+        self.set_default_values()
 
     def update_data(self, frame, frame_time=None):
         self.update_raw_data(frame, frame_time)
@@ -565,7 +607,7 @@ class Sigmundr:
         if len(frame) > 0:
             if frame[0] == 0x01 or frame[0] == 0x02:
                 self.rtc.update_data(frame)
-                frame_time = self.rtc.get_latest_timestamp()
+                frame_time = self.rtc.data['Time']
                 self.errmsg.update_data(frame, frame_time)
                 self.timer.update_data(frame, frame_time)
                 self.batteries.update_data(frame, frame_time)
@@ -577,11 +619,11 @@ class Sigmundr:
     
     def reset(self):
         self.errmsg.reset()
-        self.rtc.set_default_values()
-        self.timer.set_default_values()
-        self.batteries.set_default_values()
-        self.imu2.set_default_values()
-        self.bmp2.set_default_values()
-        self.bmp3.set_default_values()
-        self.mag.set_default_values()
-        self.pitot.set_default_values()
+        self.rtc.reset()
+        self.timer.reset()
+        self.batteries.reset()
+        self.imu2.reset()
+        self.bmp2.reset()
+        self.bmp3.reset()
+        self.mag.reset()
+        self.pitot.reset()
