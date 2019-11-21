@@ -634,12 +634,68 @@ class Sigmundr:
 # ########################## #
 
 
-class LaunchPadStation:
-    def __init__(self):
-        pass
-    
-    def update_sensors(self, frame):
-        pass
+class LPSStatus(GenericSensor):
+    fields = {
+        'IS_FILLING': {
+            'start': 0,
+            'size': 1,  # Byte
+            'conversion_function': lambda x: x & 1<<0,
+            'byte_order': 'big',
+            'signed': False,
+        },
+        'IS_VENTING': {
+            'start': 0,
+            'size': 1,
+            'conversion_function': lambda x: (x & 1<<1) >> 1,
+            'byte_order': 'big',
+            'signed': False,
+        },
+        'IS_ARMED': {
+            'start': 0,
+            'size': 1,
+            'conversion_function': lambda x: (x & 1<<2) >> 2,
+            'byte_order': 'big',
+            'signed': False,
+        },
+        'IS_FIRING': {
+            'start': 0,
+            'size': 1,
+            'conversion_function': lambda x: (x & 1<<3) >> 3,
+            'byte_order': 'big',
+            'signed': False,
+        },
+        'IS_TM_ENABLED': {
+            'start': 0,
+            'size': 1,
+            'conversion_function': lambda x: (x & 1<<4) >> 4,
+            'byte_order': 'big',
+            'signed': False,
+        },
+    }
+    sample_size = 1
+
+    def __init__(self, start_position, **kwargs):
+        super().__init__(start_position, self.fields, self.sample_size, **kwargs)
+
+        self.reset()
     
     def reset(self):
-        pass
+        self.data = {field: 0 for field in self.fields.keys()}
+        self.data['IS_TM_ENABLED'] = 1
+        self.set_default_values()
+
+    def update_data(self, frame, frame_time=None):
+        self.update_raw_data(frame, frame_time)
+        for field in self.fields.keys():
+            self.data[field] = self.raw_data[field][-1]
+
+
+class LaunchPadStation:
+    def __init__(self):
+        self.status = LPSStatus(0)
+    
+    def update_sensors(self, frame):
+        self.status.update_data(frame, frame_time=datetime.datetime.now().time())
+    
+    def reset(self):
+        self.status.reset()

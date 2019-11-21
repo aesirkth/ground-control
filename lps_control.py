@@ -30,8 +30,9 @@ class MainApplication(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
+        self.sensors = self.gateway.sensors
 
-        self.gateway_controls = LPSCommandButtons(self, self.gateway)
+        self.gateway_controls = LPSCommandButtons(self, self.gateway, self.sensors.status)
         self.gateway_status = GatewayStatus(self, self.gateway, 'LPS')
 
         self.gateway_status.grid(

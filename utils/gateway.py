@@ -74,7 +74,7 @@ class Gateway:
         with open(self.log_path, 'ab+') as file:
             file.write(frame)
 
-    def send_command(self, command):
+    def send_command(self, command, *args, **kwargs):
         """ Send a command via serial link
 
         Parameters
@@ -84,7 +84,7 @@ class Gateway:
 
         """
         if self.serial.get_status():
-            self.serial.write(command)
+            self.serial.write(command, *args, **kwargs)
 
     def start_read(self):
         """ Start reading and saving data from Gateway device

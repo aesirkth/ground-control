@@ -20,15 +20,11 @@ class LPSCommandButtons(tk.Frame):
 
     """
 
-    def __init__(self, parent, gateway, *args, **kwargs):
+    def __init__(self, parent, gateway, status, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
-        self.is_filling = False
-        self.is_venting = False
-        self.is_armed = False
-        self.is_firing = False
-        self.is_tm_enabled = True
+        self.status = status
 
         self.button_fill_text = tk.StringVar()
         self.button_fill = tk.Button(self, textvar=self.button_fill_text)
@@ -42,7 +38,7 @@ class LPSCommandButtons(tk.Frame):
         self.button_tm = tk.Button(self, textvar=self.button_tm_text)
         self.button_cal_text = tk.StringVar()
         self.button_cal = tk.Button(
-            self, textvar=self.button_cal_text, command=self._trigger_calibration)
+            self, textvar=self.button_cal_text, command=lambda: self.gateway.send_command(bytes([0x43])))
 
         self.button_fill.grid(row=1, column=1, sticky=W+E)
         self.button_vent.grid(row=1, column=2, sticky=W+E)
@@ -60,44 +56,44 @@ class LPSCommandButtons(tk.Frame):
         if self.gateway.serial.is_ready:
 
             self.button_fill.config(state=tk.NORMAL)
-            if not self.is_filling:
+            if not self.status.data['IS_FILLING']:
                 self.button_fill_text.set("Start filling")
-                self.button_fill.config(command=lambda: self._toggle_filling('START'))
+                self.button_fill.config(command=lambda: self.gateway.send_command(bytes([0x61])))
             else:
                 self.button_fill_text.set("Stop filling")
-                self.button_fill.config(command=lambda: self._toggle_filling('STOP'))
+                self.button_fill.config(command=lambda: self.gateway.send_command(bytes([0x62])))
 
             self.button_vent.config(state=tk.NORMAL)
-            if not self.is_venting:
+            if not self.status.data['IS_VENTING']:
                 self.button_vent_text.set("Start venting")
-                self.button_vent.config(command=lambda: self._toggle_venting('START'))
+                self.button_vent.config(command=lambda: self.gateway.send_command(bytes([0x63])))
             else:
                 self.button_vent_text.set("Stop venting")
-                self.button_vent.config(command=lambda: self._toggle_venting('STOP'))
+                self.button_vent.config(command=lambda: self.gateway.send_command(bytes([0x64])))
 
             self.button_arm.config(state=tk.NORMAL)
-            if not self.is_armed:
+            if not self.status.data['IS_ARMED']:
                 self.button_arm_text.set("Arm")
-                self.button_arm.config(command=lambda: self._toggle_arm('ARM'))
+                self.button_arm.config(command=lambda: self.gateway.send_command(bytes([0x65])))
             else:
                 self.button_arm_text.set("Disarm")
-                self.button_arm.config(command=lambda: self._toggle_arm('DISARM'))
+                self.button_arm.config(command=lambda: self.gateway.send_command(bytes([0x66])))
 
             self.button_fire.config(state=tk.NORMAL)
-            if not self.is_firing:
+            if not self.status.data['IS_FIRING']:
                 self.button_fire_text.set("Start ignition")
-                self.button_fire.config(command=lambda: self._toggle_ignition('START'))
+                self.button_fire.config(command=lambda: self.gateway.send_command(bytes([0x67])))
             else:
                 self.button_fire_text.set("Stop ignition")
-                self.button_fire.config(command=lambda: self._toggle_ignition('STOP'))
+                self.button_fire.config(command=lambda: self.gateway.send_command(bytes([0x68])))
 
             self.button_tm.config(state=tk.NORMAL)
-            if not self.is_tm_enabled:
+            if not self.status.data['IS_TM_ENABLED']:
                 self.button_tm_text.set("Enable telemetry ")
-                self.button_tm.config(command=lambda: self._toggle_telemetry('ENABLE'))
+                self.button_tm.config(command=lambda: self.gateway.send_command(bytes([0x41])))
             else:
                 self.button_tm_text.set("Disable telemetry")
-                self.button_tm.config(command=lambda: self._toggle_telemetry('DISABLE'))
+                self.button_tm.config(command=lambda: self.gateway.send_command(bytes([0x42])))
 
             self.button_cal.config(state=tk.NORMAL)
 
@@ -117,54 +113,6 @@ class LPSCommandButtons(tk.Frame):
 
         # Call this function again after 100 ms
         self.parent.after(100, self._update_buttons)
-
-    def _toggle_filling(self, command):
-        if command == 'START':
-            self.gateway.send_command(0x61)
-            self.is_filling = True
-        elif command == 'STOP':
-            self.gateway.send_command(0x62)
-            self.is_filling = False
-        self._update_buttons()
-
-    def _toggle_venting(self, command):
-        if command == 'START':
-            self.gateway.send_command(0x63)
-            self.is_venting = True
-        elif command == 'STOP':
-            self.gateway.send_command(0x64)
-            self.is_venting = False
-        self._update_buttons()
-
-    def _toggle_arm(self, command):
-        if command == 'ARM':
-            self.gateway.send_command(0x65)
-            self.is_armed = True
-        elif command == 'DISARM':
-            self.gateway.send_command(0x66)
-            self.is_armed = False
-        self._update_buttons()
-
-    def _toggle_ignition(self, command):
-        if command == 'START':
-            self.gateway.send_command(0x67)
-            self.is_firing = True
-        elif command == 'DISARM':
-            self.gateway.send_command(0x68)
-            self.is_firing = False
-        self._update_buttons()
-
-    def _toggle_telemetry(self, command):
-        if command == 'ENABLE':
-            self.gateway.send_command(0x41)
-            self.is_tm_enabled = True
-        elif command == 'DISABLE':
-            self.gateway.send_command(0x42)
-            self.is_tm_enabled = False
-        self._update_buttons()
-
-    def _trigger_calibration(self):
-        self.gateway.send_command(0x43)
 
 
 class GatewayStatus(tk.Frame):
