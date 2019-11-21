@@ -1,8 +1,43 @@
+""" Utilities to deal with the sensors
+
+The class GenericSensor contains all the logic required to extract the sensors' data from
+a bytearray
+
+Write GenericSensor child class for each sensor with a 'field' and 'sample_size' attributes. Add an 'update_data()'
+method that calls the parent's 'update_raw_data()' method to update the sensor's values. It is possible
+to add a specific processing in 'update_data()' if necessary
+
+"""
+
 import datetime
 
 
 class GenericSensor:
     """ This is a generic class to deal with most sensors
+
+    Parameters
+    ----------
+    start_position: int
+        position of the first byte in the frame. Count starts from 0
+    fields: dict
+        dictionary with the following structure
+            {'Name_of_the_field': {
+                'start': #Position of the first byte in the field,
+                'size': #Size of the field in bytes,
+                'conversion_function': #lamdba fonction to convert the values,
+                'byte_order': #'big' or 'little,
+                'signed': #True or False,
+                },
+            {'Name_of_an_other_field'}: {...},
+            }
+    sample_size: int
+        number of bytes in the field
+    nb_sample: int
+        (optional) number of samples. Samples must be ordered from oldest to newest
+    sample_rate: float
+        (optional) frequency of data acquisition in Hz. Required if nb_samples != 1
+    is_rtc: bool
+        True if the sensor is a Real Time Clock
 
     """
 
@@ -20,17 +55,48 @@ class GenericSensor:
         fields = ['Time'] + ['Seconds_since_start'] + list(self.fields.keys())
         self.raw_data = {key: [] for key in fields}
 
-    def extract_samples(self, frame):
-        frame = frame[self.start_position:self.start_position+self.sample_size*self.nb_samples]
+    def _extract_samples(self, frame):
+        """ Read a frame and return a view of it with only the relevant bytes
+
+        The relevant bytes are those located between self.start_position and
+        self.sample_size. If multiple samples are present (ie. self.nb_samples
+        is greater that 1) all samples are returned as elements of a list
+
+        Parameters
+        ----------
+        frame: bytearray
+            array containing all the sensors values
+
+        Returns
+        -------
+        samples: list
+            list of the samples related to the sensor
+
+        """
+        start = self.start_position
+        size = self.sample_size*self.nb_samples
+        frame = frame[start: start + size]
 
         samples = []
         for i in range(0, len(frame), self.sample_size):
-            sample = frame[i: i+self.sample_size]
+            sample = frame[i: i + self.sample_size]
             samples.append(sample)
    
         return samples
 
-    def extract_field_value(self, sample, field):
+    def _extract_field_values(self, sample, field):
+        """ Use self.field data to extract and convert the field values
+
+        Parameters
+        ----------
+        sample: bytearray
+        
+        Returns
+        -------
+        value: int or float or bool
+            converted value of the field
+
+        """
         start = self.fields[field]['start']
         size = self.fields[field]['size']
         convert = self.fields[field]['conversion_function']
@@ -44,12 +110,22 @@ class GenericSensor:
         return value
 
     def update_raw_data(self, frame, frame_time=None):
-        samples = self.extract_samples(frame)
+        """ Read values from the telemetry frame and update the sensor's values
+
+        Parameters
+        ----------
+        frame: bytearray
+            telemetry frame
+        frame_time: datetime.time object
+            (optional) timestamp of the frame. Not need when reading the RTC
+
+        """
+        samples = self._extract_samples(frame)
 
         for i, sample in enumerate(samples):
 
             for field in self.fields.keys():
-                value = self.extract_field_value(sample, field)
+                value = self._extract_field_values(sample, field)
                 self.raw_data[field].append(value)
 
             # frame_time is None when updating the RTC values
@@ -74,6 +150,11 @@ class GenericSensor:
                 self.raw_data['Seconds_since_start'].append(delta-(self.nb_samples-i+1)/self.sample_rate)
             else:
                 self.raw_data['Seconds_since_start'].append(delta)
+
+
+# ############################### #
+#      Sensors for Sigmundr       #
+# ############################### #
 
 
 class ErrMsg(GenericSensor):
@@ -201,6 +282,9 @@ class ErrMsg(GenericSensor):
 
 
 class RTC(GenericSensor):
+    """ Time since OBC boot
+
+    """
     fields = {
         'Hour': {
             'start': 0,
@@ -245,6 +329,9 @@ class RTC(GenericSensor):
 
 
 class Timer(GenericSensor):
+    """ Time elapsed since the rocket was launched
+
+    """
     fields = {
         'Timer': {
             'start': 0,
@@ -264,6 +351,9 @@ class Timer(GenericSensor):
 
 
 class Batteries(GenericSensor):
+    """ Analog reading of the embedded batteries voltage
+
+    """
     fields = {
         'Battery1': {
             'start': 0,
@@ -289,7 +379,13 @@ class Batteries(GenericSensor):
         self.update_raw_data(frame, frame_time)
 
 
-class IMU(GenericSensor):
+class ICM20602(GenericSensor):
+    """ Inertial Motion Unit
+
+    Acceleration scale: +- 16g
+    Gyro scale: +- 1000 dps
+
+    """
     fields = {
         'Acc_X': {
             'start': 0,
@@ -350,7 +446,12 @@ class IMU(GenericSensor):
         self.update_raw_data(frame, frame_time)
 
 
-class BMP(GenericSensor):
+class BMP280(GenericSensor):
+    """ Pressure sensor
+
+    On sigmundr this sensor is used to measure the static pressure
+
+    """
     fields = {
         'Temperature': {
             'start': 0,
@@ -376,7 +477,10 @@ class BMP(GenericSensor):
         self.update_raw_data(frame, frame_time)
 
 
-class MAG(GenericSensor):
+class LIS3MDLTR(GenericSensor):
+    """ Digital magnetic sensor
+
+    """
     fields = {
         'Mag_X': {
             'start': 0,
@@ -409,7 +513,12 @@ class MAG(GenericSensor):
         self.update_raw_data(frame, frame_time)
 
 
-class PITOT(GenericSensor):
+class ABP(GenericSensor):
+    """ Pressure Sensor
+
+    On Sigmundr this sensor is used to measure the dynamic pressure
+
+    """
     fields = {
         'Pressure': {
             'start': 0,
@@ -438,30 +547,32 @@ class Sigmundr:
         self.rtc = RTC(4, is_rtc=True)
         self.timer = Timer(8)
         self.batteries = Batteries(12)
-        self.imu = IMU(16, nb_samples=4, sample_rate=200)
-        self.bmp2 = BMP(72)
-        self.bmp3 = BMP(80)
-        self.mag = MAG(88)
-        self.pitot = PITOT(92)
+        self.imu2 = ICM20602(16, nb_samples=4, sample_rate=200)
+        self.bmp2 = BMP280(72)
+        self.bmp3 = BMP280(80)
+        self.mag = LIS3MDLTR(88)
+        self.pitot = ABP(92)
 
     def update_sensors(self, frame):
-        self.rtc.update_data(frame)
-        frame_time = self.rtc.get_latest_timestamp()
-        self.errmsg.update_data(frame, frame_time)
-        self.timer.update_data(frame, frame_time)
-        self.batteries.update_data(frame, frame_time)
-        self.imu.update_data(frame, frame_time)
-        self.bmp2.update_data(frame, frame_time)
-        self.bmp3.update_data(frame, frame_time)
-        self.mag.update_data(frame, frame_time)
-        self.pitot.update_data(frame, frame_time)
+        if len(frame) > 0:
+            if frame[0] == b'0x01' or frame[0] == b'0x02':
+                self.rtc.update_data(frame)
+                frame_time = self.rtc.get_latest_timestamp()
+                self.errmsg.update_data(frame, frame_time)
+                self.timer.update_data(frame, frame_time)
+                self.batteries.update_data(frame, frame_time)
+                self.imu2.update_data(frame, frame_time)
+                self.bmp2.update_data(frame, frame_time)
+                self.bmp3.update_data(frame, frame_time)
+                self.mag.update_data(frame, frame_time)
+                self.pitot.update_data(frame, frame_time)
     
     def reset(self):
         self.errmsg.set_default_values()
         self.rtc.set_default_values()
         self.timer.set_default_values()
         self.batteries.set_default_values()
-        self.imu.set_default_values()
+        self.imu2.set_default_values()
         self.bmp2.set_default_values()
         self.bmp3.set_default_values()
         self.mag.set_default_values()
