@@ -26,7 +26,7 @@ class MainApplication(tk.Frame):
 
         self.speed_graph = LiveTimeGraph(
             self, self.gateway, self.sensors.bmp2, field="Temperature")
-        self.gateway_status = GatewayStatus(self, self.gateway, field="GS")
+        self.gateway_status = GatewayStatus(self, self.gateway, "Telemetry")
         # self.tm_status = GatewayStatus(self, self.gateway, field="FM/FPV")
         self.imu2_status = SensorIndicator(
             self, self.gateway, self.sensors.errmsg, field="ERR_INIT_IMU2")

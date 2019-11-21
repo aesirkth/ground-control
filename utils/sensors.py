@@ -627,3 +627,19 @@ class Sigmundr:
         self.bmp3.reset()
         self.mag.reset()
         self.pitot.reset()
+
+
+# ########################## #
+#      Sensors for LPS       #
+# ########################## #
+
+
+class LaunchPadStation:
+    def __init__(self):
+        pass
+    
+    def update_sensors(self, frame):
+        pass
+    
+    def reset(self):
+        pass

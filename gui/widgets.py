@@ -66,14 +66,14 @@ class GatewayStatus(tk.Frame):
     field : GS or TM/FPV
     """
 
-    def __init__(self, parent, gateway, field, *args, **kwargs):
+    def __init__(self, parent, gateway, name, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
-        self.field = field
+        self.name = name
 
         # Name to separate the buttons
-        tk.Label(self,text=self.field).grid(row=0,column=0)
+        tk.Label(self,text=self.name).grid(row=0,column=0)
         # Button to open/close the Serial link
         self.button_var = tk.StringVar()
         self.read_button = tk.Button(self, textvariable=self.button_var)
@@ -131,21 +131,12 @@ class GatewayStatus(tk.Frame):
 
         """
         if self.gateway.serial.get_status():
+            self.read_button.config(command=self.gateway.stop_read)
             self.button_var.set("Close link")
-            if self.field == "GS":
-                self.read_button.config(command=self.gateway.stop_read)
-            elif self.field == "TM/FPS":
-                self.read_button.config(command=self.gateway.send_command("Close Tx"))
-            else:
-                print("Change name of field for button")
         else:
+            self.read_button.config(command=self.gateway.start_read)
             self.button_var.set("Open link")
-            if self.field == "GS":
-                self.read_button.config(command=self.gateway.start_read)
-            elif self.field == "TM/FPS":
-                self.read_button.config(command=self.gateway.send_command("Open Tx"))
-            else:
-                print("Change name of field for button")
+
         # Call this function again after 100 ms
         self.parent.after(100, self.__update_button)
 
