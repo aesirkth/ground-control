@@ -70,9 +70,6 @@ interrupt 0 pin D2-----------DIO0  (interrupt request out)
 #define CMD_TM_DISABLE 0x42 // 'B'
 #define CMD_CA_TRIGGER 0x43 // 'C'
 
-#define REPLY_ACK  0x3D // '=' This is returned if the command is successfuly executed
-#define REPLY_NACK 0x21 // '!' This is returned if the command is not successfuly executed
-
 #define BAUDRATE 115200
 #define BONJOUR 'LAUNCHPADSTATION'
 #define RFM95_CS 10
@@ -87,7 +84,6 @@ bool is_filling = false;
 bool is_venting = false;
 bool is_armed = false;
 
-int16_t packetnum = 0; // Packet counter to keep track, maybe not needed with Manager.
 uint8_t rf95_buf[RH_RF95_MAX_MESSAGE_LEN]; // rf95.maxMessageLength()Or [RH_RF95_MAX_MESSAGE_LEN]
 uint8_t rf95_len = sizeof(rf95_buf);
 uint8_t ser_command = 0;
@@ -114,28 +110,6 @@ void setup()
   delay(10);
   digitalWrite(RFM95_RST, HIGH);
   delay(10);
-
-  while(!Serial); // Wait for computer to open serial. Maybe take away to handle start-up of LPS.(just do it after gateway start-up)
-  
-  while (!rf95.init()) {
-    Serial.println("$LoRa radio init failed");
-    while (1);
-  }
-  Serial.println("$LoRa radio init OK!");
- 
-  // Defaults after init are 434.0MHz, modulation GFSK_Rb250Fd250, +13dbM
-  if (!rf95.setFrequency(RF95_FREQ)) {
-    Serial.println("$setFrequency failed");
-    while (1);
-  }
-  Serial.print("$Set Freq to: "); Serial.println(RF95_FREQ);
-
-  // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
- 
-  // The default transmitter power is 13dBm, using PA_BOOST.
-  // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then 
-  // you can set transmitter powers from 5 to 23 dBm:
-  rf95.setTxPower(23, false);
   
   init_communication();
 }
@@ -147,12 +121,13 @@ void loop()
   
   if (ser_command)
   {
-    ser_send_byte(&ser_command);
+    rfm_send_byte(&ser_command);
   }
   if (rfm_command)
   {
-    rfm_send_byte(&rfm_command);
+    ser_send_byte(&rfm_command);
   }
+  
   // Reset this to the default value
   ser_command = 0x00;
   rfm_command = 0x00;
@@ -167,6 +142,26 @@ void init_communication()
 { // Initialize the communication link
   Serial.begin(BAUDRATE);
   Serial.println(BONJOUR);
+  
+  while (!rf95.init()) {
+    Serial.println("LoRa radio init failed");
+    while (1);
+  }
+  Serial.println("LoRa radio init OK!");
+ 
+  // Defaults after init are 434.0MHz, modulation GFSK_Rb250Fd250, +13dbM
+  if (!rf95.setFrequency(RF95_FREQ)) {
+    Serial.println("setFrequency failed");
+    while (1);
+  }
+  Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
+
+  // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
+ 
+  // The default transmitter power is 13dBm, using PA_BOOST.
+  // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then 
+  // you can set transmitter powers from 5 to 23 dBm:
+  rf95.setTxPower(23, false);
 }
 
 void ser_read_byte(uint8_t *serial_data)
@@ -188,8 +183,8 @@ void rfm_read_byte(uint8_t *rfm_data)
   if (rf95.recv(rf95_buf, &rf95_len))
   {
     *rfm_data = rf95_buf[0];
+    Serial.write("Received from LPS");
   }
-  Serial.write("Received from RF95");
 }
 
 void ser_send_byte(uint8_t *data)
@@ -200,5 +195,5 @@ void ser_send_byte(uint8_t *data)
 void rfm_send_byte(uint8_t *data)
 {
   rf95.send(*data, 1);   //Make sure later that len in .send(data, len) is big enought for data.
-  Serial.write("Sending to RF95..");
+  Serial.write("Sending to LPS..");
 }
