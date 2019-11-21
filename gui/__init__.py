@@ -1,2 +1,2 @@
-from gui.widgets import (EngineControl, GatewayStatus, GeneralData,
+from gui.widgets import (GatewayStatus, GeneralData,
                          LiveTimeGraph, LPSCommandButtons, SensorIndicator)

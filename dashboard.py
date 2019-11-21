@@ -2,7 +2,7 @@ import sys
 import tkinter as tk
 from tkinter import E, N, S, W
 
-from gui import GatewayStatus, LiveTimeGraph, SensorIndicator, GeneralData, EngineControl
+from gui import GatewayStatus, LiveTimeGraph, SensorIndicator, GeneralData
 from utils import DummySerialWrapper, Gateway, SerialWrapper, Sigmundr
 
 
