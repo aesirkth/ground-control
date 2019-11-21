@@ -9,8 +9,8 @@ This GUI can:
 import tkinter as tk
 from tkinter import E, N, S, W
 
-from gui import (CommandButtons, EngineControl, GatewayStatus, GeneralData,
-                 LiveTimeGraph, SensorIndicator)
+from gui import (EngineControl, GatewayStatus, GeneralData, LiveTimeGraph,
+                 LPSCommandButtons, SensorIndicator)
 from utils import Gateway, LaunchPadStation, SerialWrapper
 
 
@@ -31,7 +31,7 @@ class MainApplication(tk.Frame):
         self.parent = parent
         self.gateway = gateway
 
-        self.gateway_controls = CommandButtons(self, self.gateway)
+        self.gateway_controls = LPSCommandButtons(self, self.gateway)
         self.gateway_status = GatewayStatus(self, self.gateway, 'LPS')
 
         self.gateway_status.grid(

@@ -337,7 +337,7 @@ class SerialWrapper:
         """
         return self.ser.is_open
 
-    def write(self, data):
+    def write(self, data, encode=False):
         """ Send data via serial link
 
         Parameters
@@ -348,8 +348,11 @@ class SerialWrapper:
         """
         if self.failed:
             return
-
-        self.ser.write(data.encode('utf-8'))
+        
+        if encode:
+            self.ser.write(data.encode('utf-8'))
+        else:
+            self.ser.write(data)
 
     def readline(self):
         """ Read a line from serial link and return it as a string
@@ -373,7 +376,7 @@ class SerialWrapper:
         try:
             line = self.ser.readline()
             line = line.decode('utf-8', 'backslashreplace')
-            line = line.replace('\n', "")
+            line = line.replace('\r\n', "")
             if line == self.bonjour:
                 self.is_ready = True
             error = ""
