@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import E, N, S, W
 
 from gui import GatewayStatus, LiveTimeGraph, MessageBox
-from utils import Gateway, Sensors, SerialWrapper
+from utils import DummySerialWrapper, Gateway, SerialWrapper, Sigmundr
 
 
 class MainApplication(tk.Frame):
@@ -27,7 +27,7 @@ class MainApplication(tk.Frame):
         self.gateway_messages = MessageBox(
             self, gateway=self.gateway, borderwidth=2, relief="groove")
         self.graph = LiveTimeGraph(
-            self, gateway=self.gateway, sensor=self.sensors.imu, field="velocity")
+            self, gateway=self.gateway, sensor=self.sensors.bmp2, field="Temperature")
         self.gateway_status = GatewayStatus(self, gateway=self.gateway)
 
         self.gateway_status.grid(
@@ -47,12 +47,15 @@ if __name__ == "__main__":
         elif sys.argv[1] == "gw":
             # Use this for testing with an Arduino board and `dummy_telemetry.ino`
             serial = SerialWrapper(baudrate=115200, name="Telemetry", bonjour="TELEMETRY")
+        elif sys.argv[1] == "dummy":
+            # Use this for testing with an Arduino board and `dummy_telemetry.ino`
+            serial = DummySerialWrapper('Dummy')
         else:
             serial = SerialWrapper(baudrate=115200, name="Telemetry", bonjour="TELEMETRY")
     else:
         serial = SerialWrapper(baudrate=115200, name="Telemetry", bonjour="TELEMETRY")
 
-    sensors = Sensors(imu="Test")
+    sensors = Sigmundr()
     
     telemetry = Gateway(serial=serial, sensors=sensors, path="./data")
 

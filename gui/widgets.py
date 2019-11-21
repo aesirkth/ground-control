@@ -264,7 +264,7 @@ class LiveTimeGraph(tk.Frame):
 
         """
         self.ax.set_ylim(0, 50)
-        self.ax.set_xlim(0, 10000)
+        self.ax.set_xlim(0, 10)
         del self.time[:]
         del self.data[:]
         self.line.set_data(self.time, self.data)
@@ -286,12 +286,13 @@ class LiveTimeGraph(tk.Frame):
         """
         tmin, tmax = self.ax.get_xlim()
 
-        self.time = self.sensor.data.time.tolist()
-        self.data = self.sensor.data[self.field].tolist()
+        self.time = self.sensor.raw_data['Seconds_since_start']
+        self.data = self.sensor.raw_data[self.field]
 
         if self.time:
             if max(self.time) > tmax:
                 self.ax.set_xlim(tmin, 2*tmax)
+                self.canvas.draw()
 
         self.line.set_data(self.time, self.data)
 
