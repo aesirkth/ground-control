@@ -9,8 +9,7 @@ This GUI can:
 import tkinter as tk
 from tkinter import E, N, S, W
 
-from gui import (GatewayStatus, GeneralData, LiveTimeGraph,
-                 LPSCommandButtons, SensorIndicator)
+from gui import GatewayStatus, LPSCommandButtons
 from utils import Gateway, LaunchPadStation, SerialWrapper
 
 

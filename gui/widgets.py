@@ -8,111 +8,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
 
-class LPSCommandButtons(tk.Frame):
-    """ TKinter frame with two control the LPS
-
-    Parameters
-    ----------
-    parent : TKinter Frame
-        parent frame
-    gateway : Gateway instance
-        Gateway to send commands to
-
-    """
-
-    def __init__(self, parent, gateway, status, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.parent = parent
-        self.gateway = gateway
-        self.status = status
-
-        self.button_fill_text = tk.StringVar()
-        self.button_fill = tk.Button(self, textvar=self.button_fill_text)
-        self.button_vent_text = tk.StringVar()
-        self.button_vent = tk.Button(self, textvar=self.button_vent_text)
-        self.button_arm_text = tk.StringVar()
-        self.button_arm = tk.Button(self, textvar=self.button_arm_text)
-        self.button_fire_text = tk.StringVar()
-        self.button_fire = tk.Button(self, textvar=self.button_fire_text)
-        self.button_tm_text = tk.StringVar()
-        self.button_tm = tk.Button(self, textvar=self.button_tm_text)
-        self.button_cal_text = tk.StringVar()
-        self.button_cal = tk.Button(
-            self, textvar=self.button_cal_text, command=lambda: self.gateway.send_command(bytes([0x43])))
-
-        self.button_fill.grid(row=1, column=1, sticky=W+E)
-        self.button_vent.grid(row=1, column=2, sticky=W+E)
-        self.button_arm.grid(row=2, column=1, sticky=W+E)
-        self.button_fire.grid(row=2, column=2, sticky=W+E)
-        self.button_tm.grid(row=3, column=1, sticky=W+E)
-        self.button_cal.grid(row=3, column=2, sticky=W+E)
-
-        self._update_buttons()
-
-    def _update_buttons(self):
-        """ Set the buttons inactive when the gateway is not ready
-
-        """
-        if self.gateway.serial.is_ready:
-
-            self.button_fill.config(state=tk.NORMAL)
-            if not self.status.data['IS_FILLING']:
-                self.button_fill_text.set("Start filling")
-                self.button_fill.config(command=lambda: self.gateway.send_command(bytes([0x61])))
-            else:
-                self.button_fill_text.set("Stop filling")
-                self.button_fill.config(command=lambda: self.gateway.send_command(bytes([0x62])))
-
-            self.button_vent.config(state=tk.NORMAL)
-            if not self.status.data['IS_VENTING']:
-                self.button_vent_text.set("Start venting")
-                self.button_vent.config(command=lambda: self.gateway.send_command(bytes([0x63])))
-            else:
-                self.button_vent_text.set("Stop venting")
-                self.button_vent.config(command=lambda: self.gateway.send_command(bytes([0x64])))
-
-            self.button_arm.config(state=tk.NORMAL)
-            if not self.status.data['IS_ARMED']:
-                self.button_arm_text.set("Arm")
-                self.button_arm.config(command=lambda: self.gateway.send_command(bytes([0x65])))
-            else:
-                self.button_arm_text.set("Disarm")
-                self.button_arm.config(command=lambda: self.gateway.send_command(bytes([0x66])))
-
-            self.button_fire.config(state=tk.NORMAL)
-            if not self.status.data['IS_FIRING']:
-                self.button_fire_text.set("Start ignition")
-                self.button_fire.config(command=lambda: self.gateway.send_command(bytes([0x67])))
-            else:
-                self.button_fire_text.set("Stop ignition")
-                self.button_fire.config(command=lambda: self.gateway.send_command(bytes([0x68])))
-
-            self.button_tm.config(state=tk.NORMAL)
-            if not self.status.data['IS_TM_ENABLED']:
-                self.button_tm_text.set("Enable telemetry ")
-                self.button_tm.config(command=lambda: self.gateway.send_command(bytes([0x41])))
-            else:
-                self.button_tm_text.set("Disable telemetry")
-                self.button_tm.config(command=lambda: self.gateway.send_command(bytes([0x42])))
-
-            self.button_cal.config(state=tk.NORMAL)
-
-        else:
-            self.button_fill_text.set("Start filling")
-            self.button_fill.config(state=tk.DISABLED)
-            self.button_vent_text.set("Start venting")
-            self.button_vent.config(state=tk.DISABLED)
-            self.button_arm_text.set("Arm")
-            self.button_arm.config(state=tk.DISABLED)
-            self.button_fire_text.set("Start ignition")
-            self.button_fire.config(state=tk.DISABLED)
-            self.button_tm_text.set("Disable telemetry")
-            self.button_tm.config(state=tk.DISABLED)
-            self.button_cal_text.set("Trigger calibration")
-            self.button_cal.config(state=tk.DISABLED)
-
-        # Call this function again after 100 ms
-        self.parent.after(100, self._update_buttons)
+# ########################### #
+#   General purpose widgets   #
+# ########################### #
 
 
 class GatewayStatus(tk.Frame):
@@ -203,87 +101,6 @@ class GatewayStatus(tk.Frame):
 
         # Call this function again after 100 ms
         self.parent.after(100, self.__update_button)
-
-
-class LiveTimeGraph(tk.Frame):
-    """ TKinter frame that holds a matplotlib graph that is frequently updated
-
-    The graph is plotted against time. The sensor must have a data.time attribute.
-
-    Parameters
-    ----------
-    parent : TKinter Frame
-        parent frame
-    gateway : Gateway instance
-        Gateway to monitor
-    sensor : attribute of a Sensors instance
-        sensor to display data from
-    field : str
-        name of the data field to display
-
-    """
-
-    def __init__(self, parent, gateway, sensor, field, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.parent = parent
-        self.gateway = gateway
-        self.sensor = sensor
-        self.field = field
-
-        self.fig = Figure(figsize=(4, 3), dpi=100)
-        self.ax = self.fig.add_subplot(111)
-        self.line, = self.ax.plot([], [], lw=2)
-        self.ax.grid()
-        # self.fig.set_label(self.field)
-        # self.fig.tight_layout()
-        self.time = []
-        self.data = []
-
-        self.canvas = FigureCanvasTkAgg(self.fig, self)
-        self.canvas.draw()
-        self.canvas.get_tk_widget().grid(row=1, column=1)
-
-        ani = animation.FuncAnimation(self.fig, self.__update_data, blit=True, interval=10,
-                                      repeat=False, init_func=self.__init_figure)
-
-    def __init_figure(self):
-        """ Set the initial values and settings of the figure
-
-        """
-        self.ax.set_ylim(0, 50)
-        self.ax.set_xlim(0, 10)
-        del self.time[:]
-        del self.data[:]
-        self.line.set_data(self.time, self.data)
-        return self.line,
-
-    def __update_data(self, data):
-        """ Refresh the figure content
-
-        Parameters
-        ----------
-        data : unused
-            default parameter given by animation.FuncAnimation
-
-        Returns
-        -------
-        tupple
-            content of the figure for matplotlib        
-
-        """
-        tmin, tmax = self.ax.get_xlim()
-
-        self.time = self.sensor.raw_data['Seconds_since_start']
-        self.data = self.sensor.raw_data[self.field]
-
-        if self.time:
-            if max(self.time) > tmax:
-                self.ax.set_xlim(tmin, 2*tmax)
-                self.canvas.draw()
-
-        self.line.set_data(self.time, self.data)
-
-        return self.line,
 
 
 class SensorIndicator(tk.Frame):
@@ -390,3 +207,200 @@ class GeneralData(tk.Frame):
             print("General data could not be categorized")
         self.parent.after(100, self.__update_value)
 
+
+# ############################# #
+#   Widgets for the Telemetry   #
+# ############################# #
+
+
+class LiveTimeGraph(tk.Frame):
+    """ TKinter frame that holds a matplotlib graph that is frequently updated
+
+    The graph is plotted against time. The sensor must have a data.time attribute.
+
+    Parameters
+    ----------
+    parent : TKinter Frame
+        parent frame
+    gateway : Gateway instance
+        Gateway to monitor
+    sensor : attribute of a Sensors instance
+        sensor to display data from
+    field : str
+        name of the data field to display
+
+    """
+
+    def __init__(self, parent, gateway, sensor, field, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensor = sensor
+        self.field = field
+
+        self.fig = Figure(figsize=(4, 3), dpi=100)
+        self.ax = self.fig.add_subplot(111)
+        self.line, = self.ax.plot([], [], lw=2)
+        self.ax.grid()
+        # self.fig.set_label(self.field)
+        # self.fig.tight_layout()
+        self.time = []
+        self.data = []
+
+        self.canvas = FigureCanvasTkAgg(self.fig, self)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().grid(row=1, column=1)
+
+        ani = animation.FuncAnimation(self.fig, self.__update_data, blit=True, interval=10,
+                                      repeat=False, init_func=self.__init_figure)
+
+    def __init_figure(self):
+        """ Set the initial values and settings of the figure
+
+        """
+        self.ax.set_ylim(0, 50)
+        self.ax.set_xlim(0, 10)
+        del self.time[:]
+        del self.data[:]
+        self.line.set_data(self.time, self.data)
+        return self.line,
+
+    def __update_data(self, data):
+        """ Refresh the figure content
+
+        Parameters
+        ----------
+        data : unused
+            default parameter given by animation.FuncAnimation
+
+        Returns
+        -------
+        tupple
+            content of the figure for matplotlib        
+
+        """
+        tmin, tmax = self.ax.get_xlim()
+
+        self.time = self.sensor.raw_data['Seconds_since_start']
+        self.data = self.sensor.raw_data[self.field]
+
+        if self.time:
+            if max(self.time) > tmax:
+                self.ax.set_xlim(tmin, 2*tmax)
+                self.canvas.draw()
+
+        self.line.set_data(self.time, self.data)
+
+        return self.line,
+
+
+# ####################### #
+#   Widgets for the LPS   #
+# ####################### #
+
+
+class LPSCommandButtons(tk.Frame):
+    """ TKinter frame with two control the LPS
+
+    Parameters
+    ----------
+    parent : TKinter Frame
+        parent frame
+    gateway : Gateway instance
+        Gateway to send commands to
+
+    """
+
+    def __init__(self, parent, gateway, status, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.status = status
+
+        self.button_fill_text = tk.StringVar()
+        self.button_fill = tk.Button(self, textvar=self.button_fill_text)
+        self.button_vent_text = tk.StringVar()
+        self.button_vent = tk.Button(self, textvar=self.button_vent_text)
+        self.button_arm_text = tk.StringVar()
+        self.button_arm = tk.Button(self, textvar=self.button_arm_text)
+        self.button_fire_text = tk.StringVar()
+        self.button_fire = tk.Button(self, textvar=self.button_fire_text)
+        self.button_tm_text = tk.StringVar()
+        self.button_tm = tk.Button(self, textvar=self.button_tm_text)
+        self.button_cal_text = tk.StringVar()
+        self.button_cal = tk.Button(
+            self, textvar=self.button_cal_text, command=lambda: self.gateway.send_command(bytes([0x43])))
+
+        self.button_fill.grid(row=1, column=1, sticky=W+E)
+        self.button_vent.grid(row=1, column=2, sticky=W+E)
+        self.button_arm.grid(row=2, column=1, sticky=W+E)
+        self.button_fire.grid(row=2, column=2, sticky=W+E)
+        self.button_tm.grid(row=3, column=1, sticky=W+E)
+        self.button_cal.grid(row=3, column=2, sticky=W+E)
+
+        self._update_buttons()
+
+    def _update_buttons(self):
+        """ Set the buttons inactive when the gateway is not ready
+
+        """
+        if self.gateway.serial.is_ready:
+
+            self.button_fill.config(state=tk.NORMAL)
+            if not self.status.data['IS_FILLING']:
+                self.button_fill_text.set("Start filling")
+                self.button_fill.config(command=lambda: self.gateway.send_command(bytes([0x61])))
+            else:
+                self.button_fill_text.set("Stop filling")
+                self.button_fill.config(command=lambda: self.gateway.send_command(bytes([0x62])))
+
+            self.button_vent.config(state=tk.NORMAL)
+            if not self.status.data['IS_VENTING']:
+                self.button_vent_text.set("Start venting")
+                self.button_vent.config(command=lambda: self.gateway.send_command(bytes([0x63])))
+            else:
+                self.button_vent_text.set("Stop venting")
+                self.button_vent.config(command=lambda: self.gateway.send_command(bytes([0x64])))
+
+            self.button_arm.config(state=tk.NORMAL)
+            if not self.status.data['IS_ARMED']:
+                self.button_arm_text.set("Arm")
+                self.button_arm.config(command=lambda: self.gateway.send_command(bytes([0x65])))
+            else:
+                self.button_arm_text.set("Disarm")
+                self.button_arm.config(command=lambda: self.gateway.send_command(bytes([0x66])))
+
+            self.button_fire.config(state=tk.NORMAL)
+            if not self.status.data['IS_FIRING']:
+                self.button_fire_text.set("Start ignition")
+                self.button_fire.config(command=lambda: self.gateway.send_command(bytes([0x67])))
+            else:
+                self.button_fire_text.set("Stop ignition")
+                self.button_fire.config(command=lambda: self.gateway.send_command(bytes([0x68])))
+
+            self.button_tm.config(state=tk.NORMAL)
+            if not self.status.data['IS_TM_ENABLED']:
+                self.button_tm_text.set("Enable telemetry ")
+                self.button_tm.config(command=lambda: self.gateway.send_command(bytes([0x41])))
+            else:
+                self.button_tm_text.set("Disable telemetry")
+                self.button_tm.config(command=lambda: self.gateway.send_command(bytes([0x42])))
+
+            self.button_cal.config(state=tk.NORMAL)
+
+        else:
+            self.button_fill_text.set("Start filling")
+            self.button_fill.config(state=tk.DISABLED)
+            self.button_vent_text.set("Start venting")
+            self.button_vent.config(state=tk.DISABLED)
+            self.button_arm_text.set("Arm")
+            self.button_arm.config(state=tk.DISABLED)
+            self.button_fire_text.set("Start ignition")
+            self.button_fire.config(state=tk.DISABLED)
+            self.button_tm_text.set("Disable telemetry")
+            self.button_tm.config(state=tk.DISABLED)
+            self.button_cal_text.set("Trigger calibration")
+            self.button_cal.config(state=tk.DISABLED)
+
+        # Call this function again after 100 ms
+        self.parent.after(100, self._update_buttons)
