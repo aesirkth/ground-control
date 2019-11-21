@@ -2,22 +2,22 @@
 
 
 # Table of contents <!-- omit in toc -->
-- [Purpose](#purpose)
-- [Requirements](#requirements)
-- [General description](#general-description)
-  - [Sensors](#sensors)
-- [Ground Station](#ground-station)
-  - [Ground Station Computer](#ground-station-computer)
-  - [Gateways](#gateways)
-    - [Purpose](#purpose-1)
-    - [Telemetry Gateway](#telemetry-gateway)
-    - [LPS Gateway](#lps-gateway)
-- [How to install ?](#how-to-install-)
-  - [Development](#development)
-    - [Telemetry link](#telemetry-link)
-    - [Launch Pad Station link](#launch-pad-station-link)
-  - [Flight conditions](#flight-conditions)
-- [Folder structure](#folder-structure)
+- [Purpose](#Purpose)
+- [Requirements](#Requirements)
+- [General description](#General-description)
+  - [Sensors](#Sensors)
+- [Ground Station](#Ground-Station)
+  - [Ground Station Computer](#Ground-Station-Computer)
+  - [Gateways](#Gateways)
+    - [Purpose](#Purpose-1)
+    - [Telemetry Gateway](#Telemetry-Gateway)
+    - [LPS Gateway](#LPS-Gateway)
+- [How to install ?](#How-to-install-)
+  - [Development](#Development)
+    - [Telemetry link](#Telemetry-link)
+    - [Launch Pad Station link](#Launch-Pad-Station-link)
+  - [Flight conditions](#Flight-conditions)
+- [Folder structure](#Folder-structure)
 
 
 # Purpose
@@ -216,5 +216,6 @@ Enjoy
 │   └── serialwrapper.py        # Class used to read/write data from serial link
 ├── dashboard.py                # Dashboard
 ├── lps_control.py              # GUI to control the Launch Pad Station
+├── radio_test.py               # Small utility to test the telemetry radio link
 └── requirements.txt
 ```

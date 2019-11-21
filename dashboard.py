@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import E, N, S, W
 
 from gui import GatewayStatus, LiveTimeGraph, SensorIndicator, GeneralData, EngineControl
-from utils import Gateway, Sensors, SerialWrapper
+from utils import DummySerialWrapper, Gateway, SerialWrapper, Sigmundr
 
 
 class MainApplication(tk.Frame):
@@ -88,12 +88,15 @@ if __name__ == "__main__":
         elif sys.argv[1] == "gw":
             # Use this for testing with an Arduino board and `dummy_telemetry.ino`
             serial = SerialWrapper(baudrate=115200, name="Telemetry", bonjour="TELEMETRY")
+        elif sys.argv[1] == "dummy":
+            # Use this for testing with an Arduino board and `dummy_telemetry.ino`
+            serial = DummySerialWrapper('Dummy')
         else:
             serial = SerialWrapper(baudrate=115200, name="Telemetry", bonjour="TELEMETRY")
     else:
         serial = SerialWrapper(baudrate=115200, name="Telemetry", bonjour="TELEMETRY")
 
-    sensors = Sensors(imu="Test")
+    sensors = Sigmundr()
     
     telemetry = Gateway(serial=serial, sensors=sensors, path="./data")
 
