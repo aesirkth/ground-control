@@ -257,7 +257,7 @@ class SensorIndicator(tk.Frame):
 
         # Button to make a colored "box" for sensor
         # Style will be reflected on this button
-        self.btn = tk.Button(self, text='', bg='red', state=tk.DISABLED, width=20)
+        self.btn = tk.Button(self, text='')
         # self.btn = tk.Button(self)
         self.btn.grid(row=0, column=1)
         # Label to display the gateway's port name
@@ -271,22 +271,14 @@ class SensorIndicator(tk.Frame):
         """ Set the style of the button depending on the status of sensor.
 
         """
-        if self.sensor.got_calibration:
-            #if self.field == "Telemetry Status":
-            #    self.btn.config(bg='green', height=2, width=3, state=tk.DISABLED)
-            #    self.sensor.got_calibration = False
-            #else:
-            self.btn.config(bg='green', height=1, width=2, state=tk.DISABLED)
-            self.sensor.got_calibration = False
+        if self.sensor.data[self.field] is None:
+            self.btn.config(bg='grey', state=tk.DISABLED, width=1)
         else:
-            #if self.field == "Telemetry Status":
-            #    self.btn.config(bg='red', height=2, width=3, state=tk.DISABLED)
-            #    self.sensor.got_calibration = True
-            # else:
-            self.btn.config(bg='red', height=1, width=2, state=tk.DISABLED)
-            self.sensor.got_calibration = True
-        # Call this function again after 500 ms
-        # Is this needed for the button? How often will this be checked? Just after calibration?
+            if self.sensor.data[self.field]:
+                self.btn.config(bg='red', height=1, state=tk.DISABLED, width=1)
+            else:
+                self.btn.config(bg='green', height=1, state=tk.DISABLED, width=1)
+            # Call this function again after 100 ms
         self.parent.after(100, self.__update_button)
 
 
