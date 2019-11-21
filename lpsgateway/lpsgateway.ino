@@ -88,8 +88,10 @@ bool is_venting = false;
 bool is_armed = false;
 
 int16_t packetnum = 0; // Packet counter to keep track, maybe not needed with Manager.
-uint8_t rf95_buf[rf95.maxMessageLenght()]; //Or [RH_RF95_MAX_MESSAGE_LEN]
+uint8_t rf95_buf[RH_RF95_MAX_MESSAGE_LEN]; // rf95.maxMessageLength()Or [RH_RF95_MAX_MESSAGE_LEN]
 uint8_t rf95_len = sizeof(rf95_buf);
+uint8_t ser_command = 0;
+uint8_t rfm_command = 0;
 
 void setup()
 {
@@ -197,6 +199,6 @@ void ser_send_byte(uint8_t *data)
 
 void rfm_send_byte(uint8_t *data)
 {
-  rf95.send(*data, 1)   //Make sure later that len in .send(data, len) is big enought for data.
+  rf95.send(*data, 1);   //Make sure later that len in .send(data, len) is big enought for data.
   Serial.write("Sending to RF95..");
 }
