@@ -62,5 +62,5 @@ frame += b'\x00\x00'
 
 sigmundr.update_sensors(frame)
 
-print(sigmundr.imu.raw_data)
+print(sigmundr.imu2.raw_data)
 print(sigmundr.rtc.raw_data)

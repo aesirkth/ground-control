@@ -555,7 +555,7 @@ class Sigmundr:
 
     def update_sensors(self, frame):
         if len(frame) > 0:
-            if frame[0] == b'0x01' or frame[0] == b'0x02':
+            if frame[0] == 0x01 or frame[0] == 0x02:
                 self.rtc.update_data(frame)
                 frame_time = self.rtc.get_latest_timestamp()
                 self.errmsg.update_data(frame, frame_time)
