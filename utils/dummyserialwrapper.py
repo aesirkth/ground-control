@@ -42,7 +42,7 @@ class DummySerialWrapper:
         # Status
         frame += b'\x00'
         # Err_msg
-        frame += b'\x04\x03'
+        frame += b'\x04\x02'
         # RTC
         now = datetime.datetime.now()
         delay = now - self.start_time
@@ -84,7 +84,7 @@ class DummySerialWrapper:
         # Status
         frame += b'\x00'
         # Err_msg
-        frame += b'\x04\x03'
+        frame += b'\x00\x01'
         # RTC
         now = datetime.datetime.now()
         delay = now - self.start_time

@@ -1,1 +1,2 @@
-from gui.widgets import CommandButtons, MessageBox, GatewayStatus, LiveTimeGraph
+from gui.widgets import CommandButtons, GatewayStatus, LiveTimeGraph, SensorIndicator, GeneralData, \
+    EngineControl

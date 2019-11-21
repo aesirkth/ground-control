@@ -277,8 +277,16 @@ class ErrMsg(GenericSensor):
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
 
+        self.reset()
+    
+    def reset(self):
+        self.data = {field: None for field in self.fields.keys()}
+        self.set_default_values()
+
     def update_data(self, frame, frame_time=None):
         self.update_raw_data(frame, frame_time)
+        for field in self.fields.keys():
+            self.data[field] = self.raw_data[field][-1]
 
 
 class RTC(GenericSensor):
@@ -568,7 +576,7 @@ class Sigmundr:
                 self.pitot.update_data(frame, frame_time)
     
     def reset(self):
-        self.errmsg.set_default_values()
+        self.errmsg.reset()
         self.rtc.set_default_values()
         self.timer.set_default_values()
         self.batteries.set_default_values()
