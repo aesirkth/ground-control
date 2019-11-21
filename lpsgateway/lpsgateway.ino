@@ -88,7 +88,8 @@ bool is_venting = false;
 bool is_armed = false;
 
 int16_t packetnum = 0; // Packet counter to keep track, maybe not needed with Manager.
-
+uint8_t rf95_buf[rf95.maxMessageLenght()]; //Or [RH_RF95_MAX_MESSAGE_LEN]
+uint8_t rf95_len = sizeof(rf95_buf);
 
 void setup()
 {
@@ -112,6 +113,8 @@ void setup()
   digitalWrite(RFM95_RST, HIGH);
   delay(10);
 
+  while(!Serial); // Wait for computer to open serial. Maybe take away to handle start-up of LPS.(just do it after gateway start-up)
+  
   while (!rf95.init()) {
     Serial.println("$LoRa radio init failed");
     while (1);
@@ -137,53 +140,20 @@ void setup()
 
 void loop()
 {
-  read_ser_byte(&ser_command);
-  read_rfm_byte(&rfm_command);
+  ser_read_byte(&ser_command);
+  rfm_read_byte(&rfm_command);
   
   if (ser_command)
   {
-    switch (ser_command)
-    {
-    case CMD_FILL_START:
-      start_filling();
-      break;
-    case CMD_FILL_STOP:
-      stop_filling();
-      break;
-    case CMD_VENT_START:
-      start_venting();
-      break;
-    case CMD_VENT_STOP:
-      stop_venting();
-      break;
-    case CMD_ARM:
-      arm();
-      break;
-    case CMD_DISARM:
-      disarm();
-      break;
-    case CMD_FIRE_START:
-      start_ignition();
-      break;
-    case CMD_FIRE_STOP:
-      stop_ignition();
-      break;
-    case CMD_TM_ENABLE:
-      enable_telemetry();
-      break;
-    case CMD_TM_DISABLE:
-      disable_telemetry();
-      break;
-    case CMD_CA_TRIGGER:
-      trigger_calibration();
-      break;
-    default:
-    send_byte(REPLY_NACK);
-      break;
-    }
+    ser_send_byte(&ser_command);
+  }
+  if (rfm_command)
+  {
+    rfm_send_byte(&rfm_command);
   }
   // Reset this to the default value
-  command = 0x00;
+  ser_command = 0x00;
+  rfm_command = 0x00;
   delay(100);
 }
 
@@ -195,148 +165,38 @@ void init_communication()
 { // Initialize the communication link
   Serial.begin(BAUDRATE);
   Serial.println(BONJOUR);
-  
 }
 
-void read_ser_byte(uint8_t *data)
-{ // Read one byte in the buffer
+void ser_read_byte(uint8_t *serial_data)
+{ // Read one byte in the serial buffer
   if (Serial.available() > 0)
   {
     *serial_data = Serial.read();
+    Serial.write("Read command..");
   }
 }
 
-void send_byte(uint8_t data)
+void rfm_read_byte(uint8_t *rfm_data)
+{ // Read one byte in the rfm buffer
+  /*if (rf95.available())
+  {
+    rf95.recv(buf, &len);
+    *rfm_data = *buf;
+  }*/
+  if (rf95.recv(rf95_buf, &rf95_len))
+  {
+    *rfm_data = rf95_buf[0];
+  }
+  Serial.write("Received from RF95");
+}
+
+void ser_send_byte(uint8_t *data)
 { // Write one byte to the communication link
-  Serial.write(data);
+  Serial.write(*data);
 }
 
-/*
- * Controls for the Rocket fueling and ignition
- */
-
-void start_filling()
-{ // Enable solenoid 1 only if solenoid 2 is disabled
-  if (!is_venting && !is_armed)
-  {
-    is_filling = true;
-    digitalWrite(PIN_RELAY_FILL, LOW);
-    send_byte(REPLY_ACK);
-    send_byte(CMD_FILL_START);
-  }
-  else
-  {
-    send_byte(REPLY_NACK);
-    send_byte(CMD_FILL_START);
-  }
-}
-
-void stop_filling()
-{ // Disable solenoid 1
-  is_filling = false;
-  digitalWrite(PIN_RELAY_FILL, HIGH);
-  send_byte(REPLY_ACK);
-  send_byte(CMD_FILL_STOP);
-}
-
-void start_venting()
-{ // Enable solenoid 2 only if solenoid 1 is disabled
-  if (!is_filling && !is_armed)
-  {
-    is_venting = true;
-    digitalWrite(PIN_RELAY_VENT, LOW);
-    send_byte(REPLY_ACK);
-    send_byte(CMD_VENT_START);
-  }
-  else
-  {
-    send_byte(REPLY_NACK);
-    send_byte(CMD_VENT_START);
-  }
-}
-
-void stop_venting()
-{ // Disable solenoid 2
-  is_venting = false;
-  digitalWrite(PIN_RELAY_VENT, HIGH);
-  send_byte(REPLY_ACK);
-  send_byte(CMD_VENT_STOP);
-}
-
-void arm()
-{ // Set is_armed to true
-  // is_armed must be true to allow ignition
-  if (!is_filling && !is_venting)
-  {
-    is_armed = true;
-    send_byte(REPLY_ACK);
-    send_byte(CMD_ARM);
-  }
-  else
-  {
-    send_byte(REPLY_NACK);
-    send_byte(CMD_ARM);
-  }  
-}
-
-void disarm()
-{ // Set is_armed to false
-  // is_armed must be true to allow ignition
-  is_armed = false;
-  // Also stop firing, just in case
-  digitalWrite(PIN_RELAY_FIRE, HIGH);
-  send_byte(REPLY_ACK);
-  send_byte(CMD_DISARM);
-}
-
-void start_ignition()
-{ // Enable ignition circuit
-  // is_armed must be true to allow ignition
-  // Solenoid 1 must be closed to allow ignition
-  // Solenoid 2 must be closed to allow ignition
-  if (is_armed)
-  {
-    digitalWrite(PIN_RELAY_FIRE, LOW);
-    send_byte(REPLY_ACK);
-    send_byte(CMD_FIRE_START);
-  }
-  else
-  {
-    send_byte(REPLY_NACK);
-    send_byte(CMD_FIRE_START);
-  }
-}
-
-void stop_ignition()
-{ // Disable ignition circuit
-  digitalWrite(PIN_RELAY_FIRE, HIGH);
-  send_byte(REPLY_ACK);
-  send_byte(CMD_FIRE_STOP);
-}
-
-/*
- * Controls for the Rocket through the ombilicals
- */
-
-void enable_telemetry()
-{ // Enable the Telemetry and FPV transmitters (on the rocket)
-  digitalWrite(PIN_OMBI_TM, HIGH);
-  send_byte(REPLY_ACK);
-  send_byte(CMD_TM_ENABLE);
-}
-
-void disable_telemetry()
-{ // Disable the Telemetry and FPV transmitters (on the rocket)
-  digitalWrite(PIN_OMBI_TM, LOW);
-  send_byte(REPLY_ACK);
-  send_byte(CMD_TM_DISABLE);
-}
-
-void trigger_calibration()
-{ // Trigger a calibration routine (on the rocket)
-  digitalWrite(PIN_OMBI_CA, LOW);
-  delay(100);
-  digitalWrite(PIN_OMBI_CA, HIGH);
-  send_byte(REPLY_ACK);
-  send_byte(CMD_CA_TRIGGER);
+void rfm_send_byte(uint8_t *data)
+{
+  rf95.send(*data, 1)   //Make sure later that len in .send(data, len) is big enought for data.
+  Serial.write("Sending to RF95..");
 }
