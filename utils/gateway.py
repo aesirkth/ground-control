@@ -3,7 +3,6 @@ Class to read data from a Gateway device and save it on storage
 
 """
 
-import csv
 import datetime
 import threading
 from os import mkdir
@@ -15,9 +14,7 @@ class Gateway:
 
     The Gateway device is connected to the computer via a serial connection
 
-    The data read from the Gateway is stored in a CSV file in real time
-    The time of reception of each line is stored along the received data
-    in ISO format (YYYY-MM-DD HH:MM:SS.ffffff)
+    The data read from the Gateway as bytes is saved in a file
 
     Parameters
     ----------
@@ -32,13 +29,6 @@ class Gateway:
     ----------
     is_reading : bool
         True if the instance is currently reading data from serial link
-    data : list [[datetime.datetime, str, str, ], ]
-        data read from Gateway
-        each string is the received data, separated by a comma ","
-    calibration : dict {key: value, }
-        calibration data received from the Gateway
-    messages : list [(datetime.datetime, str), ]
-        messages received from the Gateway
 
     Examples
     --------
@@ -46,23 +36,11 @@ class Gateway:
     >>> sensors = Sensors(imu="Test")
     >>> telemetry = Gateway(serial=serial, sensors=sensors, path="./data")
     >>> telemetry.start_read()
-    >>> data = telemetry.data
-    >>> mess = telemetry.messages
+    >>> telemetry.send_command('do something')
     ...
     >>> telemetry.stop_read() # This terminates the thread in start_read()
 
     """
-    # This is described in the protocol description
-    separators = {
-        'START_HEAD': '@',
-        'START_DATA': '#',
-        'START_CALI': '%',
-        'START_MESS': '$',
-        'SEP_DATA': '&',
-        'SEP_CALI': ':',
-    }
-    # We need to do searches both ways...
-    separators_reversed = {value: key for key, value in separators.items()}
 
     def __init__(self, serial, sensors, path):
         self.serial = serial
@@ -72,11 +50,6 @@ class Gateway:
         self.name = self.serial.name
 
         self.is_reading = False
-
-        self.header = ""
-        self.data = []
-        self.calibration = {}
-        self.messages = []
 
         self.date_created = datetime.datetime.now().replace(microsecond=0).isoformat()
 
