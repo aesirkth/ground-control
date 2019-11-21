@@ -50,25 +50,6 @@ interrupt 0 pin D2-----------DIO0  (interrupt request out)
 #include <RH_RF95.h>
 #include <RHReliableDatagram.h>
 
-// Single wire ombilicals to the rocket
-#define PIN_OMBI_TM A0 // Write LOW to this pin to disable the Telemetry and FPV transmitters
-#define PIN_OMBI_CA A1 // Write LOW to this pin to start a sensor calibration on the rocket
-// Pins where the relays are connected
-#define PIN_RELAY_FIRE A2 // Write LOW to this pin to enable the ignition circuit
-#define PIN_RELAY_FILL A3 // Write LOW to this pin to open solenoid 1
-#define PIN_RELAY_VENT A4 // Write LOW to this pin to open solenoid 2
-
-#define CMD_FILL_START 0x61 // 'a'
-#define CMD_FILL_STOP  0x62 // 'b'
-#define CMD_VENT_START 0x63 // 'c'
-#define CMD_VENT_STOP  0x64 // 'd'
-#define CMD_ARM        0x65 // 'e'
-#define CMD_DISARM     0x66 // 'f'
-#define CMD_FIRE_START 0x67 // 'g'
-#define CMD_FIRE_STOP  0x68 // 'h'
-#define CMD_TM_ENABLE  0x41 // 'A'
-#define CMD_TM_DISABLE 0x42 // 'B'
-#define CMD_CA_TRIGGER 0x43 // 'C'
 
 #define BAUDRATE 115200
 #define BONJOUR 'LAUNCHPADSTATION'
@@ -80,30 +61,12 @@ interrupt 0 pin D2-----------DIO0  (interrupt request out)
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 uint8_t command = 0x00;
-bool is_filling = false;
-bool is_venting = false;
-bool is_armed = false;
 
-uint8_t rf95_buf[RH_RF95_MAX_MESSAGE_LEN]; // rf95.maxMessageLength()Or [RH_RF95_MAX_MESSAGE_LEN]
-uint8_t rf95_len = sizeof(rf95_buf);
 uint8_t ser_command = 0;
 uint8_t rfm_command = 0;
 
 void setup()
 {
-  pinMode(PIN_RELAY_FIRE, OUTPUT);
-  pinMode(PIN_RELAY_FILL, OUTPUT);
-  pinMode(PIN_RELAY_VENT, OUTPUT);
-  pinMode(PIN_OMBI_TM, OUTPUT);
-  pinMode(PIN_OMBI_CA, OUTPUT);
-  // Disable the ignition circuit
-  digitalWrite(PIN_RELAY_FIRE, HIGH);
-  // Close the solenoids
-  digitalWrite(PIN_RELAY_FILL, HIGH);
-  digitalWrite(PIN_RELAY_VENT, HIGH);
-  // Default state is HIGH for the ombilicals
-  digitalWrite(PIN_OMBI_TM, HIGH);
-  digitalWrite(PIN_OMBI_CA, HIGH);
   // Reset of RFM95
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, LOW);
@@ -169,31 +132,28 @@ void ser_read_byte(uint8_t *serial_data)
   if (Serial.available() > 0)
   {
     *serial_data = Serial.read();
-    Serial.write("Read command..");
+    Serial.println("Read command..");
   }
 }
 
 void rfm_read_byte(uint8_t *rfm_data)
 { // Read one byte in the rfm buffer
-  /*if (rf95.available())
-  {
-    rf95.recv(buf, &len);
-    *rfm_data = *buf;
-  }*/
+  uint8_t rf95_buf[RH_RF95_MAX_MESSAGE_LEN]; // rf95.maxMessageLength()Or [RH_RF95_MAX_MESSAGE_LEN]
+  uint8_t rf95_len = sizeof(rf95_buf);
   if (rf95.recv(rf95_buf, &rf95_len))
   {
     *rfm_data = rf95_buf[0];
-    Serial.write("Received from LPS");
+    Serial.print("Received from LPS"); Serial.println((char*)rfm_data);
   }
 }
 
 void ser_send_byte(uint8_t *data)
 { // Write one byte to the communication link
-  Serial.write(*data);
+  Serial.println((char*)data);
 }
 
 void rfm_send_byte(uint8_t *data)
 {
-  rf95.send(*data, 1);   //Make sure later that len in .send(data, len) is big enought for data.
-  Serial.write("Sending to LPS..");
+  rf95.send(*data, sizeof(*data));   //Make sure later that len in .send(data, len) is big enought for data.
+  Serial.print("Sending to LPS.."); Serial.println((char*)data);
 }
