@@ -31,6 +31,10 @@ The software in this repository is everything needed to make the Ground Station 
     - Controling the Launch Pad Station
     - Monitoring the Launch Pad Station
 
+The telemetry data is managed using `dashboard.py` (see [dashboard](doc/dashboard.md))
+
+The Launch Pad Station is managed using `lps_control.py` (see [lps_control](doc/lps_control.md))
+
 
 # Requirements
 
