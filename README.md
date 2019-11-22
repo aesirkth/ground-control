@@ -152,7 +152,9 @@ Enjoy
 
 **Run the GUI**
 
-Run `dashboard.py` with a `RFD900` modem
+Connect a `RFD900` modem to your computer with an FTDI cable
+
+Run `dashboard.py`
 
 ```
 python ./dashboard.py rfd
