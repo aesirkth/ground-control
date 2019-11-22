@@ -134,7 +134,7 @@ Get the *Launch Pad Station Board* up and running. See [aesirkth/LaunchPadStatio
 
 **Run the GUI**
 
-Make sure the board is connected to your computer
+Make sure the *Launch Pad Station Board* is connected to your computer
 
 Run `lps_control.py`
 
@@ -165,12 +165,12 @@ Enjoy
 
 ### Launch Pad Station control
 
-Get the *LPS Board* and the *LPS Gateway* up and running. See [aesirkth/LaunchPadStation](https://github.com/aesirkth/LaunchPadStation)
+Get the *Launch Pad Station Board* and the *Launch Pad Station Gateway* up and running. See [aesirkth/LaunchPadStation](https://github.com/aesirkth/LaunchPadStation)
 
 
 **Run the GUI**
 
-Make sure the gateway is connected to your computer. Make sure the *LPS Board* is powered.
+Make sure the *Launch Pad Station Gateway* is connected to your computer. Make sure the *Launch Pad Station Board* is powered and within range.
 
 Run `lps_control.py`
 
