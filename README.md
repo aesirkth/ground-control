@@ -2,21 +2,21 @@
 
 
 # Table of contents <!-- omit in toc -->
-- [Purpose](#purpose)
-- [Requirements](#requirements)
-- [General description](#general-description)
-  - [Sensors](#sensors)
-  - [Gateways](#gateways)
-    - [Telemetry Gateway](#telemetry-gateway)
-    - [Launch Pad Station Gateway](#launch-pad-station-gateway)
-- [How to install ?](#how-to-install-)
-  - [Development](#development)
-    - [Dashboard](#dashboard)
-    - [Launch Pad Station control](#launch-pad-station-control)
-  - [Flight conditions](#flight-conditions)
-    - [Dashboard](#dashboard-1)
-    - [Launch Pad Station control](#launch-pad-station-control-1)
-- [Folder structure](#folder-structure)
+- [Purpose](#Purpose)
+- [Requirements](#Requirements)
+- [General description](#General-description)
+  - [Sensors](#Sensors)
+  - [Gateways](#Gateways)
+    - [Telemetry Gateway](#Telemetry-Gateway)
+    - [Launch Pad Station Gateway](#Launch-Pad-Station-Gateway)
+- [How to install ?](#How-to-install-)
+  - [Development](#Development)
+    - [Dashboard](#Dashboard)
+    - [Launch Pad Station control](#Launch-Pad-Station-control)
+  - [Flight conditions](#Flight-conditions)
+    - [Dashboard](#Dashboard-1)
+    - [Launch Pad Station control](#Launch-Pad-Station-control-1)
+- [Folder structure](#Folder-structure)
 
 
 # Purpose
@@ -40,7 +40,7 @@ The software in this repository is everything needed to make the Ground Station 
 # General description
 
 The following elements are the main part of the rocket :
-  * Rocket (see [aesirkth/Sigmundr_embedded_system](https://github.com/aesirkth/Sigmundr_embedded_system))
+  * Sigmundr (Rocket) (see [aesirkth/Sigmundr_embedded_system](https://github.com/aesirkth/Sigmundr_embedded_system))
   * The Launch Pad Station (see [aesirkth/LaunchPadStation](https://github.com/aesirkth/LaunchPadStation))
   * The Ground Station (see this repository)
   * The FPV System (*not described here*)
