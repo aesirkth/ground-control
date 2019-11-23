@@ -6,45 +6,45 @@
 - [Requirements](#Requirements)
 - [General description](#General-description)
   - [Sensors](#Sensors)
-- [Ground Station](#Ground-Station)
-  - [Ground Station Computer](#Ground-Station-Computer)
   - [Gateways](#Gateways)
-    - [Purpose](#Purpose-1)
     - [Telemetry Gateway](#Telemetry-Gateway)
-    - [LPS Gateway](#LPS-Gateway)
+    - [Launch Pad Station Gateway](#Launch-Pad-Station-Gateway)
 - [How to install ?](#How-to-install-)
   - [Development](#Development)
-    - [Telemetry link](#Telemetry-link)
-    - [Launch Pad Station link](#Launch-Pad-Station-link)
+    - [Dashboard](#Dashboard)
+    - [Launch Pad Station control](#Launch-Pad-Station-control)
   - [Flight conditions](#Flight-conditions)
+    - [Dashboard](#Dashboard-1)
+    - [Launch Pad Station control](#Launch-Pad-Station-control-1)
 - [Folder structure](#Folder-structure)
 
 
 # Purpose
 
-The software in this repository is everything needed to make the Ground Station work. This includes :
+The software in this repository is everything needed to make the Ground Station for the Sigmundr Rocket work. This includes :
 
   - Managing the telemetry data:
     - Receiving the live telemetry data from the Rocket
     - Storing the received telemetry data in the computer's filesystem for later analysis
-    - Display the received telemetry data in real time
+    - Displaying the received telemetry data in real time
   - Managing the Launch Pad Station:
     - Controling the Launch Pad Station
     - Monitoring the Launch Pad Station
 
+The telemetry data is managed using `dashboard.py` (see [dashboard](doc/dashboard.md))
+
+The Launch Pad Station is managed using `lps_control.py` (see [lps_control](doc/lps_control.md))
+
 
 # Requirements
 
-- A computer running Windows or Linux (not tested on MacOS)
-- One or two Arduino board with a USB port (for development)
-- One Arduino board with a USB port connected to an `RFM96W` LoRa tranceiver (to communicate with the Launch Pad Station)
-- One `RFD900` Radio Modem and FTDI cable (to receive telemetry data from the Rocket)
+- A laptop running Windows or Linux (not tested on MacOS)
 
 
 # General description
 
 The following elements are the main part of the rocket :
-  * Rocket (see [aesirkth/Sigmundr_embedded_system](https://github.com/aesirkth/Sigmundr_embedded_system))
+  * Sigmundr (Rocket) (see [aesirkth/Sigmundr_embedded_system](https://github.com/aesirkth/Sigmundr_embedded_system))
   * The Launch Pad Station (see [aesirkth/LaunchPadStation](https://github.com/aesirkth/LaunchPadStation))
   * The Ground Station (see this repository)
   * The FPV System (*not described here*)
@@ -65,24 +65,9 @@ The following sensors are embedded on the Rocket :
   * GPS receiver `M8Q` from u-blox
 
 
-# Ground Station
-
-This repository contains all the software required to run the items in the grey box (Ground Station).
-
-
-## Ground Station Computer
-
-The Ground Station Computer sends and receives data through the gateways. It runs a dashboard ([dashboard](doc/dashboard.md)) that displays the telemetry received from the Rocket and controls the Launch Pad Station.
-
-There is also a simplified version of the dashboard that only controls the Launch Pad Station ([lps_control](doc/lps_control.md)).
-
-
 ## Gateways
 
-
-### Purpose
-
-Gateways are added between the Ground Station Computer and the Rocket and between the Ground Station Computer(s) and the Launch Pad System. Their role is to allow wireless communication between the Ground Station Computer and the Rocket subsystems. The gateways are only forwarders. There is no logic embedded into them.
+Gateways are added between the Ground Station and the Rocket and between the Ground Station and the Launch Pad System. Their role is to allow wireless communication between the Ground Station and the Rocket subsystems. The gateways are only forwarders. There is no logic embedded into them.
 
 Here is a schematic of the data flow through the gateways :
 
@@ -94,7 +79,7 @@ In phase 1 : the computer finds the gateway
 
 In phase 2 : actual communication through the gateway
 
-`BONJOUR` is a unique string sent on serial connection initiation that is used to identify the LPS Gateway among all the serial devices connected to the Ground Station Computer. The Telemetry Gatewa is found by trying to initiate the AT command mode.
+`BONJOUR` is a unique string sent on serial connection initiation that is used to identify the LPS Gateway among all the serial devices connected to the Ground Station. The Telemetry Gatewa is found by trying to initiate the AT command mode
 
 
 ### Telemetry Gateway
@@ -104,15 +89,14 @@ The Telemetry Gateway is a `RFD900` modem.
 See [RFD900](/doc/RFD900.md)
 
 
-### LPS Gateway
+### Launch Pad Station Gateway
 
->TODO
+The *Launch Pad Station Gateway* is an Arduino with a USB port connected to a `RFM9XW` LoRa module
+
+See [aesirkth/LaunchPadStation](https://github.com/aesirkth/LaunchPadStation)
 
 
 # How to install ?
-
-
-## Development
 
 **Install the GUI requirements**
 
@@ -126,65 +110,31 @@ Install the required python packages
 python -m pip install -r requirements.txt
 ```
 
-### Telemetry link
 
-**Create a fake Telemetry Gateway**
+## Development
 
-Upload `dummy_gateway.ino` to any Arduino board with a USB port. Make sure to uncomment one of these two lines before :
 
-```c
-// Uncomment one of these to select the target gateway
-// #define lps
-#define telemetry
-```
-
+### Dashboard
 
 **Run the GUI**
 
-Make sure the board is connected to your computer
-
-Make sure `dashboard.py` is set to use the fake gateway
-
-```py
-if __name__ == "__main__":
-    # Use this with a RFD900 modem
-    # serial = SerialWrapper(baudrate=115200, name="Telemetry", rfd900=True)
-    # Use this for testing with an Arduino board and `dummy_telemetry.ino`
-    serial = SerialWrapper(baudrate=115200, name="Telemetry", bonjour="TELEMETRY")
-```
-
-Run `dashboard.py`
+Run `dashboard.py` with a dummy telemetry link
 
 ```
-python ./dashboard.py
+python ./dashboard.py dummy
 ```
 
 Enjoy
 
 
-### Launch Pad Station link
+### Launch Pad Station control
 
-**Create a fake LPS Gateway**
-
-Upload `dummy_gateway.ino` to any Arduino board with a USB port. Make sure to uncomment one of these two lines before :
-
-```c
-// Uncomment one of these to select the target gateway
-#define lps
-// #define telemetry
-```
+Get the *Launch Pad Station Board* up and running. See [aesirkth/LaunchPadStation](https://github.com/aesirkth/LaunchPadStation)
 
 
 **Run the GUI**
 
-Make sure the board is connected to your computer
-
-Make sure `lps_control.py` is set to use the fake gateway
-
-```py
-if __name__ == "__main__":
-    serial = SerialWrapper(baudrate=115200, name="LPS", bonjour="LAUNCHPADSTATION")
-```
+Make sure the *Launch Pad Station Board* is connected to your computer
 
 Run `lps_control.py`
 
@@ -194,9 +144,41 @@ python ./lps_control.py
 
 Enjoy
 
+
 ## Flight conditions
 
->TODO
+
+### Dashboard
+
+**Run the GUI**
+
+Connect a `RFD900` modem to your computer with an FTDI cable
+
+Run `dashboard.py`
+
+```
+python ./dashboard.py rfd
+```
+
+Enjoy
+
+
+### Launch Pad Station control
+
+Get the *Launch Pad Station Board* and the *Launch Pad Station Gateway* up and running. See [aesirkth/LaunchPadStation](https://github.com/aesirkth/LaunchPadStation)
+
+
+**Run the GUI**
+
+Make sure the *Launch Pad Station Gateway* is connected to your computer. Make sure the *Launch Pad Station Board* is powered and within range.
+
+Run `lps_control.py`
+
+```
+python ./lps_control.py
+```
+
+Enjoy
 
 
 # Folder structure
@@ -206,8 +188,6 @@ Enjoy
 ├── README.md                   # This file
 ├── data/                       # (Ungitted) folder to store the received telemetry
 ├── doc/                        # The documentation goes there
-├── dummy_gateway/
-│   └── dummy_gateway.ino       # Code to emulate a working gateway with an Arduino board
 ├── gui/
 │   └── widgets.py              # Widgets used in the LPS control GUI
 ├── utils/

@@ -9,8 +9,8 @@ This GUI can:
 import tkinter as tk
 from tkinter import E, N, S, W
 
-from gui import CommandButtons, GatewayStatus, MessageBox
-from utils import Gateway, Sensors, SerialWrapper
+from gui import GatewayStatus, LPSCommandButtons
+from utils import Gateway, LaunchPadStation, SerialWrapper
 
 
 class MainApplication(tk.Frame):
@@ -29,26 +29,23 @@ class MainApplication(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
+        self.sensors = self.gateway.sensors
 
-        self.gateway_messages = MessageBox(
-            self, self.gateway, borderwidth=2, relief="groove")
-        self.gateway_controls = CommandButtons(self, self.gateway)
-        self.gateway_status = GatewayStatus(self, self.gateway)
+        self.gateway_controls = LPSCommandButtons(self, self.gateway, self.sensors.status)
+        self.gateway_status = GatewayStatus(self, self.gateway, 'LPS')
 
         self.gateway_status.grid(
             row=0, column=1, sticky=W+E+N+S, padx=5, pady=5)
         self.gateway_controls.grid(
             row=1, column=1, sticky=W+E+N+S, padx=5, pady=5)
-        self.gateway_messages.grid(
-            row=2, column=1, sticky=W+E+N+S, padx=5, pady=5)
 
 
 if __name__ == "__main__":
-    serial = SerialWrapper(baudrate=115200, name="LPS", bonjour="LAUNCHPADSTATION")
+    serial = SerialWrapper(115200, "LPS", bonjour="LAUNCHPADSTATION")
 
-    sensors = Sensors()
+    sensors = LaunchPadStation()
 
-    lps = Gateway(serial=serial, sensors=sensors, path="./data")
+    lps = Gateway(serial, sensors, "./data")
 
     root = tk.Tk()
     root.title("Launch Pad Control")

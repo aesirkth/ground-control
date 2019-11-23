@@ -8,131 +8,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
 
-class CommandButtons(tk.Frame):
-    """ TKinter frame with two clickable buttons
-
-    The buttons trigger a Serial write to the gateway they are linked to
-
-    Parameters
-    ----------
-    parent : TKinter Frame
-        parent frame
-    gateway : Gateway instance
-        Gateway to send commands to
-
-    """
-
-    def __init__(self, parent, gateway, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.parent = parent
-        self.gateway = gateway
-
-        self.button_A = tk.Button(self, text="Send 'A'",
-                                  command=lambda: self.gateway.send_command('A'))
-        self.button_B = tk.Button(self, text="Send 'B'",
-                                  command=lambda: self.gateway.send_command('B'))
-
-        self.button_A.grid(row=1, column=1)
-        self.button_B.grid(row=1, column=2)
-
-        self.____update_buttons()
-
-    def ____update_buttons(self):
-        """ Set the buttons inactive when the gateway is not ready
-
-        """
-        if self.gateway.serial.is_ready:
-            self.button_A.config(state=tk.NORMAL)
-            self.button_B.config(state=tk.NORMAL)
-        else:
-            self.button_A.config(state=tk.DISABLED)
-            self.button_B.config(state=tk.DISABLED)
-        # Call this function again after 100 ms
-        self.parent.after(100, self.____update_buttons)
-
-
-class MessageBox(tk.Frame):
-    """ TKinter frame to display the messages received from an gateway
-
-    The content of the Text box is updated with every new message received
-    The time of reception is displayed before the message content
-
-    See utils/gateway.py for more details on how the messages are handled
-
-    Parameters
-    ----------
-    parent : TKinter Frame
-        parent frame
-    gateway : Gateway instance
-        Gateway to read messages from
-
-    """
-
-    def __init__(self, parent, gateway, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.parent = parent
-        self.gateway = gateway
-        self.messages = []
-
-        tk.Label(self, text="Messages :").grid(row=0, column=1, sticky=W)
-
-        # TextBox and Scrollbar
-        self.scroll_bar = tk.Scrollbar(self)
-        self.message_box = tk.Text(self, height=10, width=60)
-        self.scroll_bar.grid(row=1, column=2, sticky=W+E+N+S)
-        self.message_box.grid(row=1, column=1, sticky=W+E+N+S)
-        self.scroll_bar.config(command=self.message_box.yview)
-        self.message_box.config(yscrollcommand=self.scroll_bar.set)
-
-        self.__update_messages()
-
-    def __diff_list(self, list1, list2):
-        """ Return the elements that are only in one of the lists
-
-        The content of the lists must be hashable
-
-        Parameters
-        ----------
-        list1 : list
-            first list to compare
-        list2 : list
-            second list to compare
-
-        Returns
-        -------
-        diff : list
-            a list with only elements that are in one or the other input lists
-
-        """
-        diff = list(set(list1) - set(list2))
-        return diff
-
-    def __update_messages(self):
-        """ Add new messages at the bottom of the Text box
-
-        The Scrollbar goes to the bottom of the box every time a new message is received
-
-        """
-        # Get all messages received by the gateway
-        all_messages = self.gateway.messages
-        # Compare the previous list to the messages already displayed
-        new_messages = self.__diff_list(all_messages, self.messages)
-        # Sort new messages by date (the first element is a datetime object)
-        new_messages = sorted(new_messages, key=lambda tup: tup[0])
-
-        if new_messages:
-            # This complex line extracts the time and message content from each message
-            # in the new_messages list
-            new_lines = "".join(["{} : {}\n".format(
-                m[0].time().replace(microsecond=0), m[1]) for m in new_messages])
-            # Insert the new messages at the end of the Text content
-            self.message_box.insert(tk.END, new_lines)
-            # Move the Scrollbar cursor to the bottom
-            self.message_box.yview_moveto(1)
-            # Update the list of messages that are already displayed
-            self.messages = copy.copy(all_messages)
-        # Call this function again after 100 ms
-        self.parent.after(100, self.__update_messages)
+# ########################### #
+#   General purpose widgets   #
+# ########################### #
 
 
 class GatewayStatus(tk.Frame):
@@ -147,18 +25,21 @@ class GatewayStatus(tk.Frame):
         parent frame
     gateway : Gateway instance
         Gateway to monitor
-
+    field : GS or TM/FPV
     """
 
-    def __init__(self, parent, gateway, *args, **kwargs):
+    def __init__(self, parent, gateway, name, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
+        self.name = name
 
+        # Name to separate the buttons
+        tk.Label(self, text=self.name).grid(row=0, column=0)
         # Button to open/close the Serial link
         self.button_var = tk.StringVar()
         self.read_button = tk.Button(self, textvariable=self.button_var)
-        self.read_button.grid(row=0, column=0)
+        self.read_button.grid(row=1, column=0)
         # Label to display the gateway's port name
         self.port_var = tk.StringVar()
         self.port_var.set("Port : {}".format(
@@ -169,7 +50,7 @@ class GatewayStatus(tk.Frame):
         self.error_var = tk.StringVar()
         self.error_var.set("")
         tk.Label(self, textvariable=self.error_var).grid(
-            row=0, column=2, sticky=W+E)
+            row=1, column=1, sticky=W+E)
 
         self.__update_port()
         self.__update_error()
@@ -212,13 +93,124 @@ class GatewayStatus(tk.Frame):
 
         """
         if self.gateway.serial.get_status():
-            self.button_var.set("Close link")
             self.read_button.config(command=self.gateway.stop_read)
+            self.button_var.set("Close link")
         else:
-            self.button_var.set("Open link")
             self.read_button.config(command=self.gateway.start_read)
+            self.button_var.set("Open link")
+
         # Call this function again after 100 ms
         self.parent.after(100, self.__update_button)
+
+
+class SensorIndicator(tk.Frame):
+    """ TKinter frame that holds a TKinter square of color and a label for sensor.name
+
+    The box changes color depending on status of sensor. The sensor must have a self.status attribute.
+
+    Parameters
+    ----------
+    parent : TKinter Frame
+        parent frame
+    gateway : Gateway instance
+        Gateway to monitor
+    sensor : attribute of a Sensors instance
+        sensor to display status from
+    field : str
+        name of the sensor to display
+
+    """
+
+    def __init__(self, parent, gateway, sensor, field, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensor = sensor
+        self.field = field
+
+        # Button to make a colored "box" for sensor
+        # Style will be reflected on this button
+        self.btn = tk.Button(self, text='')
+        # self.btn = tk.Button(self)
+        self.btn.grid(row=0, column=1)
+        # Label to display the gateway's port name
+        self.label = tk.Label(self, text=self.field)
+        self.label.grid(
+            row=0, column=2, padx=5)
+
+        self.__update_button()
+
+    def __update_button(self):
+        """ Set the style of the button depending on the status of sensor.
+
+        """
+        if self.sensor.data[self.field] is None:
+            self.btn.config(bg='grey', state=tk.DISABLED, width=1)
+        else:
+            if self.sensor.data[self.field]:
+                self.btn.config(bg='red', height=1, state=tk.DISABLED, width=1)
+            else:
+                self.btn.config(bg='green', height=1,
+                                state=tk.DISABLED, width=1)
+            # Call this function again after 100 ms
+        self.parent.after(100, self.__update_button)
+
+
+class GeneralData(tk.Frame):
+    """ TKinter frame that holds a label and displays changeable string
+
+        The label is the name of measured value. The int/scalar shows the value for the value.
+
+        Parameters
+        ----------
+        parent : TKinter Frame
+            parent frame
+        gateway : Gateway instance
+            Gateway to monitor
+        data(sensor?) : data from functions calculating or directly from the TM.
+            data to display value from
+        field : str
+            name of the data to display
+
+    """
+
+    def __init__(self, parent, gateway, data, field, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.data = data
+        self.field = field
+
+        self.label = tk.Label(self, text=self.field + ": ")
+        self.label.grid(row=0, column=1)
+        self.data_var = tk.StringVar()
+        self.show_data = tk.Label(self, text=self.data_var)
+        self.show_data.grid(row=0, column=2)
+
+        self.__update_value()
+
+    def __update_value(self):
+        if self.field == "Battery":
+            # This has to be changed to point to battery value.
+            self.data_var.set(self.gateway.data)
+        elif self.field == "|V|":
+            # This has to be changed to point to calculated |V|.
+            self.data_var.set(self.gateway.data)
+        elif self.field == "Longitude":
+            # This has to be changed to point to longitude value.
+            self.data_var.set(self.gateway.data)
+        elif self.field == "Latitude":
+            # This has to be changed to point to latitude value.
+            self.data_var.set(self.gateway.data)
+        # Add an else of some sort, don't know where to print the error.
+        else:
+            print("General data could not be categorized")
+        self.parent.after(100, self.__update_value)
+
+
+# ############################# #
+#   Widgets for the Telemetry   #
+# ############################# #
 
 
 class LiveTimeGraph(tk.Frame):
@@ -238,6 +230,7 @@ class LiveTimeGraph(tk.Frame):
         name of the data field to display
 
     """
+
     def __init__(self, parent, gateway, sensor, field, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
@@ -249,6 +242,8 @@ class LiveTimeGraph(tk.Frame):
         self.ax = self.fig.add_subplot(111)
         self.line, = self.ax.plot([], [], lw=2)
         self.ax.grid()
+        # self.fig.set_label(self.field)
+        # self.fig.tight_layout()
         self.time = []
         self.data = []
 
@@ -264,7 +259,7 @@ class LiveTimeGraph(tk.Frame):
 
         """
         self.ax.set_ylim(0, 50)
-        self.ax.set_xlim(0, 10000)
+        self.ax.set_xlim(0, 10)
         del self.time[:]
         del self.data[:]
         self.line.set_data(self.time, self.data)
@@ -277,7 +272,7 @@ class LiveTimeGraph(tk.Frame):
         ----------
         data : unused
             default parameter given by animation.FuncAnimation
-        
+
         Returns
         -------
         tupple
@@ -286,13 +281,126 @@ class LiveTimeGraph(tk.Frame):
         """
         tmin, tmax = self.ax.get_xlim()
 
-        self.time = self.sensor.data.time.tolist()
-        self.data = self.sensor.data[self.field].tolist()
+        self.time = self.sensor.raw_data['Seconds_since_start']
+        self.data = self.sensor.raw_data[self.field]
 
         if self.time:
             if max(self.time) > tmax:
                 self.ax.set_xlim(tmin, 2*tmax)
+                self.canvas.draw()
 
         self.line.set_data(self.time, self.data)
 
         return self.line,
+
+
+# ####################### #
+#   Widgets for the LPS   #
+# ####################### #
+
+
+class LPSCommandButtons(tk.Frame):
+    """ TKinter frame with two control the LPS
+
+    Parameters
+    ----------
+    parent : TKinter Frame
+        parent frame
+    gateway : Gateway instance
+        Gateway to send commands to
+
+    """
+
+    def __init__(self, parent, gateway, status, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.status = status
+
+        self.button_fill_text = tk.StringVar()
+        self.button_fill = tk.Button(self, textvar=self.button_fill_text)
+        self.button_vent_text = tk.StringVar()
+        self.button_vent = tk.Button(self, textvar=self.button_vent_text)
+        self.button_arm_text = tk.StringVar()
+        self.button_arm = tk.Button(self, textvar=self.button_arm_text)
+        self.button_fire_text = tk.StringVar()
+        self.button_fire = tk.Button(self, textvar=self.button_fire_text)
+        self.button_tm_text = tk.StringVar()
+        self.button_tm = tk.Button(self, textvar=self.button_tm_text)
+        self.button_cal_text = tk.StringVar()
+        self.button_cal = tk.Button(
+            self, textvar=self.button_cal_text, command=lambda: self.gateway.send_command(bytes([0x43])))
+
+        self.button_fill.grid(row=1, column=1, sticky=W+E)
+        self.button_vent.grid(row=1, column=2, sticky=W+E)
+        self.button_arm.grid(row=2, column=1, sticky=W+E)
+        self.button_fire.grid(row=2, column=2, sticky=W+E)
+        self.button_tm.grid(row=3, column=1, sticky=W+E)
+        self.button_cal.grid(row=3, column=2, sticky=W+E)
+
+        self._update_buttons()
+
+    def _update_buttons(self):
+        """ Set the buttons inactive when the gateway is not ready
+
+        """
+        if self.gateway.serial.is_ready:
+
+            self.button_fill.config(state=tk.NORMAL)
+            if not self.status.data['IS_FILLING']:
+                self.button_fill_text.set("Start filling")
+                self.button_fill.config(command=lambda: self.gateway.send_command(bytes([0x61])))
+            else:
+                self.button_fill_text.set("Stop filling")
+                self.button_fill.config(command=lambda: self.gateway.send_command(bytes([0x62])))
+
+            self.button_vent.config(state=tk.NORMAL)
+            if not self.status.data['IS_VENTING']:
+                self.button_vent_text.set("Start venting")
+                self.button_vent.config(command=lambda: self.gateway.send_command(bytes([0x63])))
+            else:
+                self.button_vent_text.set("Stop venting")
+                self.button_vent.config(command=lambda: self.gateway.send_command(bytes([0x64])))
+
+            self.button_arm.config(state=tk.NORMAL)
+            if not self.status.data['IS_ARMED']:
+                self.button_arm_text.set("Arm")
+                self.button_arm.config(command=lambda: self.gateway.send_command(bytes([0x65])))
+            else:
+                self.button_arm_text.set("Disarm")
+                self.button_arm.config(command=lambda: self.gateway.send_command(bytes([0x66])))
+
+            self.button_fire.config(state=tk.NORMAL)
+            if not self.status.data['IS_FIRING']:
+                self.button_fire_text.set("Start ignition")
+                self.button_fire.config(command=lambda: self.gateway.send_command(bytes([0x67])))
+            else:
+                self.button_fire_text.set("Stop ignition")
+                self.button_fire.config(command=lambda: self.gateway.send_command(bytes([0x68])))
+
+            self.button_tm.config(state=tk.NORMAL)
+            if not self.status.data['IS_TM_ENABLED']:
+                self.button_tm_text.set("Enable telemetry ")
+                self.button_tm.config(command=lambda: self.gateway.send_command(bytes([0x41])))
+            else:
+                self.button_tm_text.set("Disable telemetry")
+                self.button_tm.config(command=lambda: self.gateway.send_command(bytes([0x42])))
+
+            self.button_cal.config(state=tk.NORMAL)
+
+        else:
+            self.button_fill_text.set("Start filling")
+            self.button_fill.config(state=tk.DISABLED)
+            self.button_vent_text.set("Start venting")
+            self.button_vent.config(state=tk.DISABLED)
+            self.button_arm_text.set("Arm")
+            self.button_arm.config(state=tk.DISABLED)
+            self.button_fire_text.set("Start ignition")
+            self.button_fire.config(state=tk.DISABLED)
+            self.button_tm_text.set("Disable telemetry")
+            self.button_tm.config(state=tk.DISABLED)
+            self.button_cal_text.set("Trigger calibration")
+            self.button_cal.config(state=tk.DISABLED)
+
+        # Call this function again after 100 ms
+        self.parent.after(100, self._update_buttons)
