@@ -294,6 +294,19 @@ class LiveTimeGraph(tk.Frame):
         return self.line,
 
 
+class TelemetryWidget(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensors = self.gateway.sensors
+
+        self.telemetry_status = GatewayStatus(self, self.gateway, 'Telemetry')
+        self.button_set_reference = tk.Button()
+
+        self.telemetry_status.grid(row=1, column=1, sticky=W+E+N+S)
+
+
 # ####################### #
 #   Widgets for the LPS   #
 # ####################### #
@@ -488,10 +501,10 @@ class LPSWidget(tk.Frame):
         self.sensors = self.gateway.sensors
 
         self.gateway_controls = LPSCommandButtons(self, self.gateway, self.sensors.status)
-        self.gateway_status = GatewayStatus(self, self.gateway, 'LPS')
+        self.lps_status = GatewayStatus(self, self.gateway, 'LPS')
         self.state = LPSState(self, self.gateway)
 
-        self.gateway_status.grid(
+        self.lps_status.grid(
             row=0, column=0, sticky=W+E+N+S, padx=5, pady=5)
         self.state.grid(
             row=1, column=0, sticky=W+E+N+S, padx=5, pady=5)

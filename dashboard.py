@@ -3,8 +3,9 @@ import tkinter as tk
 from tkinter import E, N, S, W
 
 from gui import (GatewayStatus, GeneralData, LiveTimeGraph, LPSWidget,
-                 SensorIndicator)
-from utils import DummySerialWrapper, Gateway, SerialWrapper, Sigmundr, LaunchPadStation
+                 SensorIndicator, TelemetryWidget)
+from utils import (DummySerialWrapper, Gateway, LaunchPadStation,
+                   SerialWrapper, Sigmundr)
 
 
 class MainApplication(tk.Frame):
@@ -29,7 +30,7 @@ class MainApplication(tk.Frame):
             self.lps_widget = LPSWidget(self, lps, borderwidth=2, relief="ridge")
             self.lps_widget.grid(row=0, column=1)
 
-        self.gateway_status = GatewayStatus(self, self.telemetry, "Telemetry", borderwidth=2, relief="ridge")
+        self.gateway_status = TelemetryWidget(self, self.telemetry, borderwidth=2, relief="ridge")
         self.speed_graph = LiveTimeGraph(
             self, self.telemetry, self.sensors.bmp2, field="Temperature")
         self.imu2_status = SensorIndicator(
