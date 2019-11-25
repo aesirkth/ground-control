@@ -25,10 +25,10 @@ class MainApplication(tk.Frame):
 
     """
 
-    def __init__(self, parent, gateway, *args, **kwargs):
+    def __init__(self, parent, lps, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         
-        self.widget = LPSWidget(self, gateway, *args, **kwargs)
+        self.widget = LPSWidget(self, lps, *args, **kwargs)
         self.widget.grid(row=1, column=0)
 
 
