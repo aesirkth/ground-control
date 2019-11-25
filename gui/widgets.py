@@ -50,7 +50,7 @@ class GatewayStatus(tk.Frame):
         self.error_var = tk.StringVar()
         self.error_var.set("")
         tk.Label(self, textvariable=self.error_var).grid(
-            row=1, column=1, sticky=W+E)
+            row=1, column=1, sticky=W)
 
         self.__update_port()
         self.__update_error()
@@ -328,15 +328,12 @@ class LPSCommandButtons(tk.Frame):
         self.button_tm_text = tk.StringVar()
         self.button_tm = tk.Button(self, textvar=self.button_tm_text)
         self.button_cal_text = tk.StringVar()
-        self.button_cal = tk.Button(self, textvar=self.button_cal_text,
-            command=lambda: self.gateway.send_command(bytes([0x43])))
 
         self.button_fill.grid(row=1, column=1, sticky=W+E)
         self.button_vent.grid(row=1, column=2, sticky=W+E)
         self.button_arm.grid(row=2, column=1, sticky=W+E)
         self.button_fire.grid(row=2, column=2, sticky=W+E)
-        self.button_tm.grid(row=3, column=1, sticky=W+E)
-        self.button_cal.grid(row=3, column=2, sticky=W+E)
+        self.button_tm.grid(row=3, column=1, columnspan=2, sticky=W+E)
 
         self._update_buttons()
 
@@ -386,8 +383,6 @@ class LPSCommandButtons(tk.Frame):
                 self.button_tm_text.set("Disable telemetry")
                 self.button_tm.config(command=lambda: self.gateway.send_command(bytes([0x42])))
 
-            self.button_cal.config(state=tk.NORMAL)
-
         else:
             self.button_fill_text.set("Start filling")
             self.button_fill.config(state=tk.DISABLED)
@@ -400,7 +395,6 @@ class LPSCommandButtons(tk.Frame):
             self.button_tm_text.set("Disable telemetry")
             self.button_tm.config(state=tk.DISABLED)
             self.button_cal_text.set("Trigger calibration")
-            self.button_cal.config(state=tk.DISABLED)
 
         # Call this function again after 100 ms
         self.parent.after(100, self._update_buttons)
