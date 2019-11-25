@@ -690,12 +690,43 @@ class LPSStatus(GenericSensor):
             self.data[field] = self.raw_data[field][-1]
 
 
+class RSSI(GenericSensor):
+    fields = {
+        'REMOTE_RSSI': {
+            'start': 0,
+            'size': 2,  # Byte
+            'conversion_function': lambda x: x,
+            'byte_order': 'big',
+            'signed': True,
+        },
+    }
+    sample_size = 2
+
+    def __init__(self, start_position, **kwargs):
+        super().__init__(start_position, self.fields, self.sample_size, **kwargs)
+
+        self.reset()
+    
+    def reset(self):
+        self.data = {field: 0 for field in self.fields.keys()}
+        self.set_default_values()
+
+    def update_data(self, frame, frame_time=None):
+        self.update_raw_data(frame, frame_time)
+        for field in self.fields.keys():
+            self.data[field] = self.raw_data[field][-1]
+
+
 class LaunchPadStation:
     def __init__(self):
         self.status = LPSStatus(0)
+        self.rssi = RSSI(1)
     
     def update_sensors(self, frame):
-        self.status.update_data(frame, frame_time=datetime.datetime.now().time())
+        time = datetime.datetime.now().time()
+        self.status.update_data(frame, frame_time=time)
+        self.rssi.update_data(frame, frame_time=time)
     
     def reset(self):
         self.status.reset()
+        self.rssi.reset()
