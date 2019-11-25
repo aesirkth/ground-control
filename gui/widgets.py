@@ -406,31 +406,31 @@ class LPSState(tk.Frame):
         self.parent = parent
         self.gateway = gateway
 
-        Motor = tk.Frame(self)
-        Motor.grid(row=0, column=1, sticky=W)
+        Motor = tk.Frame(self, borderwidth=2, relief="groove")
+        Motor.grid(row=0, column=1, sticky=W+E, padx=2, pady=2)
 
-        self.motor_txt = tk.Label(Motor, text="Motor state:")
+        self.motor_txt = tk.Label(Motor, text="  Motor  ")
         self.motor_state_txt = tk.StringVar()
         self.motor_state = tk.Label(Motor, textvar=self.motor_state_txt)
         self.default_bg = self.motor_state.cget("background")
 
         self.motor_txt.grid(row=0, column=0)
-        self.motor_state.grid(row=0, column=1)
+        self.motor_state.grid(row=1, column=0)
 
-        Telemetry = tk.Frame(self)
-        Telemetry.grid(row=1, column=1, sticky=W)
+        Telemetry = tk.Frame(self, borderwidth=2, relief="groove")
+        Telemetry.grid(row=0, column=2, sticky=W+E, padx=2, pady=2)
 
-        self.tm_txt = tk.Label(Telemetry, text="Telemetry state:")
+        self.tm_txt = tk.Label(Telemetry, text="  Telemetry  ")
         self.tm_state_txt = tk.StringVar()
         self.tm_state = tk.Label(Telemetry, textvar=self.tm_state_txt)
 
         self.tm_txt.grid(row=0, column=0)
-        self.tm_state.grid(row=0, column=1)
+        self.tm_state.grid(row=1, column=0)
 
         RSSI = tk.Frame(self, borderwidth=2, relief="groove")
-        RSSI.grid(row=0, column=0, rowspan=2, sticky=W, padx=5, pady=5)
+        RSSI.grid(row=0, column=0, rowspan=2, sticky=W+E, padx=2, pady=2)
 
-        self.rssi_txt = tk.Label(RSSI, text="Remote RSSI")
+        self.rssi_txt = tk.Label(RSSI, text="  RSSI  ")
         self.rssi_value_txt = tk.StringVar()
         self.rssi_value = tk.Label(RSSI, textvar=self.rssi_value_txt)
 
@@ -449,7 +449,7 @@ class LPSState(tk.Frame):
                 self.motor_state_txt.set('Venting')
                 self.motor_state.config(bg="orange")
             elif self.gateway.sensors.status.data['IS_FIRING']:
-                self.motor_state_txt.set('Ignition started')
+                self.motor_state_txt.set('Ignition')
                 self.motor_state.config(bg="green")
             elif self.gateway.sensors.status.data['IS_ARMED']:
                 self.motor_state_txt.set('Armed')
