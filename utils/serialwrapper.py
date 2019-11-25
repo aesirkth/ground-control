@@ -177,12 +177,12 @@ class SerialWrapper:
                     # But just to be sure...
                     time.sleep(1)
                     # Try to enter AT command mode
-                    self.write('+++')
+                    self.write('+++', encode=True)
                     # Wait one second and see the "OK" has been sent by the device
                     time.sleep(1)
                     lines = self.readlines()
                     # Exit AT command mode
-                    self.write('ATO\r')
+                    self.write('ATO\r', encode=True)
 
                     if b'OK' in lines:
                         print("{} : Found device on port : {}".format(
