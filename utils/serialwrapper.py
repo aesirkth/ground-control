@@ -450,7 +450,7 @@ class SerialWrapper:
             lines = r[:-1]
             if decode:
                 lines = [l.decode('utf-8', 'backslashreplace') for l in lines]
-            if self.bonjour in lines:
+            if self.bonjour in lines or bytearray(map(ord, self.bonjour)) in lines:
                 self.is_ready = True
             return lines
         else:

@@ -723,9 +723,10 @@ class LaunchPadStation:
         self.rssi = RSSI(1)
     
     def update_sensors(self, frame):
-        time = datetime.datetime.now().time()
-        self.status.update_data(frame, frame_time=time)
-        self.rssi.update_data(frame, frame_time=time)
+        if len(frame) == 3:
+            time = datetime.datetime.now().time()
+            self.status.update_data(frame, frame_time=time)
+            self.rssi.update_data(frame, frame_time=time)
     
     def reset(self):
         self.status.reset()
