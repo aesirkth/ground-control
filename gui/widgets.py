@@ -327,7 +327,6 @@ class LPSCommandButtons(tk.Frame):
         self.button_fire = tk.Button(self, textvar=self.button_fire_text)
         self.button_tm_text = tk.StringVar()
         self.button_tm = tk.Button(self, textvar=self.button_tm_text)
-        self.button_cal_text = tk.StringVar()
 
         self.button_fill.grid(row=1, column=1, sticky=W+E)
         self.button_vent.grid(row=1, column=2, sticky=W+E)
@@ -394,7 +393,6 @@ class LPSCommandButtons(tk.Frame):
             self.button_fire.config(state=tk.DISABLED)
             self.button_tm_text.set("Disable telemetry")
             self.button_tm.config(state=tk.DISABLED)
-            self.button_cal_text.set("Trigger calibration")
 
         # Call this function again after 100 ms
         self.parent.after(100, self._update_buttons)
