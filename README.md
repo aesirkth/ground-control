@@ -43,10 +43,11 @@ The Launch Pad Station is managed using `lps_control.py` (see [lps_control](doc/
 
 # General description
 
-The following elements are the main part of the rocket :
-  * Sigmundr (Rocket) (see [aesirkth/Sigmundr_embedded_system](https://github.com/aesirkth/Sigmundr_embedded_system))
+The following elements are the main part of the rocket system:
+  * The on-board computer on Sigmundr (Rocket) (see [aesirkth/Sigmundr_embedded_system](https://github.com/aesirkth/Sigmundr_embedded_system))
   * The Launch Pad Station (see [aesirkth/LaunchPadStation](https://github.com/aesirkth/LaunchPadStation))
-  * The Ground Station (see this repository)
+  * The fuel line and engine ignition circuit (*not described here*)
+  * The Dashboard (see this repository)
   * The FPV System (*not described here*)
 
 Here is a diagram of the data links between these main systems :
@@ -79,7 +80,7 @@ In phase 1 : the computer finds the gateway
 
 In phase 2 : actual communication through the gateway
 
-`BONJOUR` is a unique string sent on serial connection initiation that is used to identify the LPS Gateway among all the serial devices connected to the Ground Station. The Telemetry Gatewa is found by trying to initiate the AT command mode
+`BONJOUR` is a unique string sent on serial link initiation that is used to identify the LPS Gateway among all the serial devices connected to the Ground Station. The Telemetry Gateway is found by trying to initiate the AT command mode
 
 
 ### Telemetry Gateway
@@ -91,7 +92,7 @@ See [RFD900](/doc/RFD900.md)
 
 ### Launch Pad Station Gateway
 
-The *Launch Pad Station Gateway* is an Arduino with a USB port connected to a `RFM9XW` LoRa module
+The *Launch Pad Station Gateway* is an Arduino with a USB port connected to an `RFM9XW` LoRa module
 
 See [aesirkth/LaunchPadStation](https://github.com/aesirkth/LaunchPadStation)
 
