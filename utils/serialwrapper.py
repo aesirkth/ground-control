@@ -177,12 +177,12 @@ class SerialWrapper:
                     # But just to be sure...
                     time.sleep(1)
                     # Try to enter AT command mode
-                    self.write('+++')
+                    self.write('+++', encode=True)
                     # Wait one second and see the "OK" has been sent by the device
                     time.sleep(1)
                     lines = self.readlines()
                     # Exit AT command mode
-                    self.write('ATO\r')
+                    self.write('ATO\r', encode=True)
 
                     if b'OK' in lines:
                         print("{} : Found device on port : {}".format(
@@ -450,7 +450,7 @@ class SerialWrapper:
             lines = r[:-1]
             if decode:
                 lines = [l.decode('utf-8', 'backslashreplace') for l in lines]
-            if self.bonjour in lines:
+            if self.bonjour in lines or bytearray(map(ord, self.bonjour)) in lines:
                 self.is_ready = True
             return lines
         else:

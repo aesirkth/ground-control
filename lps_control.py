@@ -9,7 +9,7 @@ This GUI can:
 import tkinter as tk
 from tkinter import E, N, S, W
 
-from gui import GatewayStatus, LPSCommandButtons
+from gui import LPSWidget
 from utils import Gateway, LaunchPadStation, SerialWrapper
 
 
@@ -25,19 +25,11 @@ class MainApplication(tk.Frame):
 
     """
 
-    def __init__(self, parent, gateway, *args, **kwargs):
+    def __init__(self, parent, lps, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.parent = parent
-        self.gateway = gateway
-        self.sensors = self.gateway.sensors
-
-        self.gateway_controls = LPSCommandButtons(self, self.gateway, self.sensors.status)
-        self.gateway_status = GatewayStatus(self, self.gateway, 'LPS')
-
-        self.gateway_status.grid(
-            row=0, column=1, sticky=W+E+N+S, padx=5, pady=5)
-        self.gateway_controls.grid(
-            row=1, column=1, sticky=W+E+N+S, padx=5, pady=5)
+        
+        self.widget = LPSWidget(self, lps, *args, **kwargs)
+        self.widget.grid(row=1, column=0)
 
 
 if __name__ == "__main__":

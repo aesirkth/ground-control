@@ -50,7 +50,7 @@ class GatewayStatus(tk.Frame):
         self.error_var = tk.StringVar()
         self.error_var.set("")
         tk.Label(self, textvariable=self.error_var).grid(
-            row=1, column=1, sticky=W+E)
+            row=1, column=1, sticky=W)
 
         self.__update_port()
         self.__update_error()
@@ -213,7 +213,7 @@ class GeneralData(tk.Frame):
 # ############################# #
 
 
-class LiveTimeGraph(tk.Frame):
+class LiveTimeGraphTemp(tk.Frame):
     """ TKinter frame that holds a matplotlib graph that is frequently updated
 
     The graph is plotted against time. The sensor must have a data.time attribute.
@@ -294,6 +294,19 @@ class LiveTimeGraph(tk.Frame):
         return self.line,
 
 
+class TelemetryWidget(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensors = self.gateway.sensors
+
+        self.telemetry_status = GatewayStatus(self, self.gateway, 'Telemetry')
+        self.button_set_reference = tk.Button()
+
+        self.telemetry_status.grid(row=1, column=1, sticky=W+E+N+S)
+
+
 # ####################### #
 #   Widgets for the LPS   #
 # ####################### #
@@ -327,16 +340,12 @@ class LPSCommandButtons(tk.Frame):
         self.button_fire = tk.Button(self, textvar=self.button_fire_text)
         self.button_tm_text = tk.StringVar()
         self.button_tm = tk.Button(self, textvar=self.button_tm_text)
-        self.button_cal_text = tk.StringVar()
-        self.button_cal = tk.Button(
-            self, textvar=self.button_cal_text, command=lambda: self.gateway.send_command(bytes([0x43])))
 
         self.button_fill.grid(row=1, column=1, sticky=W+E)
         self.button_vent.grid(row=1, column=2, sticky=W+E)
         self.button_arm.grid(row=2, column=1, sticky=W+E)
         self.button_fire.grid(row=2, column=2, sticky=W+E)
-        self.button_tm.grid(row=3, column=1, sticky=W+E)
-        self.button_cal.grid(row=3, column=2, sticky=W+E)
+        self.button_tm.grid(row=3, column=1, columnspan=2, sticky=W+E)
 
         self._update_buttons()
 
@@ -386,8 +395,6 @@ class LPSCommandButtons(tk.Frame):
                 self.button_tm_text.set("Disable telemetry")
                 self.button_tm.config(command=lambda: self.gateway.send_command(bytes([0x42])))
 
-            self.button_cal.config(state=tk.NORMAL)
-
         else:
             self.button_fill_text.set("Start filling")
             self.button_fill.config(state=tk.DISABLED)
@@ -399,8 +406,108 @@ class LPSCommandButtons(tk.Frame):
             self.button_fire.config(state=tk.DISABLED)
             self.button_tm_text.set("Disable telemetry")
             self.button_tm.config(state=tk.DISABLED)
-            self.button_cal_text.set("Trigger calibration")
-            self.button_cal.config(state=tk.DISABLED)
 
         # Call this function again after 100 ms
         self.parent.after(100, self._update_buttons)
+
+
+class LPSState(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+
+        Motor = tk.Frame(self, borderwidth=2, relief="groove")
+        Motor.grid(row=0, column=1, sticky=W+E, padx=2, pady=2)
+
+        self.motor_txt = tk.Label(Motor, text="  Motor  ")
+        self.motor_state_txt = tk.StringVar()
+        self.motor_state = tk.Label(Motor, textvar=self.motor_state_txt)
+        self.default_bg = self.motor_state.cget("background")
+
+        self.motor_txt.grid(row=0, column=0)
+        self.motor_state.grid(row=1, column=0)
+
+        Telemetry = tk.Frame(self, borderwidth=2, relief="groove")
+        Telemetry.grid(row=0, column=2, sticky=W+E, padx=2, pady=2)
+
+        self.tm_txt = tk.Label(Telemetry, text="  Telemetry  ")
+        self.tm_state_txt = tk.StringVar()
+        self.tm_state = tk.Label(Telemetry, textvar=self.tm_state_txt)
+
+        self.tm_txt.grid(row=0, column=0)
+        self.tm_state.grid(row=1, column=0)
+
+        RSSI = tk.Frame(self, borderwidth=2, relief="groove")
+        RSSI.grid(row=0, column=0, rowspan=2, sticky=W+E, padx=2, pady=2)
+
+        self.rssi_txt = tk.Label(RSSI, text="  RSSI  ")
+        self.rssi_value_txt = tk.StringVar()
+        self.rssi_value = tk.Label(RSSI, textvar=self.rssi_value_txt)
+
+        self.rssi_txt.grid(row=0, column=0)
+        self.rssi_value.grid(row=1, column=0)       
+
+        self._ping_lps()
+        self._update_state()
+    
+    def _update_state(self):
+        if self.gateway.serial.is_ready:
+            if self.gateway.sensors.status.data['IS_FILLING']:
+                self.motor_state_txt.set('Filling')
+                self.motor_state.config(bg="orange")
+            elif self.gateway.sensors.status.data['IS_VENTING']:
+                self.motor_state_txt.set('Venting')
+                self.motor_state.config(bg="orange")
+            elif self.gateway.sensors.status.data['IS_FIRING']:
+                self.motor_state_txt.set('Ignition')
+                self.motor_state.config(bg="green")
+            elif self.gateway.sensors.status.data['IS_ARMED']:
+                self.motor_state_txt.set('Armed')
+                self.motor_state.config(bg="red")
+            else:
+                self.motor_state_txt.set('Default')
+                self.motor_state.config(bg=self.default_bg)
+            if self.gateway.sensors.status.data['IS_TM_ENABLED']:
+                self.tm_state_txt.set('Enabled')
+                self.tm_state.config(bg='green')
+            else:
+                self.tm_state_txt.set('Disabled')
+                self.tm_state.config(bg='red')
+
+            rssi = self.gateway.sensors.rssi.data['REMOTE_RSSI']
+            self.rssi_value_txt.set(str(rssi))
+        else:
+            self.motor_state_txt.set('')
+            self.motor_state.config(bg=self.default_bg)
+            self.tm_state_txt.set('')
+            self.tm_state.config(bg=self.default_bg)
+            self.rssi_value_txt.set('')
+
+        self.parent.after(100, self._update_state)
+
+    def _ping_lps(self):
+        # Unused command, just to get an answer
+        self.gateway.send_command(bytes([0xFF]))
+
+        self.parent.after(5000, self._ping_lps)
+
+
+class LPSWidget(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensors = self.gateway.sensors
+
+        self.gateway_controls = LPSCommandButtons(self, self.gateway, self.sensors.status)
+        self.lps_status = GatewayStatus(self, self.gateway, 'LPS')
+        self.state = LPSState(self, self.gateway)
+
+        self.lps_status.grid(
+            row=0, column=0, sticky=W+E+N+S, padx=5, pady=5)
+        self.state.grid(
+            row=1, column=0, sticky=W+E+N+S, padx=5, pady=5)
+        self.gateway_controls.grid(
+            row=2, column=0, sticky=W+E+N+S, padx=5, pady=5)
+

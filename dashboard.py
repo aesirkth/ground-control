@@ -2,8 +2,9 @@ import sys
 import tkinter as tk
 from tkinter import E, N, S, W
 
-from gui import GatewayStatus, LiveTimeGraph, SensorIndicator, GeneralData
-from utils import DummySerialWrapper, Gateway, SerialWrapper, Sigmundr
+from gui import LiveTimeGraphTemp, LPSWidget, SensorIndicator, TelemetryWidget
+from utils import (DummySerialWrapper, Gateway, LaunchPadStation,
+                   SerialWrapper, Sigmundr)
 
 
 class MainApplication(tk.Frame):
@@ -13,61 +14,57 @@ class MainApplication(tk.Frame):
     ----------
     parent : Tkinter TK() instance
         TK() instance to hold the widgets
-    gateway : Gateway instance
+    telemetry : Gateway instance
         Gateway instance correctly set for the LPS Gateway
 
     """
 
-    def __init__(self, parent, gateway, *args, **kwargs):
+    def __init__(self, parent, telemetry, show_lps, lps=None,*args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
-        self.gateway = gateway
-        self.sensors = self.gateway.sensors
+        self.telemetry = telemetry
+        self.sensors = self.telemetry.sensors
 
-        self.speed_graph = LiveTimeGraph(
-            self, self.gateway, self.sensors.bmp2, field="Temperature")
-        self.gateway_status = GatewayStatus(self, self.gateway, "Telemetry")
-        # self.tm_status = GatewayStatus(self, self.gateway, field="FM/FPV")
+        if show_lps:
+            self.lps_widget = LPSWidget(self, lps, borderwidth=2, relief="ridge")
+            self.lps_widget.grid(row=0, column=1)
+
+        self.gateway_status = TelemetryWidget(self, self.telemetry, borderwidth=2, relief="ridge")
+        self.temp_graph = LiveTimeGraphTemp(
+            self, self.telemetry, self.sensors.bmp2, field="Temperature")
         self.imu2_status = SensorIndicator(
-            self, self.gateway, self.sensors.errmsg, field="ERR_INIT_IMU2")
+            self, self.telemetry, self.sensors.errmsg, field="ERR_INIT_IMU2")
         self.imu3_status = SensorIndicator(
-            self, self.gateway, self.sensors.errmsg, field="ERR_INIT_IMU3")
+            self, self.telemetry, self.sensors.errmsg, field="ERR_INIT_IMU3")
         self.bmp2_status = SensorIndicator(
-            self, self.gateway, self.sensors.errmsg, field="ERR_INIT_BMP2")
+            self, self.telemetry, self.sensors.errmsg, field="ERR_INIT_BMP2")
         self.bmp3_status = SensorIndicator(
-            self, self.gateway, self.sensors.errmsg, field="ERR_INIT_BMP3")
+            self, self.telemetry, self.sensors.errmsg, field="ERR_INIT_BMP3")
         self.mag_status = SensorIndicator(
-            self, self.gateway, self.sensors.errmsg, field="ERR_INIT_MAG")
+            self, self.telemetry, self.sensors.errmsg, field="ERR_INIT_MAG")
         self.adc_status = SensorIndicator(
-            self, self.gateway, self.sensors.errmsg, field="ERR_INIT_ADC")
+            self, self.telemetry, self.sensors.errmsg, field="ERR_INIT_ADC")
         self.card_status = SensorIndicator(
-            self, self.gateway, self.sensors.errmsg, field="ERR_INIT_SD_CARD")
-        # self.tm_indicator = SensorIndicator(self, self.gateway, self.sensors.imu,
-        #                                     field="Telemetry Status")
-        # self.abs_vel = GeneralData(self, self.gateway, data=self.gateway.data, field="|V|")
+            self, self.telemetry, self.sensors.errmsg, field="ERR_INIT_SD_CARD")
 
         self.gateway_status.grid(
-            row=0, column=1, sticky=W+E+N+S, padx=5, pady=5)
-        # self.tm_status.grid(
-        #    row=0, column=2, sticky=W+E+N+S, padx=5, pady=5)
-        # self.abs_vel.grid(
-        #     row=0, column=3, sticky=W, padx=10, pady=5)
-        self.speed_graph.grid(
-            row=1, rowspan=7, column=3, sticky=W+E+N+S, padx=5, pady=5)
+            row=1, column=1, sticky=W+E+N+S)
+        self.temp_graph.grid(
+            row=2, rowspan=7, column=3, sticky=W+E+N+S, padx=5, pady=5)
         self.imu2_status.grid(
-            row=2, column=1, sticky=W, padx=10, pady=0)
-        self.imu3_status.grid(
             row=3, column=1, sticky=W, padx=10, pady=0)
-        self.bmp2_status.grid(
+        self.imu3_status.grid(
             row=4, column=1, sticky=W, padx=10, pady=0)
-        self.bmp3_status.grid(
+        self.bmp2_status.grid(
             row=5, column=1, sticky=W, padx=10, pady=0)
-        self.mag_status.grid(
+        self.bmp3_status.grid(
             row=6, column=1, sticky=W, padx=10, pady=0)
-        self.adc_status.grid(
+        self.mag_status.grid(
             row=7, column=1, sticky=W, padx=10, pady=0)
-        self.card_status.grid(
+        self.adc_status.grid(
             row=8, column=1, sticky=W, padx=10, pady=0)
+        self.card_status.grid(
+            row=9, column=1, sticky=W, padx=10, pady=0)
 
 
 if __name__ == "__main__":
@@ -75,26 +72,32 @@ if __name__ == "__main__":
     if len(sys.argv) >= 2:
         if sys.argv[1] == "rfd":
             # Use this with a RFD900 modem
-            serial = SerialWrapper(115200, "Telemetry", rfd900=True)
-        elif sys.argv[1] == "gw":
-            # Use this for testing with an Arduino board and `dummy_telemetry.ino`
-            serial = SerialWrapper(115200, "Telemetry", bonjour="TELEMETRY")
+            serial_telemetry = SerialWrapper(115200, "Telemetry", rfd900=True)
         elif sys.argv[1] == "dummy":
             # Use this for testing with an Arduino board and `dummy_telemetry.ino`
-            serial = DummySerialWrapper('Dummy')
+            serial_telemetry = DummySerialWrapper('Dummy')
         else:
-            serial = SerialWrapper(115200, "Telemetry", bonjour="TELEMETRY")
+            serial_telemetry = SerialWrapper(115200, "Telemetry", rfd900=True)
     else:
-        serial = SerialWrapper(115200, "Telemetry", bonjour="TELEMETRY")
+        serial_telemetry = SerialWrapper(115200, "Telemetry", rfd900=True)
+    
+    serial_lps = SerialWrapper(115200, "LPS", bonjour="LAUNCHPADSTATION")
 
-    sensors = Sigmundr()
+    show_lps = False
+    if len(sys.argv) >= 3:
+        if sys.argv[2] == "lps":
+            show_lps = True
 
-    telemetry = Gateway(serial, sensors, "./data")
+    rocket_sensors = Sigmundr()
+    lps_sensors = LaunchPadStation()
+
+    telemetry = Gateway(serial_telemetry, rocket_sensors, "./data")
+    lps = Gateway(serial_lps, lps_sensors, "./data")
 
     root = tk.Tk()
     root.title("Sigmundr Dashboard")
 
-    MainApplication(root, telemetry).pack(
+    MainApplication(root, telemetry, show_lps, lps).pack(
         side="top", fill="both", expand=True)
 
     root.mainloop()
