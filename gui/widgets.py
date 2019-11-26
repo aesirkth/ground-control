@@ -213,7 +213,7 @@ class GeneralData(tk.Frame):
 # ############################# #
 
 
-class LiveTimeGraph(tk.Frame):
+class LiveTimeGraphTemp(tk.Frame):
     """ TKinter frame that holds a matplotlib graph that is frequently updated
 
     The graph is plotted against time. The sensor must have a data.time attribute.

@@ -2,8 +2,7 @@ import sys
 import tkinter as tk
 from tkinter import E, N, S, W
 
-from gui import (GatewayStatus, GeneralData, LiveTimeGraph, LPSWidget,
-                 SensorIndicator, TelemetryWidget)
+from gui import LiveTimeGraphTemp, LPSWidget, SensorIndicator, TelemetryWidget
 from utils import (DummySerialWrapper, Gateway, LaunchPadStation,
                    SerialWrapper, Sigmundr)
 
@@ -31,7 +30,7 @@ class MainApplication(tk.Frame):
             self.lps_widget.grid(row=0, column=1)
 
         self.gateway_status = TelemetryWidget(self, self.telemetry, borderwidth=2, relief="ridge")
-        self.speed_graph = LiveTimeGraph(
+        self.temp_graph = LiveTimeGraphTemp(
             self, self.telemetry, self.sensors.bmp2, field="Temperature")
         self.imu2_status = SensorIndicator(
             self, self.telemetry, self.sensors.errmsg, field="ERR_INIT_IMU2")
@@ -50,7 +49,7 @@ class MainApplication(tk.Frame):
 
         self.gateway_status.grid(
             row=1, column=1, sticky=W+E+N+S)
-        self.speed_graph.grid(
+        self.temp_graph.grid(
             row=2, rowspan=7, column=3, sticky=W+E+N+S, padx=5, pady=5)
         self.imu2_status.grid(
             row=3, column=1, sticky=W, padx=10, pady=0)
