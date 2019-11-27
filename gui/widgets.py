@@ -304,7 +304,7 @@ class TelemetryWidget(tk.Frame):
         self.telemetry_status = GatewayStatus(self, self.gateway, 'Telemetry')
         self.button_set_reference = tk.Button()
 
-        self.telemetry_status.grid(row=1, column=1, sticky=W+E+N+S)
+        self.telemetry_status.grid(row=1, column=1, sticky=W+E+N+S, padx=5, pady=5)
 
 
 # ####################### #
@@ -418,7 +418,7 @@ class LPSState(tk.Frame):
         self.gateway = gateway
 
         Motor = tk.Frame(self, borderwidth=2, relief="groove")
-        Motor.grid(row=0, column=1, sticky=W+E, padx=2, pady=2)
+        Motor.grid(row=0, column=1, sticky=W+E, padx=2)
 
         self.motor_txt = tk.Label(Motor, text="  Motor  ")
         self.motor_state_txt = tk.StringVar()
@@ -429,7 +429,7 @@ class LPSState(tk.Frame):
         self.motor_state.grid(row=1, column=0)
 
         Telemetry = tk.Frame(self, borderwidth=2, relief="groove")
-        Telemetry.grid(row=0, column=2, sticky=W+E, padx=2, pady=2)
+        Telemetry.grid(row=0, column=2, sticky=W+E, padx=(2, 0))
 
         self.tm_txt = tk.Label(Telemetry, text="  Telemetry  ")
         self.tm_state_txt = tk.StringVar()
@@ -439,7 +439,7 @@ class LPSState(tk.Frame):
         self.tm_state.grid(row=1, column=0)
 
         RSSI = tk.Frame(self, borderwidth=2, relief="groove")
-        RSSI.grid(row=0, column=0, rowspan=2, sticky=W+E, padx=2, pady=2)
+        RSSI.grid(row=0, column=0, rowspan=2, sticky=W+E, padx=(0, 2))
 
         self.rssi_txt = tk.Label(RSSI, text="  RSSI  ")
         self.rssi_value_txt = tk.StringVar()
@@ -505,9 +505,8 @@ class LPSWidget(tk.Frame):
         self.state = LPSState(self, self.gateway)
 
         self.lps_status.grid(
-            row=0, column=0, sticky=W+E+N+S, padx=5, pady=5)
+            row=0, column=0, sticky=W+E+N+S, padx=5, pady=(5, 0))
         self.state.grid(
-            row=1, column=0, sticky=W+E+N+S, padx=5, pady=5)
+            row=1, column=0, sticky=W+E+N+S, padx=5, pady=(5, 0))
         self.gateway_controls.grid(
-            row=2, column=0, sticky=W+E+N+S, padx=5, pady=5)
-
+            row=2, column=0, sticky=W+E+N+S, padx=5, pady=(5, 5))
