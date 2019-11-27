@@ -318,7 +318,7 @@ class RTC(GenericSensor):
         'Microsecond': {
             'start': 3,
             'size': 1,
-            'conversion_function': lambda x: 1000000-x*1000*1000/256.,  # ms
+            'conversion_function': lambda x: 999999-x*1000*1000/256.,  # ms
             'byte_order': 'big',
             'signed': False,
         },

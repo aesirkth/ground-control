@@ -91,7 +91,7 @@ class DummySerialWrapper:
         hour = delay.seconds/3600
         minute = (delay.seconds%3600)/60
         second = delay.seconds%60
-        millisecond = delay.microseconds/1000
+        millisecond = 999-delay.microseconds/1000
         frame += bytes([int(hour)])
         frame += bytes([int(minute)])
         frame += bytes([int(second)])
@@ -99,7 +99,7 @@ class DummySerialWrapper:
         # Timer
         frame += b'\x10\x27\x00\x00' # 5s
         # Battery1
-        frame += b'\x00\x00'
+        frame += b'\x3C\x0D'
         # Battery2
         frame += b'\x00\x00'
         # IMU2
