@@ -405,17 +405,43 @@ class TimeIndicator(tk.Frame):
         self.parent.after(100, self._update_time)
 
 
+class ParachuteIndicator(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+
+        self.parachute_txt = tk.StringVar()
+        self.parachute_indicator = tk.Label(self, textvar=self.parachute_txt)
+        self.parachute_indicator.grid(row=0, column=0)
+
+        self._update_parachute()
+    
+    def _update_parachute(self):
+        if self.gateway.sensors.status.data['PARACHUTE_DEPLOYED']:
+            self.parachute_txt.set('Parachute deployed !')
+            self.parachute_indicator.config(bg='green')
+        else:
+            self.parachute_txt.set('Parachute not deployed')
+            self.parachute_indicator.config(bg='grey')
+        
+        self.parent.after(100, self._update_parachute)
+
+
 class RocketStatus(tk.Frame):
     def __init__(self, parent, gateway, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
 
+        self.parachute = ParachuteIndicator(self, self.gateway, bd=BD, relief="solid")
+        self.parachute.grid(row=0, column=0, columnspan=2, padx=10, pady=(5, 0))
+
         self.batteries = BatteryIndicator(self, self.gateway, bd=BD, relief="solid")
-        self.batteries.grid(row=0, column=0, padx=10, pady=(5, 0))
+        self.batteries.grid(row=1, column=0, padx=10, pady=(5, 0))
 
         self.time = TimeIndicator(self, self.gateway, bd=BD, relief="solid")
-        self.time.grid(row=0, column=1, padx=10, pady=(5, 0))
+        self.time.grid(row=1, column=1, padx=10, pady=(5, 0))
 
         self.init_status = InitStatus(self, self.gateway, bd=BD, relief="solid")
         self.init_status.grid(row=2, column=0, columnspan=2, padx=10, pady=(5, 5))

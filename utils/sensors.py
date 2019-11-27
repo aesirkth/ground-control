@@ -157,6 +157,33 @@ class GenericSensor:
 # ############################### #
 
 
+class Status(GenericSensor):
+    fields = {
+        'PARACHUTE_DEPLOYED': {
+            'start': 0,
+            'size': 1,  # Byte
+            'conversion_function': lambda x: (x & 1<<7) >> 7,
+            'byte_order': 'big',
+            'signed': False,
+        },
+    }
+    sample_size = 1
+
+    def __init__(self, start_position, **kwargs):
+        super().__init__(start_position, self.fields, self.sample_size, **kwargs)
+
+        self.reset()
+    
+    def reset(self):
+        self.data = {field: None for field in self.fields.keys()}
+        self.set_default_values()
+
+    def update_data(self, frame, frame_time=None):
+        self.update_raw_data(frame, frame_time)
+        for field in self.fields.keys():
+            self.data[field] = self.raw_data[field][-1]
+
+
 class ErrMsg(GenericSensor):
     fields = {
         'ERR_INIT_IMU2': {
@@ -603,6 +630,7 @@ class Sigmundr:
     """
 
     def __init__(self):
+        self.status = Status(1)
         self.errmsg = ErrMsg(2)
         self.rtc = RTC(4, is_rtc=True)
         self.timer = Timer(8)
@@ -619,6 +647,7 @@ class Sigmundr:
                 self.rtc.update_data(frame)
                 frame_time = self.rtc.data['Time']
                 self.errmsg.update_data(frame, frame_time)
+                self.status.update_data(frame, frame_time)
                 self.timer.update_data(frame, frame_time)
                 self.batteries.update_data(frame, frame_time)
                 self.imu2.update_data(frame, frame_time)
@@ -629,6 +658,7 @@ class Sigmundr:
     
     def reset(self):
         self.errmsg.reset()
+        self.status.reset()
         self.rtc.reset()
         self.timer.reset()
         self.batteries.reset()
