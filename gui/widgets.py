@@ -103,40 +103,37 @@ class GatewayStatus(tk.Frame):
         self.parent.after(100, self.__update_button)
 
 
-class SensorIndicator(tk.Frame):
-    """ TKinter frame that holds a TKinter square of color and a label for sensor.name
+class BoolFieldIndicator(tk.Frame):
+    """ TKinter frame that holds a TKinter square of color and a label
 
-    The box changes color depending on status of sensor. The sensor must have a self.status attribute.
+    The box changes color depending on status of sensor
 
     Parameters
     ----------
     parent : TKinter Frame
         parent frame
-    gateway : Gateway instance
-        Gateway to monitor
     sensor : attribute of a Sensors instance
         sensor to display status from
     field : str
-        name of the sensor to display
+        dictionary key of the field to check
+    text : str
+        text to display next to the indicator
 
     """
 
-    def __init__(self, parent, gateway, sensor, field, *args, **kwargs):
+    def __init__(self, parent, sensor, field, text, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
-        self.gateway = gateway
         self.sensor = sensor
         self.field = field
+        self.text = text
 
         # Button to make a colored "box" for sensor
         # Style will be reflected on this button
-        self.btn = tk.Button(self, text='')
-        # self.btn = tk.Button(self)
-        self.btn.grid(row=0, column=1)
-        # Label to display the gateway's port name
-        self.label = tk.Label(self, text=self.field)
-        self.label.grid(
-            row=0, column=2, padx=5)
+        self.btn = tk.Button(self, text='', height=1, width=1, state=tk.DISABLED)
+        self.btn.grid(row=0, column=1, sticky=W+E)
+        self.label = tk.Label(self, text=self.text)
+        self.label.grid(row=0, column=2, padx=5, sticky=W+E)
 
         self.__update_button()
 
@@ -145,14 +142,13 @@ class SensorIndicator(tk.Frame):
 
         """
         if self.sensor.data[self.field] is None:
-            self.btn.config(bg='grey', state=tk.DISABLED, width=1)
+            self.btn.config(bg='grey')
         else:
             if self.sensor.data[self.field]:
-                self.btn.config(bg='red', height=1, state=tk.DISABLED, width=1)
+                self.btn.config(bg='red')
             else:
-                self.btn.config(bg='green', height=1,
-                                state=tk.DISABLED, width=1)
-            # Call this function again after 100 ms
+                self.btn.config(bg='green')
+        # Call this function again after 100 ms
         self.parent.after(100, self.__update_button)
 
 
@@ -305,6 +301,89 @@ class TelemetryWidget(tk.Frame):
         self.button_set_reference = tk.Button()
 
         self.telemetry_status.grid(row=1, column=1, sticky=W+E+N+S, padx=5, pady=5)
+
+
+class InitStatus(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensors = self.gateway.sensors
+
+        self.title = tk.Label(self, text="Initialization status")
+        self.title.grid(row=0, column=0, columnspan=2, sticky=W+E)
+
+        self.imu2_status = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_INIT_IMU2", "IMU2")
+        # self.imu3_status = BoolFieldIndicator(
+        #     self, self.sensors.errmsg, "ERR_INIT_IMU3", "IMU3")
+        self.bmp2_status = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_INIT_BMP2", "BMP2")
+        self.bmp3_status = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_INIT_BMP3", "BMP3")
+        self.mag_status = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_INIT_MAG", "MAG")
+        self.adc_status = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_INIT_ADC", "ADC")
+        self.card_status = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_INIT_SD_CARD", "SD")
+        
+        self.imu2_status.grid(
+            row=1, column=0, sticky=W+E)
+        # self.imu3_status.grid(
+        #     row=2, column=0, sticky=W+E)
+        self.bmp2_status.grid(
+            row=2, column=0, sticky=W+E)
+        self.bmp3_status.grid(
+            row=3, column=0, sticky=W+E)
+        self.mag_status.grid(
+            row=1, column=1, sticky=W+E)
+        self.adc_status.grid(
+            row=2, column=1, sticky=W+E)
+        self.card_status.grid(
+            row=3, column=1, sticky=W+E)
+
+
+class BatteryIndicator(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+
+        self.battery1_txt = tk.StringVar()
+        self.battery1 = tk.Label(self, textvar=self.battery1_txt)
+        self.battery1.grid(row=1, column=0, sticky=W+E)
+
+        self.battery2_txt = tk.StringVar()
+        self.battery2 = tk.Label(self, textvar=self.battery2_txt)
+        self.battery2.grid(row=1, column=1, sticky=W+E)
+
+        self._update_label()
+    
+    def _update_label(self):
+        voltage_battery1 = self.gateway.sensors.batteries.data['Battery1']
+        txt1 = "Battery 1 : {:05.2f}V".format(voltage_battery1)
+        self.battery1_txt.set(txt1)
+        voltage_battery2 = self.gateway.sensors.batteries.data['Battery2']
+        txt2 = "Battery 2 : {:3.2f}V".format(voltage_battery2)
+        self.battery2_txt.set(txt2)
+
+        # Call this function again after 100 ms
+        self.parent.after(100, self._update_label)
+
+
+
+class RocketStatus(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+
+        self.batteries = BatteryIndicator(self, self.gateway)
+        self.batteries.grid(row=1, column=0, padx=5, pady=(5, 0), sticky=W+E)
+
+        self.init_status = InitStatus(self, self.gateway)
+        self.init_status.grid(row=2, column=0, padx=5, pady=(5, 0), sticky=W+E)
 
 
 # ####################### #
