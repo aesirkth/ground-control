@@ -19,17 +19,19 @@ class MainApplication(tk.Frame):
 
     """
 
-    def __init__(self, parent, telemetry, show_lps, lps=None,*args, **kwargs):
+    def __init__(self, parent, telemetry, lps,*args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.telemetry = telemetry
         self.sensors = self.telemetry.sensors
 
-        if show_lps:
-            self.lps_widget = LPSWidget(self, lps, borderwidth=2, relief="ridge")
-            self.lps_widget.grid(row=0, column=1)
 
-        self.gateway_status = TelemetryWidget(self, self.telemetry, borderwidth=2, relief="ridge")
+        self.lps_widget = LPSWidget(self, lps, borderwidth=2, relief="ridge")
+        self.lps_widget.grid(row=0, column=1)
+
+        self.tm_widget = TelemetryWidget(self, self.telemetry, borderwidth=2, relief="ridge")
+        self.tm_widget.grid(row=1, column=1, sticky=W+E+N+S)
+
         self.temp_graph = LiveTimeGraphTemp(
             self, self.telemetry, self.sensors.bmp2, field="Temperature")
         self.imu2_status = SensorIndicator(
@@ -47,8 +49,6 @@ class MainApplication(tk.Frame):
         self.card_status = SensorIndicator(
             self, self.telemetry, self.sensors.errmsg, field="ERR_INIT_SD_CARD")
 
-        self.gateway_status.grid(
-            row=1, column=1, sticky=W+E+N+S)
         self.temp_graph.grid(
             row=2, rowspan=7, column=3, sticky=W+E+N+S, padx=5, pady=5)
         self.imu2_status.grid(
@@ -74,30 +74,24 @@ if __name__ == "__main__":
             # Use this with a RFD900 modem
             serial_telemetry = SerialWrapper(115200, "Telemetry", rfd900=True)
         elif sys.argv[1] == "dummy":
-            # Use this for testing with an Arduino board and `dummy_telemetry.ino`
+            # Use this to simulate a telemetry data flow
             serial_telemetry = DummySerialWrapper('Dummy')
         else:
             serial_telemetry = SerialWrapper(115200, "Telemetry", rfd900=True)
     else:
         serial_telemetry = SerialWrapper(115200, "Telemetry", rfd900=True)
     
-    serial_lps = SerialWrapper(115200, "LPS", bonjour="LAUNCHPADSTATION")
-
-    show_lps = False
-    if len(sys.argv) >= 3:
-        if sys.argv[2] == "lps":
-            show_lps = True
-
     rocket_sensors = Sigmundr()
-    lps_sensors = LaunchPadStation()
-
     telemetry = Gateway(serial_telemetry, rocket_sensors, "./data")
+
+    serial_lps = SerialWrapper(115200, "LPS", bonjour="LAUNCHPADSTATION")
+    lps_sensors = LaunchPadStation()
     lps = Gateway(serial_lps, lps_sensors, "./data")
 
     root = tk.Tk()
     root.title("Sigmundr Dashboard")
 
-    MainApplication(root, telemetry, show_lps, lps).pack(
+    MainApplication(root, telemetry, lps).pack(
         side="top", fill="both", expand=True)
 
     root.mainloop()
