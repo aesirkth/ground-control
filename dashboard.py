@@ -19,7 +19,7 @@ class MainApplication(tk.Frame):
 
     """
 
-    def __init__(self, parent, telemetry, lps,*args, **kwargs):
+    def __init__(self, parent, telemetry, lps, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.telemetry = telemetry
@@ -28,13 +28,16 @@ class MainApplication(tk.Frame):
         self.left_column = tk.Frame(self)
         self.left_column.grid(row=1, column=0)
 
-        self.lps_widget = LPSWidget(self.left_column, lps, borderwidth=2, relief="ridge")
+        self.lps_widget = LPSWidget(
+            self.left_column, lps, borderwidth=2, relief="ridge")
         self.lps_widget.grid(row=0, column=1, sticky=W+E+N+S)
 
-        self.tm_widget = TelemetryWidget(self.left_column, self.telemetry, borderwidth=2, relief="ridge")
+        self.tm_widget = TelemetryWidget(
+            self.left_column, self.telemetry, borderwidth=2, relief="ridge")
         self.tm_widget.grid(row=1, column=1, sticky=W+E+N+S)
 
-        self.rocket_status = RocketStatus(self.left_column, self.telemetry, borderwidth=2, relief="ridge")
+        self.rocket_status = RocketStatus(
+            self.left_column, self.telemetry, borderwidth=2, relief="ridge")
         self.rocket_status.grid(row=2, column=1, sticky=W+E+N+S)
 
         self.temp_graph = LiveTimeGraphTemp(
@@ -56,7 +59,7 @@ if __name__ == "__main__":
             serial_telemetry = SerialWrapper(115200, "Telemetry", rfd900=True)
     else:
         serial_telemetry = SerialWrapper(115200, "Telemetry", rfd900=True)
-    
+
     rocket_sensors = Sigmundr()
     telemetry = Gateway(serial_telemetry, rocket_sensors, "./data")
 

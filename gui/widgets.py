@@ -130,7 +130,8 @@ class BoolFieldIndicator(tk.Frame):
 
         # Button to make a colored "box" for sensor
         # Style will be reflected on this button
-        self.btn = tk.Button(self, text='', height=1, width=1, state=tk.DISABLED)
+        self.btn = tk.Button(self, text='', height=1,
+                             width=1, state=tk.DISABLED)
         self.btn.grid(row=0, column=1, sticky=W+E)
         self.label = tk.Label(self, text=self.text)
         self.label.grid(row=0, column=2, padx=5, sticky=W+E)
@@ -300,7 +301,8 @@ class TelemetryWidget(tk.Frame):
         self.telemetry_status = GatewayStatus(self, self.gateway, 'Telemetry')
         self.button_set_reference = tk.Button()
 
-        self.telemetry_status.grid(row=1, column=1, sticky=W+E+N+S, padx=5, pady=5)
+        self.telemetry_status.grid(
+            row=1, column=1, sticky=W+E+N+S, padx=5, pady=5)
 
 
 class InitStatus(tk.Frame):
@@ -327,7 +329,7 @@ class InitStatus(tk.Frame):
             self, self.sensors.errmsg, "ERR_INIT_ADC", "ADC")
         self.card_status = BoolFieldIndicator(
             self, self.sensors.errmsg, "ERR_INIT_SD_CARD", "SD")
-        
+
         self.imu2_status.grid(
             row=1, column=0, sticky=W+E)
         # self.imu3_status.grid(
@@ -359,7 +361,7 @@ class BatteryIndicator(tk.Frame):
         self.battery2.grid(row=1, column=1, sticky=W+E)
 
         self._update_label()
-    
+
     def _update_label(self):
         voltage_battery1 = self.gateway.sensors.batteries.data['Battery1']
         txt1 = "Battery 1 : {:05.2f}V".format(voltage_battery1)
@@ -370,7 +372,6 @@ class BatteryIndicator(tk.Frame):
 
         # Call this function again after 100 ms
         self.parent.after(100, self._update_label)
-
 
 
 class RocketStatus(tk.Frame):
@@ -437,42 +438,52 @@ class LPSCommandButtons(tk.Frame):
             self.button_fill.config(state=tk.NORMAL)
             if not self.status.data['IS_FILLING']:
                 self.button_fill_text.set("Start filling")
-                self.button_fill.config(command=lambda: self.gateway.send_command(bytes([0x61])))
+                self.button_fill.config(
+                    command=lambda: self.gateway.send_command(bytes([0x61])))
             else:
                 self.button_fill_text.set("Stop filling")
-                self.button_fill.config(command=lambda: self.gateway.send_command(bytes([0x62])))
+                self.button_fill.config(
+                    command=lambda: self.gateway.send_command(bytes([0x62])))
 
             self.button_vent.config(state=tk.NORMAL)
             if not self.status.data['IS_VENTING']:
                 self.button_vent_text.set("Start venting")
-                self.button_vent.config(command=lambda: self.gateway.send_command(bytes([0x63])))
+                self.button_vent.config(
+                    command=lambda: self.gateway.send_command(bytes([0x63])))
             else:
                 self.button_vent_text.set("Stop venting")
-                self.button_vent.config(command=lambda: self.gateway.send_command(bytes([0x64])))
+                self.button_vent.config(
+                    command=lambda: self.gateway.send_command(bytes([0x64])))
 
             self.button_arm.config(state=tk.NORMAL)
             if not self.status.data['IS_ARMED']:
                 self.button_arm_text.set("Arm")
-                self.button_arm.config(command=lambda: self.gateway.send_command(bytes([0x65])))
+                self.button_arm.config(
+                    command=lambda: self.gateway.send_command(bytes([0x65])))
             else:
                 self.button_arm_text.set("Disarm")
-                self.button_arm.config(command=lambda: self.gateway.send_command(bytes([0x66])))
+                self.button_arm.config(
+                    command=lambda: self.gateway.send_command(bytes([0x66])))
 
             self.button_fire.config(state=tk.NORMAL)
             if not self.status.data['IS_FIRING']:
                 self.button_fire_text.set("Start ignition")
-                self.button_fire.config(command=lambda: self.gateway.send_command(bytes([0x67])))
+                self.button_fire.config(
+                    command=lambda: self.gateway.send_command(bytes([0x67])))
             else:
                 self.button_fire_text.set("Stop ignition")
-                self.button_fire.config(command=lambda: self.gateway.send_command(bytes([0x68])))
+                self.button_fire.config(
+                    command=lambda: self.gateway.send_command(bytes([0x68])))
 
             self.button_tm.config(state=tk.NORMAL)
             if not self.status.data['IS_TM_ENABLED']:
                 self.button_tm_text.set("Enable telemetry ")
-                self.button_tm.config(command=lambda: self.gateway.send_command(bytes([0x41])))
+                self.button_tm.config(
+                    command=lambda: self.gateway.send_command(bytes([0x41])))
             else:
                 self.button_tm_text.set("Disable telemetry")
-                self.button_tm.config(command=lambda: self.gateway.send_command(bytes([0x42])))
+                self.button_tm.config(
+                    command=lambda: self.gateway.send_command(bytes([0x42])))
 
         else:
             self.button_fill_text.set("Start filling")
@@ -525,11 +536,11 @@ class LPSState(tk.Frame):
         self.rssi_value = tk.Label(RSSI, textvar=self.rssi_value_txt)
 
         self.rssi_txt.grid(row=0, column=0)
-        self.rssi_value.grid(row=1, column=0)       
+        self.rssi_value.grid(row=1, column=0)
 
         self._ping_lps()
         self._update_state()
-    
+
     def _update_state(self):
         if self.gateway.serial.is_ready:
             if self.gateway.sensors.status.data['IS_FILLING']:
@@ -579,7 +590,8 @@ class LPSWidget(tk.Frame):
         self.gateway = gateway
         self.sensors = self.gateway.sensors
 
-        self.gateway_controls = LPSCommandButtons(self, self.gateway, self.sensors.status)
+        self.gateway_controls = LPSCommandButtons(
+            self, self.gateway, self.sensors.status)
         self.lps_status = GatewayStatus(self, self.gateway, 'LPS')
         self.state = LPSState(self, self.gateway)
 
