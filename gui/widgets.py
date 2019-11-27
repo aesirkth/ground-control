@@ -7,6 +7,8 @@ import matplotlib.animation as animation
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
+BD = 0
+
 
 # ########################### #
 #   General purpose widgets   #
@@ -302,7 +304,7 @@ class TelemetryWidget(tk.Frame):
         self.button_set_reference = tk.Button()
 
         self.telemetry_status.grid(
-            row=1, column=1, sticky=W+E+N+S, padx=5, pady=5)
+            row=1, column=1, sticky=W, padx=10, pady=5)
 
 
 class InitStatus(tk.Frame):
@@ -409,14 +411,14 @@ class RocketStatus(tk.Frame):
         self.parent = parent
         self.gateway = gateway
 
-        self.batteries = BatteryIndicator(self, self.gateway)
-        self.batteries.grid(row=0, column=0, padx=5, pady=(5, 0), sticky=W)
+        self.batteries = BatteryIndicator(self, self.gateway, bd=BD, relief="solid")
+        self.batteries.grid(row=0, column=0, padx=10, pady=(5, 0))
 
-        self.time = TimeIndicator(self, self.gateway)
-        self.time.grid(row=0, column=1, padx=5, pady=(5, 0), sticky=E)
+        self.time = TimeIndicator(self, self.gateway, bd=BD, relief="solid")
+        self.time.grid(row=0, column=1, padx=10, pady=(5, 0))
 
-        self.init_status = InitStatus(self, self.gateway)
-        self.init_status.grid(row=2, column=0, columnspan=2, padx=5, pady=(5, 0))
+        self.init_status = InitStatus(self, self.gateway, bd=BD, relief="solid")
+        self.init_status.grid(row=2, column=0, columnspan=2, padx=10, pady=(5, 5))
 
 
 # ####################### #
@@ -539,7 +541,7 @@ class LPSState(tk.Frame):
         self.parent = parent
         self.gateway = gateway
 
-        Motor = tk.Frame(self, borderwidth=2, relief="groove")
+        Motor = tk.Frame(self, bd=2, relief="groove")
         Motor.grid(row=0, column=1, sticky=W+E, padx=2)
 
         self.motor_txt = tk.Label(Motor, text="  Motor  ")
@@ -550,7 +552,7 @@ class LPSState(tk.Frame):
         self.motor_txt.grid(row=0, column=0)
         self.motor_state.grid(row=1, column=0)
 
-        Telemetry = tk.Frame(self, borderwidth=2, relief="groove")
+        Telemetry = tk.Frame(self, bd=2, relief="groove")
         Telemetry.grid(row=0, column=2, sticky=W+E, padx=(2, 0))
 
         self.tm_txt = tk.Label(Telemetry, text="  Telemetry  ")
@@ -560,7 +562,7 @@ class LPSState(tk.Frame):
         self.tm_txt.grid(row=0, column=0)
         self.tm_state.grid(row=1, column=0)
 
-        RSSI = tk.Frame(self, borderwidth=2, relief="groove")
+        RSSI = tk.Frame(self, bd=2, relief="groove")
         RSSI.grid(row=0, column=0, rowspan=2, sticky=W+E, padx=(0, 2))
 
         self.rssi_txt = tk.Label(RSSI, text="  RSSI  ")
@@ -623,13 +625,13 @@ class LPSWidget(tk.Frame):
         self.sensors = self.gateway.sensors
 
         self.gateway_controls = LPSCommandButtons(
-            self, self.gateway, self.sensors.status)
+            self, self.gateway, self.sensors.status, bd=BD, relief="solid")
         self.lps_status = GatewayStatus(self, self.gateway, 'LPS')
         self.state = LPSState(self, self.gateway)
 
         self.lps_status.grid(
-            row=0, column=0, sticky=W+E+N+S, padx=5, pady=(5, 0))
+            row=0, column=0, padx=10, pady=(5, 0), sticky=W)
         self.state.grid(
-            row=1, column=0, sticky=W+E+N+S, padx=5, pady=(5, 0))
+            row=1, column=0, padx=10, pady=(5, 0))
         self.gateway_controls.grid(
-            row=2, column=0, sticky=W+E+N+S, padx=5, pady=(5, 5))
+            row=2, column=0, padx=10, pady=(5, 5))

@@ -29,15 +29,15 @@ class MainApplication(tk.Frame):
         self.left_column.grid(row=1, column=0)
 
         self.lps_widget = LPSWidget(
-            self.left_column, lps, borderwidth=2, relief="ridge")
+            self.left_column, lps, bd=2, relief="ridge")
         self.lps_widget.grid(row=0, column=1, sticky=W+E+N+S)
 
         self.tm_widget = TelemetryWidget(
-            self.left_column, self.telemetry, borderwidth=2, relief="ridge")
+            self.left_column, self.telemetry, bd=2, relief="ridge")
         self.tm_widget.grid(row=1, column=1, sticky=W+E+N+S)
 
         self.rocket_status = RocketStatus(
-            self.left_column, self.telemetry, borderwidth=2, relief="ridge")
+            self.left_column, self.telemetry, bd=2, relief="ridge")
         self.rocket_status.grid(row=2, column=1, sticky=W+E+N+S)
 
         self.temp_graph = LiveTimeGraphTemp(
