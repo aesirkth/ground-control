@@ -354,11 +354,11 @@ class BatteryIndicator(tk.Frame):
 
         self.battery1_txt = tk.StringVar()
         self.battery1 = tk.Label(self, textvar=self.battery1_txt)
-        self.battery1.grid(row=1, column=0, sticky=W+E)
+        self.battery1.grid(row=0, column=0, sticky=W)
 
         self.battery2_txt = tk.StringVar()
         self.battery2 = tk.Label(self, textvar=self.battery2_txt)
-        self.battery2.grid(row=1, column=1, sticky=W+E)
+        self.battery2.grid(row=1, column=0, sticky=W)
 
         self._update_label()
 
@@ -374,6 +374,35 @@ class BatteryIndicator(tk.Frame):
         self.parent.after(100, self._update_label)
 
 
+class TimeIndicator(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+
+        self.rtc_txt = tk.StringVar()
+        self.rtc = tk.Label(self, textvar=self.rtc_txt)
+        self.rtc.grid(row=0, column=0)
+
+        self.timer_txt = tk.StringVar()
+        self.timer = tk.Label(self, textvar=self.timer_txt)
+        self.timer.grid(row=1, column=0)
+
+        self._update_time()
+
+    def _update_time(self):
+        rtc_time = self.gateway.sensors.rtc.data
+        txt = "{}:{:02d}:{:02d}.{:02.0f}".format(
+            rtc_time['Hour'], rtc_time['Minute'], rtc_time['Second'], rtc_time['Microsecond']/1e4)
+        self.rtc_txt.set(txt)
+
+        timer_time = self.gateway.sensors.timer.data
+        txt = "{}".format(timer_time['Timer'])
+        self.timer_txt.set(txt)
+        
+        self.parent.after(100, self._update_time)
+
+
 class RocketStatus(tk.Frame):
     def __init__(self, parent, gateway, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
@@ -381,10 +410,13 @@ class RocketStatus(tk.Frame):
         self.gateway = gateway
 
         self.batteries = BatteryIndicator(self, self.gateway)
-        self.batteries.grid(row=1, column=0, padx=5, pady=(5, 0), sticky=W+E)
+        self.batteries.grid(row=0, column=0, padx=5, pady=(5, 0), sticky=W)
+
+        self.time = TimeIndicator(self, self.gateway)
+        self.time.grid(row=0, column=1, padx=5, pady=(5, 0), sticky=E)
 
         self.init_status = InitStatus(self, self.gateway)
-        self.init_status.grid(row=2, column=0, padx=5, pady=(5, 0), sticky=W+E)
+        self.init_status.grid(row=2, column=0, columnspan=2, padx=5, pady=(5, 0))
 
 
 # ####################### #

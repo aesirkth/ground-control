@@ -331,12 +331,22 @@ class RTC(GenericSensor):
         self.reset()
     
     def reset(self):
-        self.data = {'Time': datetime.time(0, 0, 0, 0)}
+        self.data = {
+            'Time': datetime.time(0, 0, 0, 0),
+            'Hour': 0,
+            'Minute': 0,
+            'Second': 0,
+            'Microsecond': 0,
+        }
         self.set_default_values()
     
     def update_data(self, frame, frame_time=None):
         self.update_raw_data(frame, frame_time)
         self.data['Time'] = self.raw_data['Time'][-1]
+        self.data['Hour'] = self.raw_data['Hour'][-1]
+        self.data['Minute'] = self.raw_data['Minute'][-1]
+        self.data['Second'] = self.raw_data['Second'][-1]
+        self.data['Microsecond'] = self.raw_data['Microsecond'][-1]
 
 
 class Timer(GenericSensor):
