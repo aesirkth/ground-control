@@ -531,34 +531,45 @@ class GPSStatus(tk.Frame):
         self.vdop = tk.Label(self, textvar=self.vdop_txt)
         self.vdop.grid(row=5, column=0, sticky=W)
 
+        self.default_bg = self.fix_validity.cget('background')
+
         self._update_status()
     
     def _update_status(self):
         fix_validity = self.sensors.gps.data['Fix_Validity']
         if fix_validity:
             txt_validity = "Fix validity : DATA VALID"
+            self.fix_validity.config(bg="green")
         else:
             txt_validity = "Fix validity : DATA INVALID"
+            self.fix_validity.config(bg="red")
         self.fix_validity_txt.set(txt_validity)
 
         fix_quality = self.sensors.gps.data['Fix_Quality']
         if fix_quality == 0:
             txt_quality = "Fix quality : Invalid"
+            self.fix_quality.config(bg='red')
         elif fix_quality == 1:
             txt_quality = "Fix quality : GPS Fix"
+            self.fix_quality.config(bg='green')
         else:
             txt_quality = "Fix quality : Other value"
+            self.fix_quality.config(bg='green')
         self.fix_quality_txt.set(txt_quality)
 
         fix_status = self.sensors.gps.data['Fix_Status']
         if fix_status == 1:
             txt_status = "Fix status : no fix"
+            self.fix_status.config(bg='red')
         elif fix_status == 2:
             txt_status = "Fix status : 2D fix"
+            self.fix_status.config(bg='green yellow')
         elif fix_status == 3:
             txt_status = "Fix status : 3D fix"
+            self.fix_status.config(bg='green')
         else:
             txt_status = "Fix status : -"
+            self.fix_quality.config(bg=self.default_bg)
         self.fix_status_txt.set(txt_status)
 
         pdop = self.sensors.gps.data['pDOP']
@@ -588,8 +599,6 @@ class GPSWidget(tk.Frame):
 
         self.status = GPSStatus(self, self.gateway)
         self.status.grid(row=2, column=0, sticky=W)
-
-
 
 
 # ####################### #
