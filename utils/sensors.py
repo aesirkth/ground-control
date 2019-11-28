@@ -883,6 +883,7 @@ class LPSStatus(GenericSensor):
         'IS_SAFE_MODE': {
             'start': 0,
             'size': 1,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<5) >> 5,
             'byte_order': 'big',
             'signed': False,
