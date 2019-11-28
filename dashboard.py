@@ -2,8 +2,9 @@ import sys
 import tkinter as tk
 from tkinter import E, N, S, W
 
-from gui import (GPSWidget, LiveTimeGraphTemp, LPSWidget, RocketStatus,
-                 TelemetryWidget)
+from gui import (GPSWidget, LiveTimeGraphAcc, LiveTimeGraphAirSpeed,
+                 LiveTimeGraphAltitude, LiveTimeGraphGyro, LPSWidget,
+                 RocketStatus, TelemetryWidget)
 from utils import (DummySerialWrapper, Gateway, LaunchPadStation,
                    SerialWrapper, Sigmundr)
 
@@ -43,13 +44,27 @@ class MainApplication(tk.Frame):
             self.left_column, self.telemetry, bd=2, relief="ridge")
         self.rocket_status.grid(row=2, column=1, sticky=W+E+N+S)
 
-        self.temp_graph = LiveTimeGraphTemp(
-            self, self.telemetry, self.telemetry.sensors.bmp2, field="Temperature")
-        self.temp_graph.grid(
-            row=1, column=2, padx=5, pady=5)
-
         self.gps = GPSWidget(self, self.telemetry, bd=2, relief="ridge")
         self.gps.grid(row=1, column=4, sticky=N)
+        self.speed_graph = LiveTimeGraphAirSpeed(
+            self, self.telemetry, self.telemetry.sensors.pitot, field="Pressure")
+        self.speed_graph.grid(
+            row=1, column=2, padx=5, pady=5)
+
+        self.acceleration_graph = LiveTimeGraphAcc(
+            self, self.telemetry, self.telemetry.sensors.imu2, field="Acceleration")
+        self.acceleration_graph.grid(
+            row=2, column=2, padx=5, pady=5)
+
+        self.alt_graph = LiveTimeGraphGyro(
+            self, self.telemetry, self.telemetry.sensors.imu2, field="Acceleration")
+        self.alt_graph.grid(
+            row=1, column=3, padx=5, pady=5)
+
+        self.gyro_graph = LiveTimeGraphAltitude(
+            self, self.telemetry, self.telemetry.sensors.bmp2, self.telemetry.sensors.bmp3, field="Acceleration")
+        self.gyro_graph.grid(
+            row=2, column=3, padx=5, pady=5)
 
 
 if __name__ == "__main__":

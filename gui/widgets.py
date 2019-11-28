@@ -212,7 +212,7 @@ class GeneralData(tk.Frame):
 # ############################# #
 
 
-class LiveTimeGraphTemp(tk.Frame):
+class LiveTimeGraphAirSpeed(tk.Frame):
     """ TKinter frame that holds a matplotlib graph that is frequently updated
 
     The graph is plotted against time. The sensor must have a data.time attribute.
@@ -240,9 +240,9 @@ class LiveTimeGraphTemp(tk.Frame):
         self.fig = Figure(figsize=(4, 3), dpi=100)
         self.ax = self.fig.add_subplot(111)
         self.line, = self.ax.plot([], [], lw=2)
+        self.line.set_label('Air Speed')
+        self.ax.legend()
         self.ax.grid()
-        # self.fig.set_label(self.field)
-        # self.fig.tight_layout()
         self.time = []
         self.data = []
 
@@ -291,6 +291,285 @@ class LiveTimeGraphTemp(tk.Frame):
         self.line.set_data(self.time, self.data)
 
         return self.line,
+
+
+class LiveTimeGraphAcc(tk.Frame):
+    """ TKinter frame that holds a matplotlib graph that is frequently updated
+
+    The graph is plotted against time. The sensor must have a data.time attribute.
+
+    Parameters
+    ----------
+    parent : TKinter Frame
+        parent frame
+    gateway : Gateway instance
+        Gateway to monitor
+    sensor : attribute of a Sensors instance
+        sensor to display data from
+    field : str
+        name of the data field to display
+
+    """
+
+    def __init__(self, parent, gateway, sensor, field, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensor = sensor
+        self.field = field
+
+        self.fig = Figure(figsize=(4, 3), dpi=100)
+        self.ax = self.fig.add_subplot(111)
+        self.x_value, = self.ax.plot([], [], lw=2)
+        self.y_value, = self.ax.plot([], [], lw=2)
+        self.z_value, = self.ax.plot([], [], lw=2)
+        self.x_value.set_label('x-axis')
+        self.y_value.set_label('y-axis')
+        self.z_value.set_label('z-axis')
+        self.ax.legend()
+        self.ax.grid()
+        self.time = []
+        self.x_data = []
+        self.y_data = []
+        self.z_data = []
+
+        self.canvas = FigureCanvasTkAgg(self.fig, self)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().grid(row=1, column=1)
+
+        ani = animation.FuncAnimation(self.fig, self.__update_data, blit=True, interval=10,
+                                      repeat=False, init_func=self.__init_figure)
+
+    def __init_figure(self):
+        """ Set the initial values and settings of the figure
+
+        """
+        self.ax.set_ylim(0, 50)
+        self.ax.set_xlim(0, 10)
+        del self.time[:]
+        del self.x_data[:]
+        del self.y_data[:]
+        del self.z_data[:]
+        self.x_value.set_data(self.time, self.x_data)
+        self.y_value.set_data(self.time, self.y_data)
+        self.z_value.set_data(self.time, self.z_data)
+        return self.x_value, self.y_value, self.z_value,
+
+    def __update_data(self, data):
+        """ Refresh the figure content
+
+        Parameters
+        ----------
+        data : unused
+            default parameter given by animation.FuncAnimation
+
+        Returns
+        -------
+        tupple
+            content of the figure for matplotlib
+
+        """
+        tmin, tmax = self.ax.get_xlim()
+
+        self.time = self.sensor.raw_data['Seconds_since_start']
+        self.x_data = self.sensor.raw_data['Acc_X']
+        self.y_data = self.sensor.raw_data['Acc_Y']
+        self.z_data = self.sensor.raw_data['Acc_Z']
+
+        if self.time:
+            if max(self.time) > tmax:
+                self.ax.set_xlim(tmin, 2*tmax)
+                self.canvas.draw()
+
+        self.x_value.set_data(self.time, self.x_data)
+        self.y_value.set_data(self.time, self.y_data)
+        self.z_value.set_data(self.time, self.z_data)
+
+        return self.x_value, self.y_value, self.z_value,
+
+
+class LiveTimeGraphGyro(tk.Frame):
+    """ TKinter frame that holds a matplotlib graph that is frequently updated
+
+    The graph is plotted against time. The sensor must have a data.time attribute.
+
+    Parameters
+    ----------
+    parent : TKinter Frame
+        parent frame
+    gateway : Gateway instance
+        Gateway to monitor
+    sensor : attribute of a Sensors instance
+        sensor to display data from
+    field : str
+        name of the data field to display
+
+    """
+
+    def __init__(self, parent, gateway, sensor, field, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensor = sensor
+        self.field = field
+
+        self.fig = Figure(figsize=(4, 3), dpi=100)
+        self.ax = self.fig.add_subplot(111)
+        self.x_value, = self.ax.plot([], [], lw=2)
+        self.y_value, = self.ax.plot([], [], lw=2)
+        self.z_value, = self.ax.plot([], [], lw=2)
+        self.x_value.set_label('x-axis')
+        self.y_value.set_label('y-axis')
+        self.z_value.set_label('z-axis')
+        self.ax.legend()
+        self.ax.grid()
+        self.time = []
+        self.x_data = []
+        self.y_data = []
+        self.z_data = []
+
+        self.canvas = FigureCanvasTkAgg(self.fig, self)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().grid(row=1, column=1)
+
+        ani = animation.FuncAnimation(self.fig, self.__update_data, blit=True, interval=10,
+                                      repeat=False, init_func=self.__init_figure)
+
+    def __init_figure(self):
+        """ Set the initial values and settings of the figure
+
+        """
+        self.ax.set_ylim(0, 50)
+        self.ax.set_xlim(0, 10)
+        del self.time[:]
+        del self.x_data[:]
+        del self.y_data[:]
+        del self.z_data[:]
+        self.x_value.set_data(self.time, self.x_data)
+        self.y_value.set_data(self.time, self.y_data)
+        self.z_value.set_data(self.time, self.z_data)
+        return self.x_value, self.y_value, self.z_value,
+
+    def __update_data(self, data):
+        """ Refresh the figure content
+
+        Parameters
+        ----------
+        data : unused
+            default parameter given by animation.FuncAnimation
+
+        Returns
+        -------
+        tupple
+            content of the figure for matplotlib
+
+        """
+        tmin, tmax = self.ax.get_xlim()
+
+        self.time = self.sensor.raw_data['Seconds_since_start']
+        self.x_data = self.sensor.raw_data['Gyro_X']
+        self.y_data = self.sensor.raw_data['Gyro_Y']
+        self.z_data = self.sensor.raw_data['Gyro_Z']
+
+        if self.time:
+            if max(self.time) > tmax:
+                self.ax.set_xlim(tmin, 2*tmax)
+                self.canvas.draw()
+
+        self.x_value.set_data(self.time, self.x_data)
+        self.y_value.set_data(self.time, self.y_data)
+        self.z_value.set_data(self.time, self.z_data)
+
+        return self.x_value, self.y_value, self.z_value,
+
+
+class LiveTimeGraphAltitude(tk.Frame):
+    """ TKinter frame that holds a matplotlib graph that is frequently updated
+
+    The graph is plotted against time. The sensor must have a data.time attribute.
+
+    Parameters
+    ----------
+    parent : TKinter Frame
+        parent frame
+    gateway : Gateway instance
+        Gateway to monitor
+    sensor : attribute of a Sensors instance
+        sensor to display data from
+    field : str
+        name of the data field to display
+
+    """
+
+    def __init__(self, parent, gateway, sensor1, sensor2, field, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensor1 = sensor1
+        self.sensor2 = sensor2
+        self.field = field
+
+        self.fig = Figure(figsize=(4, 3), dpi=100)
+        self.ax = self.fig.add_subplot(111)
+        self.altitude1, = self.ax.plot([], [], lw=2)
+        self.altitude2, = self.ax.plot([], [], lw=2)
+        self.altitude1.set_label('BMP2')
+        self.altitude2.set_label('BMP3')
+        self.ax.legend()
+        self.ax.grid()
+        self.time = []
+        self.bmp1_data = []
+        self.bmp2_data = []
+
+        self.canvas = FigureCanvasTkAgg(self.fig, self)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().grid(row=1, column=1)
+
+        ani = animation.FuncAnimation(self.fig, self.__update_data, blit=True, interval=10,
+                                      repeat=False, init_func=self.__init_figure)
+
+    def __init_figure(self):
+        """ Set the initial values and settings of the figure
+
+        """
+        self.ax.set_ylim(0, 50)
+        self.ax.set_xlim(0, 10)
+        del self.time[:]
+        del self.bmp1_data[:]
+        del self.bmp2_data[:]
+        self.altitude1.set_data(self.time, self.bmp1_data)
+        self.altitude2.set_data(self.time, self.bmp2_data)
+        return self.altitude1, self.altitude2,
+
+    def __update_data(self, data):
+        """ Refresh the figure content
+
+        Parameters
+        ----------
+        data : unused
+            default parameter given by animation.FuncAnimation
+
+        Returns
+        -------
+        tupple
+            content of the figure for matplotlib
+
+        """
+        tmin, tmax = self.ax.get_xlim()
+
+        self.time = self.sensor1.raw_data['Seconds_since_start']
+        self.x_data = self.sensor1.raw_data['Pressure']
+        self.y_data = self.sensor2.raw_data['Pressure']
+
+        if self.time:
+            if max(self.time) > tmax:
+                self.ax.set_xlim(tmin, 2*tmax)
+                self.canvas.draw()
+
+        self.altitude1.set_data(self.time, self.x_data)
+        self.altitude2.set_data(self.time, self.y_data)
+
+        return self.altitude1, self.altitude2,
 
 
 class TelemetryWidget(tk.Frame):
