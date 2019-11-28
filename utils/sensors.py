@@ -172,6 +172,7 @@ class Status(GenericSensor):
         'PARACHUTE_DEPLOYED': {
             'start': 0,
             'size': 1,  # Byte
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<7) >> 7,
             'byte_order': 'big',
             'signed': False,
