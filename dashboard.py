@@ -2,7 +2,8 @@ import sys
 import tkinter as tk
 from tkinter import E, N, S, W
 
-from gui import LiveTimeGraphTemp, LPSWidget, RocketStatus, TelemetryWidget
+from gui import (GPSWidget, LiveTimeGraphTemp, LPSWidget, RocketStatus,
+                 TelemetryWidget)
 from utils import (DummySerialWrapper, Gateway, LaunchPadStation,
                    SerialWrapper, Sigmundr)
 
@@ -44,6 +45,9 @@ class MainApplication(tk.Frame):
             self, self.telemetry, self.sensors.bmp2, field="Temperature")
         self.temp_graph.grid(
             row=1, column=2, padx=5, pady=5)
+
+        self.gps = GPSWidget(self, self.telemetry, bd=2, relief="ridge")
+        self.gps.grid(row=0, column=4)
 
 
 if __name__ == "__main__":

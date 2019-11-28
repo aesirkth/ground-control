@@ -447,6 +447,73 @@ class RocketStatus(tk.Frame):
         self.init_status.grid(row=2, column=0, columnspan=2, padx=10, pady=(5, 5))
 
 
+class GPSValues(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensors = self.gateway.sensors
+
+        self.latitude_txt = tk.StringVar()
+        self.latitude = tk.Label(self, textvar=self.latitude_txt)
+        self.latitude.grid(row=0, column=0, sticky=W)
+
+        self.longitude_txt = tk.StringVar()
+        self.longitude = tk.Label(self, textvar=self.longitude_txt)
+        self.longitude.grid(row=1, column=0, sticky=W)
+
+        self.altitude_txt = tk.StringVar()
+        self.altitude = tk.Label(self, textvar=self.altitude_txt)
+        self.altitude.grid(row=2, column=0, sticky=W)
+
+        self.heading_txt = tk.StringVar()
+        self.heading = tk.Label(self, textvar=self.heading_txt)
+        self.heading.grid(row=3, column=0, sticky=W)
+
+        self.speed_txt = tk.StringVar()
+        self.speed = tk.Label(self, textvar=self.speed_txt)
+        self.speed.grid(row=4, column=0, sticky=W)
+
+        self._update_values()
+
+    def _update_values(self):
+        latitude = self.sensors.gps.data['Latitude']
+        txt_lat = "Latitude : {:8.3f}".format(latitude)
+        self.latitude_txt.set(txt_lat)
+
+        longitude = self.sensors.gps.data['Longitude']
+        txt_long = "Longitude : {:8.3f}".format(longitude)
+        self.longitude_txt.set(txt_long)
+
+        altitude = self.sensors.gps.data['Altitude']
+        txt_alt = "Altitude : {:8.3f}".format(altitude)
+        self.altitude_txt.set(txt_alt)
+
+        heading = self.sensors.gps.data['Heading']
+        txt_head = "Heading : {:8.3f}".format(heading)
+        self.heading_txt.set(txt_head)
+
+        speed = self.sensors.gps.data['Ground_Speed']
+        txt_speed = "Ground speed : {:8.3f}".format(speed)
+        self.speed_txt.set(txt_speed)
+    
+        self.parent.after(100, self._update_values)
+
+
+
+class GPSWidget(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensors = self.gateway.sensors
+
+        self.values = GPSValues(self, self.gateway)
+        self.values.grid(row=0, column=0)
+
+
+
+
 # ####################### #
 #   Widgets for the LPS   #
 # ####################### #

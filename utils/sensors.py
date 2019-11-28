@@ -774,7 +774,7 @@ class GPS(GenericSensor):
         self.reset()
 
     def reset(self):
-        self.data = {field: None for field in self.fields.keys()}
+        self.data = {field: 0 for field in self.fields.keys()}
         self.set_default_values()
 
     def update_data(self, frame, frame_time=None):
