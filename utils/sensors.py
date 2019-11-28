@@ -711,6 +711,13 @@ class LPSStatus(GenericSensor):
             'byte_order': 'big',
             'signed': False,
         },
+        'IS_SAFE_MODE': {
+            'start': 0,
+            'size': 1,
+            'conversion_function': lambda x: (x & 1<<5) >> 5,
+            'byte_order': 'big',
+            'signed': False,
+        },
     }
     sample_size = 1
 
