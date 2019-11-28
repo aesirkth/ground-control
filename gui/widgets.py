@@ -394,8 +394,8 @@ class TimeIndicator(tk.Frame):
 
     def _update_time(self):
         rtc_time = self.gateway.sensors.rtc.data
-        txt = "{}:{:02d}:{:02d}.{:02.0f}".format(
-            rtc_time['Hour'], rtc_time['Minute'], rtc_time['Second'], rtc_time['Microsecond']/1e4)
+        txt = "{}:{:02d}:{:02d}.{:02d}".format(
+            rtc_time['Hour'], rtc_time['Minute'], rtc_time['Second'], int(rtc_time['Microsecond']/1e4))
         self.rtc_txt.set(txt)
 
         timer_time = self.gateway.sensors.timer.data
