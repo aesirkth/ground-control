@@ -75,12 +75,17 @@ class DummySerialWrapper:
         frame += b'\x00\x00\x00\x00\x00\x00'
         # PITOT
         frame += b'\x00\x00'
+        # GPS
+        frame += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        frame += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        frame += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        frame += b'\x00\x00\x00'
         return frame
 
     def readlines(self, decode=False):
         time.sleep(0.1)
         # Frame number
-        frame = b'\x01'
+        frame = b'\x02'
         # Status
         frame += b'\x00'
         # Err_msg
@@ -115,4 +120,9 @@ class DummySerialWrapper:
         frame += b'\x00\x00\x00\x00\x00\x00'
         # PITOT
         frame += b'\x00\x00'
+        # GPS
+        frame += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        frame += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        frame += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        frame += b'\x00\x00\x00'
         return [frame]
