@@ -47,7 +47,7 @@ class MainApplication(tk.Frame):
             row=1, column=2, padx=5, pady=5)
 
         self.gps = GPSWidget(self, self.telemetry, bd=2, relief="ridge")
-        self.gps.grid(row=0, column=4)
+        self.gps.grid(row=1, column=4, sticky=N)
 
 
 if __name__ == "__main__":
