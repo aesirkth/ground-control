@@ -741,7 +741,7 @@ class GPS(GenericSensor):
             'byte_order': 'big',
             'signed': True,
         },
-        'Fix_Valididy': {
+        'Fix_Validity': {
             'start': 32,
             'size': 1,  # Byte
             'type': 'int',

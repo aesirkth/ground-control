@@ -500,6 +500,81 @@ class GPSValues(tk.Frame):
         self.parent.after(100, self._update_values)
 
 
+class GPSStatus(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensors = self.gateway.sensors
+
+        self.fix_validity_txt = tk.StringVar()
+        self.fix_validity = tk.Label(self, textvar=self.fix_validity_txt)
+        self.fix_validity.grid(row=0, column=0, sticky=W)
+
+        self.fix_quality_txt = tk.StringVar()
+        self.fix_quality = tk.Label(self, textvar=self.fix_quality_txt)
+        self.fix_quality.grid(row=1, column=0, sticky=W)
+
+        self.fix_status_txt = tk.StringVar()
+        self.fix_status = tk.Label(self, textvar=self.fix_status_txt)
+        self.fix_status.grid(row=2, column=0, sticky=W)
+
+        self.pdop_txt = tk.StringVar()
+        self.pdop = tk.Label(self, textvar=self.pdop_txt)
+        self.pdop.grid(row=3, column=0, sticky=W)
+
+        self.hdop_txt = tk.StringVar()
+        self.hdop = tk.Label(self, textvar=self.hdop_txt)
+        self.hdop.grid(row=4, column=0, sticky=W)
+
+        self.vdop_txt = tk.StringVar()
+        self.vdop = tk.Label(self, textvar=self.vdop_txt)
+        self.vdop.grid(row=5, column=0, sticky=W)
+
+        self._update_status()
+    
+    def _update_status(self):
+        fix_validity = self.sensors.gps.data['Fix_Validity']
+        if fix_validity:
+            txt_validity = "Fix validity : DATA VALID"
+        else:
+            txt_validity = "Fix validity : DATA INVALID"
+        self.fix_validity_txt.set(txt_validity)
+
+        fix_quality = self.sensors.gps.data['Fix_Quality']
+        if fix_quality == 0:
+            txt_quality = "Fix quality : Invalid"
+        elif fix_quality == 1:
+            txt_quality = "Fix quality : GPS Fix"
+        else:
+            txt_quality = "Fix quality : Other value"
+        self.fix_quality_txt.set(txt_quality)
+
+        fix_status = self.sensors.gps.data['Fix_Status']
+        if fix_status == 1:
+            txt_status = "Fix status : no fix"
+        elif fix_status == 2:
+            txt_status = "Fix status : 2D fix"
+        elif fix_status == 3:
+            txt_status = "Fix status : 3D fix"
+        else:
+            txt_status = "Fix status : -"
+        self.fix_status_txt.set(txt_status)
+
+        pdop = self.sensors.gps.data['pDOP']
+        pdop_txt = "Position DOP : {}".format(pdop)
+        self.pdop_txt.set(pdop_txt)
+
+        hdop = self.sensors.gps.data['hDOP']
+        hdop_txt = "Horizontal DOP : {}".format(hdop)
+        self.hdop_txt.set(hdop_txt)
+
+        vdop = self.sensors.gps.data['vDOP']
+        vdop_txt = "Vertical DOP : {}".format(vdop)
+        self.vdop_txt.set(vdop_txt)
+
+        self.parent.after(100, self._update_status)
+
 
 class GPSWidget(tk.Frame):
     def __init__(self, parent, gateway, *args, **kwargs):
@@ -509,7 +584,10 @@ class GPSWidget(tk.Frame):
         self.sensors = self.gateway.sensors
 
         self.values = GPSValues(self, self.gateway)
-        self.values.grid(row=0, column=0)
+        self.values.grid(row=0, column=0, sticky=W)
+
+        self.status = GPSStatus(self, self.gateway)
+        self.status.grid(row=2, column=0, sticky=W)
 
 
 
