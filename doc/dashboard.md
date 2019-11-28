@@ -8,12 +8,6 @@ The telemetry data is received via radio link by an Arduino board and sent to th
 
 The raw telemetry data is processed on the fly on the Ground Station and not on the rocket.
 
+The dashboard can also control the Launch Pad Station.
 
-# Transmission protocol
-
-See [this issue](https://github.com/aesirkth/GroundStation/issues/4)
-
-
-# File storage
-
-See [this issue](https://github.com/aesirkth/GroundStation/issues/4)
+![dashboard](images/dashboard.png)
