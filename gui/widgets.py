@@ -307,7 +307,7 @@ class TelemetryWidget(tk.Frame):
 
         self.Buttons = tk.Frame(self)
         self.Buttons.grid(
-            row=2, column=1, sticky=W, padx=10, pady=(5, 0))
+            row=2, column=1, sticky=W, padx=10, pady=(0, 5))
 
         self.button_set_reference = tk.Button(
             self.Buttons, text="Set reference", command=self._set_reference)
@@ -606,15 +606,15 @@ class GPSStatus(tk.Frame):
         self.fix_status_txt.set(txt_status)
 
         pdop = self.sensors.gps.data['pDOP'][-1]
-        pdop_txt = "Position DOP : {}".format(pdop)
+        pdop_txt = "Position DOP : {:5.2f}".format(pdop)
         self.pdop_txt.set(pdop_txt)
 
         hdop = self.sensors.gps.data['hDOP'][-1]
-        hdop_txt = "Horizontal DOP : {}".format(hdop)
+        hdop_txt = "Horizontal DOP : {:5.2f}".format(hdop)
         self.hdop_txt.set(hdop_txt)
 
         vdop = self.sensors.gps.data['vDOP'][-1]
-        vdop_txt = "Vertical DOP : {}".format(vdop)
+        vdop_txt = "Vertical DOP : {:5.2f}".format(vdop)
         self.vdop_txt.set(vdop_txt)
 
         self.parent.after(100, self._update_status)

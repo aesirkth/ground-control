@@ -134,10 +134,13 @@ class DummySerialWrapper:
         dlong += 0.0002
         frame += struct.pack('f', 5929.093 + dlat) # Latitude
         frame += struct.pack('f', 1792.499 + dlong) # Longitude
-        frame += b'\x00\x00\x00\x00'
-        frame += b'\x00\x00\x00\x00\x00\x00\x00\x00'
-        frame += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-        frame += b'\x00\x00\x18'
+        frame += struct.pack('f', 40.3) # Altitude
+        frame += struct.pack('f', 1.2) # pDOP
+        frame += struct.pack('f', 1.3) # pDOP
+        frame += struct.pack('f', 1.4) # pDOP
+        frame += b'\x00\x00\x00\x00' # Heading
+        frame += b'\x00\x00\x00\x00' # Ground speed
+        frame += b'\x18' # Fix parameter
         # Garbage
         frame += b'\x00\x00\x00\x00\x00\x00\x00'
         return [frame]
