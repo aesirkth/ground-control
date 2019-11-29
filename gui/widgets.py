@@ -474,28 +474,44 @@ class GPSValues(tk.Frame):
         self.speed = tk.Label(self, textvar=self.speed_txt)
         self.speed.grid(row=4, column=0, sticky=W)
 
+        self.distance_txt = tk.StringVar()
+        self.distance = tk.Label(self, textvar=self.distance_txt)
+        self.distance.grid(row=5, column=0, sticky=W)
+
+        self.bearing_txt = tk.StringVar()
+        self.bearing = tk.Label(self, textvar=self.bearing_txt)
+        self.bearing.grid(row=6, column=0, sticky=W)
+
         self._update_values()
 
     def _update_values(self):
-        latitude = self.sensors.gps.data['Latitude']
-        txt_lat = "Latitude : {:8.3f}".format(latitude)
+        latitude = self.sensors.gps.data['Latitude'][-1]
+        txt_lat = "Latitude : {:8.5f}".format(latitude)
         self.latitude_txt.set(txt_lat)
 
-        longitude = self.sensors.gps.data['Longitude']
-        txt_long = "Longitude : {:8.3f}".format(longitude)
+        longitude = self.sensors.gps.data['Longitude'][-1]
+        txt_long = "Longitude : {:8.5f}".format(longitude)
         self.longitude_txt.set(txt_long)
 
-        altitude = self.sensors.gps.data['Altitude']
-        txt_alt = "Altitude : {:8.3f}".format(altitude)
+        altitude = self.sensors.gps.data['Altitude'][-1]
+        txt_alt = "Altitude : {:6.1f} MAMSL".format(altitude)
         self.altitude_txt.set(txt_alt)
 
-        heading = self.sensors.gps.data['Heading']
-        txt_head = "Heading : {:8.3f}".format(heading)
+        heading = self.sensors.gps.data['Heading'][-1]
+        txt_head = "Heading : {:8.3f}°".format(heading)
         self.heading_txt.set(txt_head)
 
-        speed = self.sensors.gps.data['Ground_Speed']
-        txt_speed = "Ground speed : {:8.3f}".format(speed)
+        speed = self.sensors.gps.data['Ground_Speed'][-1]
+        txt_speed = "Ground speed : {:8.3f} kph".format(speed)
         self.speed_txt.set(txt_speed)
+
+        distance = self.sensors.gps.data['Distance'][-1]
+        txt_distance = "Distance : {:8.1f} m".format(distance)
+        self.distance_txt.set(txt_distance)
+
+        bearing = self.sensors.gps.data['Bearing'][-1]
+        txt_bearing = "Bearing : {:8.3f}°".format(bearing)
+        self.bearing_txt.set(txt_bearing)
     
         self.parent.after(100, self._update_values)
 
@@ -536,7 +552,7 @@ class GPSStatus(tk.Frame):
         self._update_status()
     
     def _update_status(self):
-        fix_validity = self.sensors.gps.data['Fix_Validity']
+        fix_validity = self.sensors.gps.data['Fix_Validity'][-1]
         if fix_validity:
             txt_validity = "Fix validity : DATA VALID"
             self.fix_validity.config(bg="green")
@@ -545,7 +561,7 @@ class GPSStatus(tk.Frame):
             self.fix_validity.config(bg="red")
         self.fix_validity_txt.set(txt_validity)
 
-        quality = self.sensors.gps.data['Fix_Quality']
+        quality = self.sensors.gps.data['Fix_Quality'][-1]
         if quality == 0:
             txt_quality = "Fix quality : Invalid"
             self.fix_quality.config(background="red")
@@ -557,7 +573,7 @@ class GPSStatus(tk.Frame):
             self.fix_quality.config(bg='green')
         self.fix_quality_txt.set(txt_quality)
 
-        fix_status = self.sensors.gps.data['Fix_Status']
+        fix_status = self.sensors.gps.data['Fix_Status'][-1]
         if fix_status == 1:
             txt_status = "Fix status : no fix"
             self.fix_status.config(bg='red')
@@ -572,15 +588,15 @@ class GPSStatus(tk.Frame):
             self.fix_quality.config(bg=self.default_bg)
         self.fix_status_txt.set(txt_status)
 
-        pdop = self.sensors.gps.data['pDOP']
+        pdop = self.sensors.gps.data['pDOP'][-1]
         pdop_txt = "Position DOP : {}".format(pdop)
         self.pdop_txt.set(pdop_txt)
 
-        hdop = self.sensors.gps.data['hDOP']
+        hdop = self.sensors.gps.data['hDOP'][-1]
         hdop_txt = "Horizontal DOP : {}".format(hdop)
         self.hdop_txt.set(hdop_txt)
 
-        vdop = self.sensors.gps.data['vDOP']
+        vdop = self.sensors.gps.data['vDOP'][-1]
         vdop_txt = "Vertical DOP : {}".format(vdop)
         self.vdop_txt.set(vdop_txt)
 

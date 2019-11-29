@@ -10,6 +10,7 @@ to add a specific processing in 'update_data()' if necessary
 """
 
 import datetime
+import math
 import struct
 
 
@@ -682,7 +683,7 @@ class GPS(GenericSensor):
             'start': 0,
             'size': 4,  # Byte
             'type': 'float',
-            'conversion_function': lambda x: x,
+            'conversion_function': lambda x: x/100.,
             'byte_order': 'little',
             'signed': True,
         },
@@ -690,7 +691,7 @@ class GPS(GenericSensor):
             'start': 4,
             'size': 4,  # Byte
             'type': 'float',
-            'conversion_function': lambda x: x,
+            'conversion_function': lambda x: x/100.,
             'byte_order': 'little',
             'signed': True,
         },
@@ -775,13 +776,110 @@ class GPS(GenericSensor):
         self.reset()
 
     def reset(self):
-        self.data = {field: 0 for field in self.fields.keys()}
+        self.data = {field: [0] for field in self.fields.keys()}
+        self.data['Distance'] = [0]
+        self.data['Bearing'] = [0]
+        self.reference_coord = None
         self.set_default_values()
+    
+    def set_reference(self):
+        self.reference_coord = (self.data['Latitude'][-1], self.data['Longitude'][-1])
+    
+    def distance_haversine(self, coord1, coord2):
+        """ Compute the distance between two GPS points
+
+        Coordinates must be in decimal degrees format
+
+        Parameters
+        ----------
+        coord1 : (float, float)
+            first coordinates in DD.MMMM format
+        coord2 : (float, float)
+            second coordinates in DD.MMMM format
+
+        Returns
+        -------
+        d : float
+            distance between the two points
+
+        """
+        R = 6372800  # Earth radius in meters
+        lat1, lon1 = coord1
+        lat2, lon2 = coord2
+        
+        phi1 = math.radians(lat1)
+        phi2 = math.radians(lat2) 
+        dphi = math.radians(lat2 - lat1)
+        dlambda = math.radians(lon2 - lon1)
+        
+        a = math.sin(dphi/2)**2 + \
+            math.cos(phi1)*math.cos(phi2)*math.sin(dlambda/2)**2
+
+        c = 2*math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+        d = R*c
+        
+        return d
+
+    def bearing(self, coord1, coord2):
+        """
+        Calculates the bearing between two points.
+        The formulae used is the following:
+            θ = atan2(sin(Δlong).cos(lat2),
+                    cos(lat1).sin(lat2) − sin(lat1).cos(lat2).cos(Δlong))
+        Parameters
+        ----------
+        coord1: (float, float) 
+            tuple representing the latitude/longitude for the first point
+            Latitude and longitude must be in decimal degrees
+        coord2: (float, float) 
+            tuple representing the latitude/longitude for the second point
+            Latitude and longitude must be in decimal degrees
+        
+        Returns
+        -------
+        compass_bearing : float
+            bearing in degrees
+
+        """
+        lat1, lon1 = coord1
+        lat2, lon2 = coord2
+
+        lat1 = math.radians(lat1)
+        lat2 = math.radians(lat2)
+
+        diffLong = math.radians(lon2 - lon1)
+
+        x = math.sin(diffLong) * math.cos(lat2)
+        y = math.cos(lat1) * math.sin(lat2) - (math.sin(lat1)
+                * math.cos(lat2) * math.cos(diffLong))
+
+        initial_bearing = math.atan2(x, y)
+
+        # Now we have the initial bearing but math.atan2 return values
+        # from -180° to + 180° which is not what we want for a compass bearing
+        # The solution is to normalize the initial bearing as shown below
+        initial_bearing = math.degrees(initial_bearing)
+        compass_bearing = (initial_bearing + 360) % 360
+
+        return compass_bearing
 
     def update_data(self, frame, frame_time=None):
         self.update_raw_data(frame, frame_time)
         for field in self.fields.keys():
-            self.data[field] = self.raw_data[field][-1]
+            self.data[field].append(self.raw_data[field][-1])
+
+        if not self.reference_coord is None:
+            current_coord = (self.data['Latitude'][-1], self.data['Longitude'][-1])
+
+            distance = self.distance_haversine(self.reference_coord, current_coord)
+            bearing = self.bearing(self.reference_coord, current_coord)
+            
+            self.data['Distance'].append(distance)
+            self.data['Bearing'].append(bearing)
+        else:
+            self.data['Distance'].append(0)
+            self.data['Bearing'].append(0)
 
 
 class Sigmundr:
