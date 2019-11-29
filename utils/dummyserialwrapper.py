@@ -99,7 +99,7 @@ class DummySerialWrapper:
         hour = delay.seconds/3600
         minute = (delay.seconds%3600)/60
         second = delay.seconds%60
-        millisecond = 999-delay.microseconds/1000
+        millisecond = delay.microseconds/1000
         frame += bytes([int(hour)])
         frame += bytes([int(minute)])
         frame += bytes([int(second)])
