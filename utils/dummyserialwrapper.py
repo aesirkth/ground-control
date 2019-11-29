@@ -140,7 +140,7 @@ class DummySerialWrapper:
         frame += struct.pack('f', 1.4) # pDOP
         frame += b'\x00\x00\x00\x00' # Heading
         frame += b'\x00\x00\x00\x00' # Ground speed
-        frame += b'\x18' # Fix parameter
+        frame += b'\x1B' # Fix parameter
         # Garbage
         frame += b'\x00\x00\x00\x00\x00\x00\x00'
         return [frame]
