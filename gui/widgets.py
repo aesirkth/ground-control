@@ -301,10 +301,27 @@ class TelemetryWidget(tk.Frame):
         self.sensors = self.gateway.sensors
 
         self.telemetry_status = GatewayStatus(self, self.gateway, 'Telemetry')
-        self.button_set_reference = tk.Button()
 
         self.telemetry_status.grid(
             row=1, column=1, sticky=W, padx=10, pady=5)
+
+        self.Buttons = tk.Frame(self)
+        self.Buttons.grid(
+            row=2, column=1, sticky=W, padx=10, pady=(5, 0))
+
+        self.button_set_reference = tk.Button(
+            self.Buttons, text="Set reference", command=self._set_reference)
+        self.button_set_reference.grid(row=0, column=0)
+
+        self.button_reset = tk.Button(
+            self.Buttons, text="Reset", command=self._reset)
+        self.button_reset.grid(row=0, column=1)
+
+    def _set_reference(self):
+        self.sensors.set_reference()
+
+    def _reset(self):
+        self.sensors.reset()
 
 
 class InitStatus(tk.Frame):

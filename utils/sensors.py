@@ -931,6 +931,9 @@ class Sigmundr:
         self.mag.reset()
         self.pitot.reset()
         self.gps.reset()
+    
+    def set_reference(self):
+        self.gps.set_reference()
 
 
 # ########################## #
