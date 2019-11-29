@@ -399,7 +399,7 @@ class TimeIndicator(tk.Frame):
         self.rtc_txt.set(txt)
 
         timer_time = self.gateway.sensors.timer.data
-        txt = "{}".format(timer_time['Timer'])
+        txt = "{:7.3f}".format(timer_time['Timer'])
         self.timer_txt.set(txt)
         
         self.parent.after(100, self._update_time)
@@ -545,15 +545,15 @@ class GPSStatus(tk.Frame):
             self.fix_validity.config(bg="red")
         self.fix_validity_txt.set(txt_validity)
 
-        fix_quality = self.sensors.gps.data['Fix_Quality']
-        if fix_quality == 0:
+        quality = self.sensors.gps.data['Fix_Quality']
+        if quality == 0:
             txt_quality = "Fix quality : Invalid"
-            self.fix_quality.config(bg='red')
-        elif fix_quality == 1:
+            self.fix_quality.config(background="red")
+        elif quality == 1:
             txt_quality = "Fix quality : GPS Fix"
             self.fix_quality.config(bg='green')
         else:
-            txt_quality = "Fix quality : Other value"
+            txt_quality = "Fix quality : Other value {}".format(quality)
             self.fix_quality.config(bg='green')
         self.fix_quality_txt.set(txt_quality)
 

@@ -376,7 +376,7 @@ class RTC(GenericSensor):
             'start': 3,
             'size': 1,
             'type': 'int',
-            'conversion_function': lambda x: (255-x)*1000*1000/256.,  # ms
+            'conversion_function': lambda x: x*1000*1000/256.,  # ms
             'byte_order': 'big',
             'signed': False,
         },
@@ -683,7 +683,7 @@ class GPS(GenericSensor):
             'size': 4,  # Byte
             'type': 'float',
             'conversion_function': lambda x: x,
-            'byte_order': 'big',
+            'byte_order': 'little',
             'signed': True,
         },
         'Longitude': {
@@ -691,7 +691,7 @@ class GPS(GenericSensor):
             'size': 4,  # Byte
             'type': 'float',
             'conversion_function': lambda x: x,
-            'byte_order': 'big',
+            'byte_order': 'little',
             'signed': True,
         },
         'Altitude': {
@@ -699,7 +699,7 @@ class GPS(GenericSensor):
             'size': 4,  # Byte
             'type': 'float',
             'conversion_function': lambda x: x,
-            'byte_order': 'big',
+            'byte_order': 'little',
             'signed': True,
         },
         'pDOP': {
@@ -707,7 +707,7 @@ class GPS(GenericSensor):
             'size': 4,  # Byte
             'type': 'float',
             'conversion_function': lambda x: x,
-            'byte_order': 'big',
+            'byte_order': 'little',
             'signed': True,
         },
         'hDOP': {
@@ -715,7 +715,7 @@ class GPS(GenericSensor):
             'size': 4,  # Byte
             'type': 'float',
             'conversion_function': lambda x: x,
-            'byte_order': 'big',
+            'byte_order': 'little',
             'signed': True,
         },
         'vDOP': {
@@ -723,7 +723,7 @@ class GPS(GenericSensor):
             'size': 4,  # Byte
             'type': 'float',
             'conversion_function': lambda x: x,
-            'byte_order': 'big',
+            'byte_order': 'little',
             'signed': True,
         },
         'Heading': {
@@ -731,7 +731,7 @@ class GPS(GenericSensor):
             'size': 4,  # Byte
             'type': 'float',
             'conversion_function': lambda x: x,
-            'byte_order': 'big',
+            'byte_order': 'little',
             'signed': True,
         },
         'Ground_Speed': {
@@ -739,7 +739,7 @@ class GPS(GenericSensor):
             'size': 4,  # Byte
             'type': 'float',
             'conversion_function': lambda x: x,
-            'byte_order': 'big',
+            'byte_order': 'little',
             'signed': True,
         },
         'Fix_Validity': {
@@ -747,7 +747,7 @@ class GPS(GenericSensor):
             'size': 1,  # Byte
             'type': 'int',
             'conversion_function': lambda x: x & 1,
-            'byte_order': 'big',
+            'byte_order': 'little',
             'signed': True,
         },
         'Fix_Quality': {
@@ -755,7 +755,7 @@ class GPS(GenericSensor):
             'size': 1,  # Byte
             'type': 'int',
             'conversion_function': lambda x: (x & 0x06) >> 1,
-            'byte_order': 'big',
+            'byte_order': 'little',
             'signed': True,
         },
         'Fix_Status': {
@@ -800,24 +800,26 @@ class Sigmundr:
         self.bmp3 = BMP280(80)
         self.mag = LIS3MDLTR(88)
         self.pitot = ABP(92)
-        self.gps = GPS(96)
+        self.gps = GPS(100)
 
     def update_sensors(self, frame):
         if len(frame) > 0:
             if frame[0] == 0x01 or frame[0] == 0x02:
-                self.rtc.update_data(frame)
-                frame_time = self.rtc.data['Time']
-                self.errmsg.update_data(frame, frame_time)
-                self.status.update_data(frame, frame_time)
-                self.timer.update_data(frame, frame_time)
-                self.batteries.update_data(frame, frame_time)
-                self.imu2.update_data(frame, frame_time)
-                self.bmp2.update_data(frame, frame_time)
-                self.bmp3.update_data(frame, frame_time)
-                self.mag.update_data(frame, frame_time)
-                self.pitot.update_data(frame, frame_time)
+                if len(frame) == 94 or len(frame) == 140:
+                    self.rtc.update_data(frame)
+                    frame_time = self.rtc.data['Time']
+                    self.errmsg.update_data(frame, frame_time)
+                    self.status.update_data(frame, frame_time)
+                    self.timer.update_data(frame, frame_time)
+                    self.batteries.update_data(frame, frame_time)
+                    self.imu2.update_data(frame, frame_time)
+                    self.bmp2.update_data(frame, frame_time)
+                    self.bmp3.update_data(frame, frame_time)
+                    self.mag.update_data(frame, frame_time)
+                    self.pitot.update_data(frame, frame_time)
             if frame[0] == 0x02:
-                self.gps.update_data(frame, frame_time)
+                if len(frame) == 140:
+                    self.gps.update_data(frame, frame_time)
     
     def reset(self):
         self.errmsg.reset()

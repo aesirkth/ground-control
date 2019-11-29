@@ -76,10 +76,13 @@ class DummySerialWrapper:
         # PITOT
         frame += b'\x00\x00'
         # GPS
+        frame += b'\x00\x00\x00\x00'
         frame += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
         frame += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
         frame += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-        frame += b'\x00\x00\x00'
+        frame += b'\x00\x00\xFF'
+        # Garbage
+        frame += b'\x00\x00\x00\x00\x00\x00\x00'
         return frame
 
     def readlines(self, decode=False):
@@ -121,8 +124,11 @@ class DummySerialWrapper:
         # PITOT
         frame += b'\x00\x00'
         # GPS
+        frame += b'\x00\x00\x00\x00'
         frame += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
         frame += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
         frame += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
         frame += b'\x00\x00\x18'
+        # Garbage
+        frame += b'\x00\x00\x00\x00\x00\x00\x00'
         return [frame]
