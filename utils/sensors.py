@@ -779,8 +779,10 @@ class GPS(GenericSensor):
         self.data = {field: [0] for field in self.fields.keys()}
         self.data['Distance'] = [0]
         self.data['Bearing'] = [0]
+        self.data['Bearing_rad'] = [0]
         self.reference_coord = None
         self.set_default_values()
+        self.is_graph_init = False
     
     def set_reference(self):
         self.reference_coord = (self.data['Latitude'][-1], self.data['Longitude'][-1])
@@ -877,9 +879,11 @@ class GPS(GenericSensor):
             
             self.data['Distance'].append(distance)
             self.data['Bearing'].append(bearing)
+            self.data['Bearing_rad'].append(math.radians(bearing))
         else:
             self.data['Distance'].append(0)
             self.data['Bearing'].append(0)
+            self.data['Bearing_rad'].append(0)
 
 
 class Sigmundr:

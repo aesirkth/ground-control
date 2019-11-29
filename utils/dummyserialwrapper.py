@@ -131,7 +131,7 @@ class DummySerialWrapper:
         # GPS
         frame += b'\x00\x00\x00\x00'
         dlat += 0.0001
-        dlong += 0.0002
+        dlong -= 0.0003
         frame += struct.pack('f', 5929.093 + dlat) # Latitude
         frame += struct.pack('f', 1792.499 + dlong) # Longitude
         frame += struct.pack('f', 40.3) # Altitude

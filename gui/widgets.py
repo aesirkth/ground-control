@@ -620,6 +620,83 @@ class GPSStatus(tk.Frame):
         self.parent.after(100, self._update_status)
 
 
+class GPSGraph(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.gps = self.gateway.sensors.gps
+
+        self.rmax_init = 40
+
+        self.fig = Figure(figsize=(3, 3.5), dpi=100)
+        self.ax = self.fig.add_subplot(111, projection='polar')
+        self.line, = self.ax.plot([], [], lw=2)
+        self.ax.grid()
+
+        self.bearing = []
+        self.distance = []
+
+        self.canvas = FigureCanvasTkAgg(self.fig, self)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().grid(row=1, column=1)
+
+        ani = animation.FuncAnimation(self.fig, self._update_data, blit=True, interval=10,
+                                      repeat=False, init_func=self._init_figure)
+
+    def _init_figure(self):
+        """ Set the initial values and settings of the figure
+
+        """
+        rmax = self.rmax_init
+        self.ax.set_rlim(0, rmax)
+        self.ax.set_rticks([rmax/4., rmax/2., 3*rmax/4., rmax])
+        self.ax.set_rlabel_position(67.5)
+        self.ax.set_theta_direction(-1)
+        self.ax.set_theta_zero_location('N')
+        self.ax.set_title("Position from launch pad", y=1.13)
+        self.ax.grid(True)
+        self.canvas.draw()
+        del self.bearing[:]
+        del self.distance[:]
+        self.line.set_data(self.bearing, self.distance)
+        return self.line,
+
+    def _update_data(self, data):
+        """ Refresh the figure content
+
+        Parameters
+        ----------
+        data : unused
+            default parameter given by animation.FuncAnimation
+
+        Returns
+        -------
+        tupple
+            content of the figure for matplotlib        
+
+        """
+        if not self.gps.is_graph_init:
+            self._init_figure()
+            self.gps.is_graph_init = True
+
+        rmin, rmax = self.ax.get_ylim()
+
+        self.bearing = self.gps.data['Bearing_rad'][:]
+        self.distance = self.gps.data['Distance'][:]
+
+        if self.distance:
+            if max(self.distance) > 0.8*rmax:
+                rmax = rmax + self.rmax_init
+                self.ax.set_rlim(rmin, rmax)
+                self.ax.set_rticks([rmax/4., rmax/2., 3*rmax/4., rmax])
+                self.canvas.draw()
+
+        self.line.set_data(self.bearing, self.distance)
+
+        return self.line,
+
+
 class GPSWidget(tk.Frame):
     def __init__(self, parent, gateway, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
@@ -629,6 +706,9 @@ class GPSWidget(tk.Frame):
 
         self.values = GPSValues(self, self.gateway)
         self.values.grid(row=0, column=0, sticky=W)
+
+        self.graph = GPSGraph(self, self.gateway)
+        self.graph.grid(row=1, column=0)
 
         self.status = GPSStatus(self, self.gateway)
         self.status.grid(row=2, column=0, sticky=W)

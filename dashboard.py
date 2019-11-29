@@ -27,7 +27,7 @@ class MainApplication(tk.Frame):
         self.sensors = self.telemetry.sensors
 
         self.left_column = tk.Frame(self)
-        self.left_column.grid(row=1, column=0)
+        self.left_column.grid(row=1, column=0, sticky=W+N)
 
         self.lps_widget = LPSWidget(
             self.left_column, lps, bd=2, relief="ridge")
