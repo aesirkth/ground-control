@@ -16,7 +16,9 @@ class MainApplication(tk.Frame):
     parent : Tkinter TK() instance
         TK() instance to hold the widgets
     telemetry : Gateway instance
-        Gateway instance correctly set for the LPS Gateway
+        Gateway instance correctly set for the Telemetry Gateway
+    lps : Gateway instance
+        Gateway instance correctly set for the LPS gateway
 
     """
 
@@ -24,13 +26,13 @@ class MainApplication(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.telemetry = telemetry
-        self.sensors = self.telemetry.sensors
+        self.lps = lps
 
         self.left_column = tk.Frame(self)
         self.left_column.grid(row=1, column=0, sticky=W+N)
 
         self.lps_widget = LPSWidget(
-            self.left_column, lps, bd=2, relief="ridge")
+            self.left_column, self.lps, bd=2, relief="ridge")
         self.lps_widget.grid(row=0, column=1, sticky=W+E+N+S)
 
         self.tm_widget = TelemetryWidget(
@@ -42,7 +44,7 @@ class MainApplication(tk.Frame):
         self.rocket_status.grid(row=2, column=1, sticky=W+E+N+S)
 
         self.temp_graph = LiveTimeGraphTemp(
-            self, self.telemetry, self.sensors.bmp2, field="Temperature")
+            self, self.telemetry, self.telemetry.sensors.bmp2, field="Temperature")
         self.temp_graph.grid(
             row=1, column=2, padx=5, pady=5)
 

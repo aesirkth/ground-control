@@ -868,10 +868,16 @@ class GPS(GenericSensor):
 
     def update_data(self, frame, frame_time=None):
         self.update_raw_data(frame, frame_time)
+
         for field in self.fields.keys():
             self.data[field].append(self.raw_data[field][-1])
 
-        if not self.reference_coord is None:
+        # Just add 0 if the reference coordinates are not set
+        if self.reference_coord is None:
+            self.data['Distance'].append(0)
+            self.data['Bearing'].append(0)
+            self.data['Bearing_rad'].append(0)
+        else:
             current_coord = (self.data['Latitude'][-1], self.data['Longitude'][-1])
 
             distance = self.distance_haversine(self.reference_coord, current_coord)
@@ -879,11 +885,8 @@ class GPS(GenericSensor):
             
             self.data['Distance'].append(distance)
             self.data['Bearing'].append(bearing)
+            # Used in the polar plot
             self.data['Bearing_rad'].append(math.radians(bearing))
-        else:
-            self.data['Distance'].append(0)
-            self.data['Bearing'].append(0)
-            self.data['Bearing_rad'].append(0)
 
 
 class Sigmundr:
