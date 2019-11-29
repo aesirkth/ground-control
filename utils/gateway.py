@@ -72,7 +72,7 @@ class Gateway:
 
         """
         with open(self.log_path, 'ab+') as file:
-            file.write(frame)
+            file.write(frame + b'\r\n')
 
     def send_command(self, command, *args, **kwargs):
         """ Send a command via serial link
