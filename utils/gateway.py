@@ -105,8 +105,6 @@ class Gateway:
         self.serial.open_serial()
 
         self.is_reading = True
-        self.data = []
-        self.sensors.reset()
 
         t = threading.Thread(target=read_tread)
         t.start()
