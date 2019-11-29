@@ -683,7 +683,7 @@ class GPS(GenericSensor):
             'start': 0,
             'size': 4,  # Byte
             'type': 'float',
-            'conversion_function': lambda x: x/100.,
+            'conversion_function': lambda x: (x-int(x/100.)*100)/60. + int(x/100.), # Decimal degrees
             'byte_order': 'little',
             'signed': True,
         },
@@ -691,7 +691,7 @@ class GPS(GenericSensor):
             'start': 4,
             'size': 4,  # Byte
             'type': 'float',
-            'conversion_function': lambda x: x/100.,
+            'conversion_function': lambda x: (x-int(x/100.)*100)/60 + int(x/100.), # Decimal degrees
             'byte_order': 'little',
             'signed': True,
         },
