@@ -3,11 +3,15 @@ Class to read and write data from and to a serial connection
 
 """
 
-import time
 import datetime
+import struct
+import time
 
 import serial
 import serial.tools.list_ports
+
+dlat = 0.
+dlong = 0.
 
 
 class DummySerialWrapper:
@@ -86,6 +90,7 @@ class DummySerialWrapper:
         return frame
 
     def readlines(self, decode=False):
+        global dlat, dlong
         time.sleep(0.1)
         # Frame number
         frame = b'\x02'
@@ -125,8 +130,12 @@ class DummySerialWrapper:
         frame += b'\x00\x00'
         # GPS
         frame += b'\x00\x00\x00\x00'
-        frame += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-        frame += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        dlat += 0.0001
+        dlong += 0.0002
+        frame += struct.pack('f', 5929.093 + dlat) # Latitude
+        frame += struct.pack('f', 1792.499 + dlong) # Longitude
+        frame += b'\x00\x00\x00\x00'
+        frame += b'\x00\x00\x00\x00\x00\x00\x00\x00'
         frame += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
         frame += b'\x00\x00\x18'
         # Garbage
