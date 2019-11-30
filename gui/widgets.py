@@ -246,45 +246,39 @@ class TelemetryWidget(tk.Frame):
 ################ Rocket Status ################
 
 
-class InitStatus(tk.Frame):
+class ErrorState(tk.Frame):
     def __init__(self, parent, gateway, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
         self.sensors = self.gateway.sensors
 
-        self.title = tk.Label(self, text="Initialization status")
+        self.title = tk.Label(self, text="Errors")
         self.title.grid(row=0, column=0, columnspan=2, sticky=W+E)
 
-        self.imu2_status = BoolFieldIndicator(
-            self, self.sensors.errmsg, "ERR_INIT_IMU2", "IMU2")
-        # self.imu3_status = BoolFieldIndicator(
-        #     self, self.sensors.errmsg, "ERR_INIT_IMU3", "IMU3")
-        self.bmp2_status = BoolFieldIndicator(
-            self, self.sensors.errmsg, "ERR_INIT_BMP2", "BMP2")
-        self.bmp3_status = BoolFieldIndicator(
-            self, self.sensors.errmsg, "ERR_INIT_BMP3", "BMP3")
-        self.mag_status = BoolFieldIndicator(
-            self, self.sensors.errmsg, "ERR_INIT_MAG", "MAG")
-        self.adc_status = BoolFieldIndicator(
-            self, self.sensors.errmsg, "ERR_INIT_ADC", "ADC")
-        self.card_status = BoolFieldIndicator(
-            self, self.sensors.errmsg, "ERR_INIT_SD_CARD", "SD")
+        self.loop = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_LOOP_TIME", "loop time")
+        self.sd_write = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_WRITE_SD", "write SD")
+        self.sd_sync = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_SYNC_SD", "sync SD")
+        self.tm_send = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_SEND_TM", "send TM")
+        self.imu_read = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_READ_IMU", "read imu")
 
-        self.imu2_status.grid(
+        self.loop.grid(
             row=1, column=0, sticky=W+E)
         # self.imu3_status.grid(
         #     row=2, column=0, sticky=W+E)
-        self.bmp2_status.grid(
+        self.sd_write.grid(
             row=2, column=0, sticky=W+E)
-        self.bmp3_status.grid(
+        self.sd_sync.grid(
             row=3, column=0, sticky=W+E)
-        self.mag_status.grid(
+        self.tm_send.grid(
             row=1, column=1, sticky=W+E)
-        self.adc_status.grid(
+        self.imu_read.grid(
             row=2, column=1, sticky=W+E)
-        self.card_status.grid(
-            row=3, column=1, sticky=W+E)
 
 
 class BatteryIndicator(tk.Frame):
@@ -382,7 +376,7 @@ class RocketStatus(tk.Frame):
         self.time = TimeIndicator(self, self.gateway, bd=BD, relief="solid")
         self.time.grid(row=1, column=1, padx=10, pady=(5, 0))
 
-        self.init_status = InitStatus(self, self.gateway, bd=BD, relief="solid")
+        self.init_status = ErrorState(self, self.gateway, bd=BD, relief="solid")
         self.init_status.grid(row=2, column=0, columnspan=2, padx=10, pady=(5, 5))
 
         self.time_interval_txt = tk.StringVar()

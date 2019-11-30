@@ -198,136 +198,48 @@ class Status(GenericSensor):
 
 class ErrMsg(GenericSensor):
     fields = {
-        'ERR_INIT_IMU2': {
+        'ERR_LOOP_TIME': {
             'start': 0,
-            'size': 2,  # Byte
+            'size': 1,
             'type': 'int',
-            'conversion_function': lambda x: x & 1<<0,
+            'conversion_function': lambda x: (x & 1<<0) >> 0,
             'byte_order': 'big',
             'signed': False,
         },
-        'ERR_INIT_IMU3': {
+        'ERR_WRITE_SD': {
             'start': 0,
-            'size': 2,
+            'size': 1,
             'type': 'int',
             'conversion_function': lambda x: (x & 1<<1) >> 1,
             'byte_order': 'big',
             'signed': False,
         },
-        'ERR_INIT_BMP2': {
+        'ERR_SYNC_SD': {
             'start': 0,
-            'size': 2,
+            'size': 1,
             'type': 'int',
             'conversion_function': lambda x: (x & 1<<2) >> 2,
             'byte_order': 'big',
             'signed': False,
         },
-        'ERR_INIT_BMP3': {
+        'ERR_SEND_TM': {
             'start': 0,
-            'size': 2,
+            'size': 1,
             'type': 'int',
             'conversion_function': lambda x: (x & 1<<3) >> 3,
             'byte_order': 'big',
             'signed': False,
         },
-        'ERR_INIT_MAG': {
+        'ERR_READ_IMU': {
             'start': 0,
-            'size': 2,
+            'size': 1,
             'type': 'int',
             'conversion_function': lambda x: (x & 1<<4) >> 4,
             'byte_order': 'big',
             'signed': False,
         },
-        'ERR_INIT_ADC': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<5) >> 5,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'ERR_INIT_SD_CARD': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<6) >> 6,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'ERR_LOOP_TIME': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<7) >> 7,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'ERR_SPI2_ERRORCALLBACK': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<8) >> 8,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'ERR_SPI3_ERRORCALLBACK': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<9) >> 9,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'ERR_ADC_ERRORCALLBACK': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<10) >> 10,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'ERR_UART_ERRORCALLBACK': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<11) >> 11,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'WAIT_IMU2_FINISH_BEFORE_GPS': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<12) >> 12,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'WAIT_IMU3_FINISH_BEFORE_BMP3': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<13) >> 13,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'WAIT_GPS_FINISH_BEFORE_BMP2': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<14) >> 14,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'WAIT_ADC_TO_FINISH': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<15) >> 15,
-            'byte_order': 'big',
-            'signed': False,
-        },
     }
-    sample_size = 2
+    sample_size = 1
 
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
@@ -940,7 +852,7 @@ class Sigmundr:
 
     def __init__(self):
         self.status = Status(1)
-        self.errmsg = ErrMsg(2)
+        self.errmsg = ErrMsg(3)
         self.rtc = RTC(4, is_rtc=True)
         self.timer = Timer(8)
         self.batteries = Batteries(12)
