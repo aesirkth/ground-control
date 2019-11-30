@@ -212,6 +212,183 @@ class GeneralData(tk.Frame):
 # ############################# #
 
 
+class TelemetryWidget(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensors = self.gateway.sensors
+
+        self.telemetry_status = GatewayStatus(self, self.gateway, 'Telemetry')
+
+        self.telemetry_status.grid(
+            row=1, column=1, sticky=W, padx=10, pady=5)
+
+        self.Buttons = tk.Frame(self)
+        self.Buttons.grid(
+            row=2, column=1, sticky=W, padx=10, pady=(0, 5))
+
+        self.button_set_reference = tk.Button(
+            self.Buttons, text="Set reference", command=self._set_reference)
+        self.button_set_reference.grid(row=0, column=0)
+
+        self.button_reset = tk.Button(
+            self.Buttons, text="Reset", command=self._reset)
+        self.button_reset.grid(row=0, column=1)
+
+    def _set_reference(self):
+        self.sensors.set_reference()
+
+    def _reset(self):
+        self.sensors.reset()
+
+
+################ Rocket Status ################
+
+
+class InitStatus(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensors = self.gateway.sensors
+
+        self.title = tk.Label(self, text="Initialization status")
+        self.title.grid(row=0, column=0, columnspan=2, sticky=W+E)
+
+        self.imu2_status = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_INIT_IMU2", "IMU2")
+        # self.imu3_status = BoolFieldIndicator(
+        #     self, self.sensors.errmsg, "ERR_INIT_IMU3", "IMU3")
+        self.bmp2_status = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_INIT_BMP2", "BMP2")
+        self.bmp3_status = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_INIT_BMP3", "BMP3")
+        self.mag_status = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_INIT_MAG", "MAG")
+        self.adc_status = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_INIT_ADC", "ADC")
+        self.card_status = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_INIT_SD_CARD", "SD")
+
+        self.imu2_status.grid(
+            row=1, column=0, sticky=W+E)
+        # self.imu3_status.grid(
+        #     row=2, column=0, sticky=W+E)
+        self.bmp2_status.grid(
+            row=2, column=0, sticky=W+E)
+        self.bmp3_status.grid(
+            row=3, column=0, sticky=W+E)
+        self.mag_status.grid(
+            row=1, column=1, sticky=W+E)
+        self.adc_status.grid(
+            row=2, column=1, sticky=W+E)
+        self.card_status.grid(
+            row=3, column=1, sticky=W+E)
+
+
+class BatteryIndicator(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+
+        self.battery1_txt = tk.StringVar()
+        self.battery1 = tk.Label(self, textvar=self.battery1_txt)
+        self.battery1.grid(row=0, column=0, sticky=W)
+
+        self.battery2_txt = tk.StringVar()
+        self.battery2 = tk.Label(self, textvar=self.battery2_txt)
+        self.battery2.grid(row=1, column=0, sticky=W)
+
+        self._update_label()
+
+    def _update_label(self):
+        voltage_battery1 = self.gateway.sensors.batteries.data['Battery1']
+        txt1 = "Battery 1 : {:05.2f}V".format(voltage_battery1)
+        self.battery1_txt.set(txt1)
+        voltage_battery2 = self.gateway.sensors.batteries.data['Battery2']
+        txt2 = "Battery 2 : {:3.2f}V".format(voltage_battery2)
+        self.battery2_txt.set(txt2)
+
+        # Call this function again after 100 ms
+        self.parent.after(100, self._update_label)
+
+
+class TimeIndicator(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+
+        self.rtc_txt = tk.StringVar()
+        self.rtc = tk.Label(self, textvar=self.rtc_txt)
+        self.rtc.grid(row=0, column=0)
+
+        self.timer_txt = tk.StringVar()
+        self.timer = tk.Label(self, textvar=self.timer_txt)
+        self.timer.grid(row=1, column=0)
+
+        self._update_time()
+
+    def _update_time(self):
+        rtc_time = self.gateway.sensors.rtc.data
+        txt = "{}:{:02d}:{:02d}.{:02d}".format(
+            rtc_time['Hour'], rtc_time['Minute'], rtc_time['Second'], int(rtc_time['Microsecond']/1e4))
+        self.rtc_txt.set(txt)
+
+        timer_time = self.gateway.sensors.timer.data
+        txt = "{:7.3f}".format(timer_time['Timer'])
+        self.timer_txt.set(txt)
+        
+        self.parent.after(100, self._update_time)
+
+
+class ParachuteIndicator(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+
+        self.parachute_txt = tk.StringVar()
+        self.parachute_indicator = tk.Label(self, textvar=self.parachute_txt)
+        self.parachute_indicator.grid(row=0, column=0)
+
+        self._update_parachute()
+    
+    def _update_parachute(self):
+        if self.gateway.sensors.status.data['PARACHUTE_DEPLOYED']:
+            self.parachute_txt.set('Parachute deployed !')
+            self.parachute_indicator.config(bg='green')
+        else:
+            self.parachute_txt.set('Parachute not deployed')
+            self.parachute_indicator.config(bg='grey')
+        
+        self.parent.after(100, self._update_parachute)
+
+
+class RocketStatus(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+
+        self.parachute = ParachuteIndicator(self, self.gateway, bd=BD, relief="solid")
+        self.parachute.grid(row=0, column=0, columnspan=2, padx=10, pady=(5, 0))
+
+        self.batteries = BatteryIndicator(self, self.gateway, bd=BD, relief="solid")
+        self.batteries.grid(row=1, column=0, padx=10, pady=(5, 0))
+
+        self.time = TimeIndicator(self, self.gateway, bd=BD, relief="solid")
+        self.time.grid(row=1, column=1, padx=10, pady=(5, 0))
+
+        self.init_status = InitStatus(self, self.gateway, bd=BD, relief="solid")
+        self.init_status.grid(row=2, column=0, columnspan=2, padx=10, pady=(5, 5))
+
+
+################ Plots ################
+
+
 class LiveTimeGraphAirSpeed(tk.Frame):
     """ TKinter frame that holds a matplotlib graph that is frequently updated
 
@@ -572,175 +749,7 @@ class LiveTimeGraphAltitude(tk.Frame):
         return self.altitude1, self.altitude2,
 
 
-class TelemetryWidget(tk.Frame):
-    def __init__(self, parent, gateway, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.parent = parent
-        self.gateway = gateway
-        self.sensors = self.gateway.sensors
-
-        self.telemetry_status = GatewayStatus(self, self.gateway, 'Telemetry')
-
-        self.telemetry_status.grid(
-            row=1, column=1, sticky=W, padx=10, pady=5)
-
-        self.Buttons = tk.Frame(self)
-        self.Buttons.grid(
-            row=2, column=1, sticky=W, padx=10, pady=(0, 5))
-
-        self.button_set_reference = tk.Button(
-            self.Buttons, text="Set reference", command=self._set_reference)
-        self.button_set_reference.grid(row=0, column=0)
-
-        self.button_reset = tk.Button(
-            self.Buttons, text="Reset", command=self._reset)
-        self.button_reset.grid(row=0, column=1)
-
-    def _set_reference(self):
-        self.sensors.set_reference()
-
-    def _reset(self):
-        self.sensors.reset()
-
-
-class InitStatus(tk.Frame):
-    def __init__(self, parent, gateway, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.parent = parent
-        self.gateway = gateway
-        self.sensors = self.gateway.sensors
-
-        self.title = tk.Label(self, text="Initialization status")
-        self.title.grid(row=0, column=0, columnspan=2, sticky=W+E)
-
-        self.imu2_status = BoolFieldIndicator(
-            self, self.sensors.errmsg, "ERR_INIT_IMU2", "IMU2")
-        # self.imu3_status = BoolFieldIndicator(
-        #     self, self.sensors.errmsg, "ERR_INIT_IMU3", "IMU3")
-        self.bmp2_status = BoolFieldIndicator(
-            self, self.sensors.errmsg, "ERR_INIT_BMP2", "BMP2")
-        self.bmp3_status = BoolFieldIndicator(
-            self, self.sensors.errmsg, "ERR_INIT_BMP3", "BMP3")
-        self.mag_status = BoolFieldIndicator(
-            self, self.sensors.errmsg, "ERR_INIT_MAG", "MAG")
-        self.adc_status = BoolFieldIndicator(
-            self, self.sensors.errmsg, "ERR_INIT_ADC", "ADC")
-        self.card_status = BoolFieldIndicator(
-            self, self.sensors.errmsg, "ERR_INIT_SD_CARD", "SD")
-
-        self.imu2_status.grid(
-            row=1, column=0, sticky=W+E)
-        # self.imu3_status.grid(
-        #     row=2, column=0, sticky=W+E)
-        self.bmp2_status.grid(
-            row=2, column=0, sticky=W+E)
-        self.bmp3_status.grid(
-            row=3, column=0, sticky=W+E)
-        self.mag_status.grid(
-            row=1, column=1, sticky=W+E)
-        self.adc_status.grid(
-            row=2, column=1, sticky=W+E)
-        self.card_status.grid(
-            row=3, column=1, sticky=W+E)
-
-
-class BatteryIndicator(tk.Frame):
-    def __init__(self, parent, gateway, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.parent = parent
-        self.gateway = gateway
-
-        self.battery1_txt = tk.StringVar()
-        self.battery1 = tk.Label(self, textvar=self.battery1_txt)
-        self.battery1.grid(row=0, column=0, sticky=W)
-
-        self.battery2_txt = tk.StringVar()
-        self.battery2 = tk.Label(self, textvar=self.battery2_txt)
-        self.battery2.grid(row=1, column=0, sticky=W)
-
-        self._update_label()
-
-    def _update_label(self):
-        voltage_battery1 = self.gateway.sensors.batteries.data['Battery1']
-        txt1 = "Battery 1 : {:05.2f}V".format(voltage_battery1)
-        self.battery1_txt.set(txt1)
-        voltage_battery2 = self.gateway.sensors.batteries.data['Battery2']
-        txt2 = "Battery 2 : {:3.2f}V".format(voltage_battery2)
-        self.battery2_txt.set(txt2)
-
-        # Call this function again after 100 ms
-        self.parent.after(100, self._update_label)
-
-
-class TimeIndicator(tk.Frame):
-    def __init__(self, parent, gateway, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.parent = parent
-        self.gateway = gateway
-
-        self.rtc_txt = tk.StringVar()
-        self.rtc = tk.Label(self, textvar=self.rtc_txt)
-        self.rtc.grid(row=0, column=0)
-
-        self.timer_txt = tk.StringVar()
-        self.timer = tk.Label(self, textvar=self.timer_txt)
-        self.timer.grid(row=1, column=0)
-
-        self._update_time()
-
-    def _update_time(self):
-        rtc_time = self.gateway.sensors.rtc.data
-        txt = "{}:{:02d}:{:02d}.{:02d}".format(
-            rtc_time['Hour'], rtc_time['Minute'], rtc_time['Second'], int(rtc_time['Microsecond']/1e4))
-        self.rtc_txt.set(txt)
-
-        timer_time = self.gateway.sensors.timer.data
-        txt = "{:7.3f}".format(timer_time['Timer'])
-        self.timer_txt.set(txt)
-        
-        self.parent.after(100, self._update_time)
-
-
-class ParachuteIndicator(tk.Frame):
-    def __init__(self, parent, gateway, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.parent = parent
-        self.gateway = gateway
-
-        self.parachute_txt = tk.StringVar()
-        self.parachute_indicator = tk.Label(self, textvar=self.parachute_txt)
-        self.parachute_indicator.grid(row=0, column=0)
-
-        self._update_parachute()
-    
-    def _update_parachute(self):
-        if self.gateway.sensors.status.data['PARACHUTE_DEPLOYED']:
-            self.parachute_txt.set('Parachute deployed !')
-            self.parachute_indicator.config(bg='green')
-        else:
-            self.parachute_txt.set('Parachute not deployed')
-            self.parachute_indicator.config(bg='grey')
-        
-        self.parent.after(100, self._update_parachute)
-
-
-class RocketStatus(tk.Frame):
-    def __init__(self, parent, gateway, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.parent = parent
-        self.gateway = gateway
-
-        self.parachute = ParachuteIndicator(self, self.gateway, bd=BD, relief="solid")
-        self.parachute.grid(row=0, column=0, columnspan=2, padx=10, pady=(5, 0))
-
-        self.batteries = BatteryIndicator(self, self.gateway, bd=BD, relief="solid")
-        self.batteries.grid(row=1, column=0, padx=10, pady=(5, 0))
-
-        self.time = TimeIndicator(self, self.gateway, bd=BD, relief="solid")
-        self.time.grid(row=1, column=1, padx=10, pady=(5, 0))
-
-        self.init_status = InitStatus(self, self.gateway, bd=BD, relief="solid")
-        self.init_status.grid(row=2, column=0, columnspan=2, padx=10, pady=(5, 5))
+################ GPS ################
 
 
 class GPSValues(tk.Frame):
