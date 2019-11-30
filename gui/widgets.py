@@ -367,8 +367,8 @@ class RocketStatus(tk.Frame):
         self.parent = parent
         self.gateway = gateway
 
-        self.parachute = ParachuteIndicator(self, self.gateway, bd=BD, relief="solid")
-        self.parachute.grid(row=0, column=0, columnspan=2, padx=10, pady=(5, 0))
+        # self.parachute = ParachuteIndicator(self, self.gateway, bd=BD, relief="solid")
+        # self.parachute.grid(row=0, column=0, columnspan=2, padx=10, pady=(5, 0))
 
         self.batteries = BatteryIndicator(self, self.gateway, bd=BD, relief="solid")
         self.batteries.grid(row=1, column=0, padx=10, pady=(5, 0))
@@ -383,6 +383,14 @@ class RocketStatus(tk.Frame):
         self.time_interval = tk.Label(self, textvar=self.time_interval_txt)
         self.time_interval.grid(row=3, column=0)
 
+        self.status1_txt = tk.StringVar()
+        self.status1 = tk.Label(self, textvar=self.status1_txt)
+        self.status1.grid(row=4, column=0)
+
+        self.status2_txt = tk.StringVar()
+        self.status2 = tk.Label(self, textvar=self.status2_txt)
+        self.status2.grid(row=5, column=0)
+
         self.update()
     
     def update(self):
@@ -392,6 +400,16 @@ class RocketStatus(tk.Frame):
             interval = t1-t2
             txt = "Timer interval: {}".format(interval)
             self.time_interval_txt.set(txt)
+        
+        if not self.gateway.sensors.status.data['STATUS_1'] is None:
+            status_1 = self.gateway.sensors.status.data['STATUS_1']
+            txt = "Status 1: {0:08b}".format(status_1)
+            self.status1_txt.set(txt)
+        
+        if not self.gateway.sensors.status.data['STATUS_2'] is None:
+            status_2 = self.gateway.sensors.status.data['STATUS_2']
+            txt = "Status 2: {:08b}".format(status_2)
+            self.status2_txt.set(txt)
         
         self.parent.after(100, self.update)
 

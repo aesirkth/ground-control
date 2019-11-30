@@ -170,16 +170,24 @@ class GenericSensor:
 
 class Status(GenericSensor):
     fields = {
-        'PARACHUTE_DEPLOYED': {
+        'STATUS_1': {
             'start': 0,
-            'size': 1,  # Byte
+            'size': 2,  # Byte
             'type': 'int',
-            'conversion_function': lambda x: (x & 1<<7) >> 7,
+            'conversion_function': lambda x: (x & 0xFF00) >> 8,
             'byte_order': 'big',
             'signed': False,
         },
+        'STATUS_2': {
+            'start': 0,
+            'size': 2,  # Byte
+            'type': 'int',
+            'conversion_function': lambda x: (x & 0x00FF) >> 0,
+            'byte_order': 'big',
+            'signed': False,
+        }
     }
-    sample_size = 1
+    sample_size = 2
 
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
