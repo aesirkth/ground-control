@@ -337,8 +337,8 @@ class TimeIndicator(tk.Frame):
             rtc_time['Hour'], rtc_time['Minute'], rtc_time['Second'], int(rtc_time['Microsecond']/1e4))
         self.rtc_txt.set(txt)
 
-        timer_time = self.gateway.sensors.timer.data
-        txt = "{:7.3f}".format(timer_time['Timer'])
+        timer_time = self.gateway.sensors.timer.data['Timer']
+        txt = "{:7.3f}".format(timer_time)
         self.timer_txt.set(txt)
         
         self.parent.after(100, self._update_time)
@@ -384,6 +384,22 @@ class RocketStatus(tk.Frame):
 
         self.init_status = InitStatus(self, self.gateway, bd=BD, relief="solid")
         self.init_status.grid(row=2, column=0, columnspan=2, padx=10, pady=(5, 5))
+
+        self.time_interval_txt = tk.StringVar()
+        self.time_interval = tk.Label(self, textvar=self.time_interval_txt)
+        self.time_interval.grid(row=3, column=0)
+
+        self.update()
+    
+    def update(self):
+        if len(self.gateway.sensors.timer.raw_data['Timer']) >= 2:
+            t1 = self.gateway.sensors.timer.raw_data['Timer'][-1]
+            t2 = self.gateway.sensors.timer.raw_data['Timer'][-2]
+            interval = t1-t2
+            txt = "Timer interval: {}".format(interval)
+            self.time_interval_txt.set(txt)
+        
+        self.parent.after(100, self.update)
 
 
 ################ Plots ################

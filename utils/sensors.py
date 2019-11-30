@@ -417,7 +417,7 @@ class Timer(GenericSensor):
             'start': 0,
             'size': 4,  # Byte
             'type': 'int',
-            'conversion_function': lambda x: x*5e-4,  # s
+            'conversion_function': lambda x: x*1e-4,  # s
             'byte_order': 'little',
             'signed': False,
         },
@@ -604,7 +604,10 @@ class BMP280(GenericSensor):
     
     def altitude(self, T, p, p0):
         # Hypsometric formula
-        h = ( pow(p0/p, 1/5.257) - 1) * (T + 273.15) / 0.0065
+        if p > 0.:
+            h = ( pow(p0/p, 1/5.257) - 1) * (T + 273.15) / 0.0065
+        else:
+            h = 0
         return h
 
     def update_data(self, frame, frame_time=None):
