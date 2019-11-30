@@ -552,6 +552,8 @@ class ICM20602(GenericSensor):
     def reset(self):
         self.data = {}
         self.set_default_values()
+        self.is_acc_graph_init = False
+        self.is_gyro_graph_init = False
 
     def update_data(self, frame, frame_time=None):
         self.update_raw_data(frame, frame_time)
@@ -590,10 +592,14 @@ class BMP280(GenericSensor):
     
     def reset(self):
         self.data = {}
+        self.data['Pressure hPa'] = []
         self.set_default_values()
+        self.is_pressure_graph_init = False
+        self.is_altitude_graph_init = False
 
     def update_data(self, frame, frame_time=None):
         self.update_raw_data(frame, frame_time)
+        self.data['Pressure hPa'].append(self.raw_data['Pressure'][-1]/100.)
 
 
 class LIS3MDLTR(GenericSensor):
@@ -666,10 +672,14 @@ class ABP(GenericSensor):
     
     def reset(self):
         self.data = {}
+        self.data['Pressure hPa'] = []
         self.set_default_values()
+        self.is_pressure_graph_init = False
+        self.is_speed_graph_init = False
 
     def update_data(self, frame, frame_time=None):
         self.update_raw_data(frame, frame_time)
+        self.data['Pressure hPa'].append(self.raw_data['Pressure'][-1]/100.)
 
 
 class GPS(GenericSensor):

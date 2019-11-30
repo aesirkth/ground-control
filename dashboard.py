@@ -47,23 +47,19 @@ class MainApplication(tk.Frame):
         self.middle_column = tk.Frame(self)
         self.middle_column.grid(row=1, column=1, sticky=W+N)
 
-        self.speed_graph = LiveTimeGraphAirSpeed(
-            self.middle_column, self.telemetry, self.telemetry.sensors.pitot, field="Pressure")
+        self.speed_graph = LiveTimeGraphAirSpeed(self.middle_column, self.telemetry)
         self.speed_graph.grid(
             row=1, column=2, padx=5, pady=5)
 
-        self.gyro_graph = LiveTimeGraphAltitude(
-            self.middle_column, self.telemetry, self.telemetry.sensors.bmp2, self.telemetry.sensors.bmp3, field="Acceleration")
+        self.gyro_graph = LiveTimeGraphAltitude(self.middle_column, self.telemetry)
         self.gyro_graph.grid(
             row=1, column=3, padx=5, pady=5)
 
-        self.acceleration_graph = LiveTimeGraphAcc(
-            self.middle_column, self.telemetry, self.telemetry.sensors.imu2, field="Acceleration")
+        self.acceleration_graph = LiveTimeGraphAcc(self.middle_column, self.telemetry)
         self.acceleration_graph.grid(
             row=2, column=2, padx=5, pady=5)
 
-        self.alt_graph = LiveTimeGraphGyro(
-            self.middle_column, self.telemetry, self.telemetry.sensors.imu2, field="Acceleration")
+        self.alt_graph = LiveTimeGraphGyro(self.middle_column, self.telemetry)
         self.alt_graph.grid(
             row=2, column=3, padx=5, pady=5)
 
