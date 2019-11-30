@@ -418,8 +418,8 @@ class LiveTimeGraphAirSpeed(tk.Frame):
         self.fig = Figure(figsize=(5, 3.4), dpi=100)
         self.ax = self.fig.add_subplot(111)
         self.line, = self.ax.plot([], [], lw=2)
-        self.line.set_label('Air Speed')
-        self.ax.legend()
+        # self.line.set_label('Air Speed')
+        # self.ax.legend()
         self.ax.grid()
         self.time = []
         self.data = []
@@ -435,9 +435,9 @@ class LiveTimeGraphAirSpeed(tk.Frame):
         """ Set the initial values and settings of the figure
 
         """
-        self.ax.set_ylim(900, 1250)
+        self.ax.set_ylim(0, 50)
         self.ax.set_xlim(0, self.tmax_init)
-        self.ax.set_title("Dynamic pressure", y=1.1)
+        self.ax.set_title("Air speed", y=1.1)
         self.canvas.draw()
         del self.time[:]
         del self.data[:]
@@ -465,7 +465,7 @@ class LiveTimeGraphAirSpeed(tk.Frame):
         tmin, tmax = self.ax.get_xlim()
 
         self.time = self.pitot.raw_data['Seconds_since_start'][:]
-        self.data = self.pitot.raw_data['Pressure'][:]
+        self.data = self.pitot.data['Air speed'][:]
 
         if self.time:
             if max(self.time) > 0.8*tmax:
