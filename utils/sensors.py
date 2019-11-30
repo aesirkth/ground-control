@@ -593,13 +593,32 @@ class BMP280(GenericSensor):
     def reset(self):
         self.data = {}
         self.data['Pressure hPa'] = []
+        self.data['Altitude'] = []
         self.set_default_values()
+        self.reference_pressure = None
         self.is_pressure_graph_init = False
         self.is_altitude_graph_init = False
+    
+    def set_reference(self):
+        self.reference_pressure = self.raw_data['Pressure'][-1]
+    
+    def altitude(self, T, p, p0):
+        # Hypsometric formula
+        h = ( pow(p0/p, 1/5.257) - 1) * (T + 273.15) / 0.0065
+        return h
 
     def update_data(self, frame, frame_time=None):
         self.update_raw_data(frame, frame_time)
         self.data['Pressure hPa'].append(self.raw_data['Pressure'][-1]/100.)
+
+        if self.reference_pressure is None:
+            self.data['Altitude'].append(0)
+        else:
+            T = self.raw_data['Temperature'][-1]
+            p = self.raw_data['Pressure'][-1]
+            p0 = self.reference_pressure
+            h = self.altitude(T, p, p0)
+            self.data['Altitude'].append(h)
 
 
 class LIS3MDLTR(GenericSensor):
@@ -965,6 +984,8 @@ class Sigmundr:
     
     def set_reference(self):
         self.gps.set_reference()
+        self.bmp2.set_reference()
+        self.bmp3.set_reference()
 
 
 # ########################## #

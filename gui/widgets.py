@@ -734,9 +734,9 @@ class LiveTimeGraphAltitude(tk.Frame):
         """ Set the initial values and settings of the figure
 
         """
-        self.ax.set_ylim(900, 1250)
+        self.ax.set_ylim(-10, 100)
         self.ax.set_xlim(0, self.tmax_init)
-        self.ax.set_title("Static pressure", y=1.1)
+        self.ax.set_title("Altitude", y=1.1)
         self.canvas.draw()
         del self.time[:]
         del self.bmp1_data[:]
@@ -766,8 +766,8 @@ class LiveTimeGraphAltitude(tk.Frame):
         tmin, tmax = self.ax.get_xlim()
 
         self.time = self.bmp2.raw_data['Seconds_since_start'][:]
-        self.x_data = self.bmp2.data['Pressure hPa'][:]
-        self.y_data = self.bmp3.data['Pressure hPa'][:]
+        self.x_data = self.bmp2.data['Altitude'][:]
+        self.y_data = self.bmp3.data['Altitude'][:]
 
         if self.time:
             if max(self.time) > 0.8*tmax:
