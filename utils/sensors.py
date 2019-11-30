@@ -10,6 +10,8 @@ to add a specific processing in 'update_data()' if necessary
 """
 
 import datetime
+import math
+import struct
 
 
 class GenericSensor:
@@ -99,13 +101,22 @@ class GenericSensor:
         """
         start = self.fields[field]['start']
         size = self.fields[field]['size']
+        field_type = self.fields[field]['type']
         convert = self.fields[field]['conversion_function']
         byte_order = self.fields[field]['byte_order']
         signed = self.fields[field]['signed']
 
         field_bytes = sample[start: start + size]
-        field_int = int.from_bytes(field_bytes, byte_order, signed=signed)
-        value = convert(field_int)
+
+        if field_type == 'int':
+            value = int.from_bytes(field_bytes, byte_order, signed=signed)
+        elif field_type == 'float':
+            if byte_order == 'big':
+                [value] = struct.unpack('>f', field_bytes)
+            else:
+                [value] = struct.unpack('<f', field_bytes)
+
+        value = convert(value)
 
         return value
 
@@ -162,6 +173,7 @@ class Status(GenericSensor):
         'PARACHUTE_DEPLOYED': {
             'start': 0,
             'size': 1,  # Byte
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<7) >> 7,
             'byte_order': 'big',
             'signed': False,
@@ -189,6 +201,7 @@ class ErrMsg(GenericSensor):
         'ERR_INIT_IMU2': {
             'start': 0,
             'size': 2,  # Byte
+            'type': 'int',
             'conversion_function': lambda x: x & 1<<0,
             'byte_order': 'big',
             'signed': False,
@@ -196,6 +209,7 @@ class ErrMsg(GenericSensor):
         'ERR_INIT_IMU3': {
             'start': 0,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<1) >> 1,
             'byte_order': 'big',
             'signed': False,
@@ -203,6 +217,7 @@ class ErrMsg(GenericSensor):
         'ERR_INIT_BMP2': {
             'start': 0,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<2) >> 2,
             'byte_order': 'big',
             'signed': False,
@@ -210,6 +225,7 @@ class ErrMsg(GenericSensor):
         'ERR_INIT_BMP3': {
             'start': 0,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<3) >> 3,
             'byte_order': 'big',
             'signed': False,
@@ -217,6 +233,7 @@ class ErrMsg(GenericSensor):
         'ERR_INIT_MAG': {
             'start': 0,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<4) >> 4,
             'byte_order': 'big',
             'signed': False,
@@ -224,6 +241,7 @@ class ErrMsg(GenericSensor):
         'ERR_INIT_ADC': {
             'start': 0,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<5) >> 5,
             'byte_order': 'big',
             'signed': False,
@@ -231,6 +249,7 @@ class ErrMsg(GenericSensor):
         'ERR_INIT_SD_CARD': {
             'start': 0,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<6) >> 6,
             'byte_order': 'big',
             'signed': False,
@@ -238,6 +257,7 @@ class ErrMsg(GenericSensor):
         'ERR_LOOP_TIME': {
             'start': 0,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<7) >> 7,
             'byte_order': 'big',
             'signed': False,
@@ -245,6 +265,7 @@ class ErrMsg(GenericSensor):
         'ERR_SPI2_ERRORCALLBACK': {
             'start': 0,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<8) >> 8,
             'byte_order': 'big',
             'signed': False,
@@ -252,6 +273,7 @@ class ErrMsg(GenericSensor):
         'ERR_SPI3_ERRORCALLBACK': {
             'start': 0,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<9) >> 9,
             'byte_order': 'big',
             'signed': False,
@@ -259,6 +281,7 @@ class ErrMsg(GenericSensor):
         'ERR_ADC_ERRORCALLBACK': {
             'start': 0,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<10) >> 10,
             'byte_order': 'big',
             'signed': False,
@@ -266,6 +289,7 @@ class ErrMsg(GenericSensor):
         'ERR_UART_ERRORCALLBACK': {
             'start': 0,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<11) >> 11,
             'byte_order': 'big',
             'signed': False,
@@ -273,6 +297,7 @@ class ErrMsg(GenericSensor):
         'WAIT_IMU2_FINISH_BEFORE_GPS': {
             'start': 0,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<12) >> 12,
             'byte_order': 'big',
             'signed': False,
@@ -280,6 +305,7 @@ class ErrMsg(GenericSensor):
         'WAIT_IMU3_FINISH_BEFORE_BMP3': {
             'start': 0,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<13) >> 13,
             'byte_order': 'big',
             'signed': False,
@@ -287,6 +313,7 @@ class ErrMsg(GenericSensor):
         'WAIT_GPS_FINISH_BEFORE_BMP2': {
             'start': 0,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<14) >> 14,
             'byte_order': 'big',
             'signed': False,
@@ -294,6 +321,7 @@ class ErrMsg(GenericSensor):
         'WAIT_ADC_TO_FINISH': {
             'start': 0,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<15) >> 15,
             'byte_order': 'big',
             'signed': False,
@@ -324,6 +352,7 @@ class RTC(GenericSensor):
         'Hour': {
             'start': 0,
             'size': 1,  # Byte
+            'type': 'int',
             'conversion_function': lambda x: x,  # h
             'byte_order': 'big',
             'signed': False,
@@ -331,6 +360,7 @@ class RTC(GenericSensor):
         'Minute': {
             'start': 1,
             'size': 1,
+            'type': 'int',
             'conversion_function': lambda x: x,  # min
             'byte_order': 'big',
             'signed': False,
@@ -338,6 +368,7 @@ class RTC(GenericSensor):
         'Second': {
             'start': 2,
             'size': 1,
+            'type': 'int',
             'conversion_function': lambda x: x,  # s
             'byte_order': 'big',
             'signed': False,
@@ -345,7 +376,8 @@ class RTC(GenericSensor):
         'Microsecond': {
             'start': 3,
             'size': 1,
-            'conversion_function': lambda x: (255-x)*1000*1000/256.,  # ms
+            'type': 'int',
+            'conversion_function': lambda x: x*1000*1000/256.,  # ms
             'byte_order': 'big',
             'signed': False,
         },
@@ -384,6 +416,7 @@ class Timer(GenericSensor):
         'Timer': {
             'start': 0,
             'size': 4,  # Byte
+            'type': 'int',
             'conversion_function': lambda x: x*5e-4,  # s
             'byte_order': 'little',
             'signed': False,
@@ -413,6 +446,7 @@ class Batteries(GenericSensor):
         'Battery1': {
             'start': 0,
             'size': 2,  # Byte
+            'type': 'int',
             'conversion_function': lambda x: x*3.3/4096*4.030,  # Volt
             'byte_order': 'little',
             'signed': False,
@@ -420,6 +454,7 @@ class Batteries(GenericSensor):
         'Battery2': {
             'start': 2,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: x*3.3/4096*2.786,  # Volt
             'byte_order': 'little',
             'signed': False,
@@ -453,6 +488,7 @@ class ICM20602(GenericSensor):
         'Acc_X': {
             'start': 0,
             'size': 2,  # Byte
+            'type': 'int',
             'conversion_function': lambda x: x/2048.,  # g
             'byte_order': 'big',
             'signed': True,
@@ -460,6 +496,7 @@ class ICM20602(GenericSensor):
         'Acc_Y': {
             'start': 2,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: x/2048.,  # g
             'byte_order': 'big',
             'signed': True,
@@ -467,6 +504,7 @@ class ICM20602(GenericSensor):
         'Acc_Z': {
             'start': 4,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: x/2048.,  # g
             'byte_order': 'big',
             'signed': True,
@@ -474,6 +512,7 @@ class ICM20602(GenericSensor):
         'Temp': {
             'start': 6,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: x/326.8 + 25,  # °C
             'byte_order': 'big',
             'signed': True,
@@ -481,6 +520,7 @@ class ICM20602(GenericSensor):
         'Gyro_X': {
             'start': 8,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: x/32.8,  # dps
             'byte_order': 'big',
             'signed': True,
@@ -488,6 +528,7 @@ class ICM20602(GenericSensor):
         'Gyro_Y': {
             'start': 10,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: x/32.8,  # dps
             'byte_order': 'big',
             'signed': True,
@@ -495,6 +536,7 @@ class ICM20602(GenericSensor):
         'Gyro_Z': {
             'start': 12,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: x/32.8,  # dps
             'byte_order': 'big',
             'signed': True,
@@ -525,6 +567,7 @@ class BMP280(GenericSensor):
         'Temperature': {
             'start': 0,
             'size': 4,  # Byte
+            'type': 'int',
             'conversion_function': lambda x: x/100.,  # °C
             'byte_order': 'little',
             'signed': True,
@@ -532,6 +575,7 @@ class BMP280(GenericSensor):
         'Pressure': {
             'start': 4,
             'size': 4,
+            'type': 'int',
             'conversion_function': lambda x: x/256.,  # Pa
             'byte_order': 'little',
             'signed': True,
@@ -560,6 +604,7 @@ class LIS3MDLTR(GenericSensor):
         'Mag_X': {
             'start': 0,
             'size': 2,  # Byte
+            'type': 'int',
             'conversion_function': lambda x: x/6842.,  # Gauss
             'byte_order': 'big',
             'signed': True,
@@ -567,6 +612,7 @@ class LIS3MDLTR(GenericSensor):
         'Mag_Y': {
             'start': 2,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: x/6842.,  # Gauss
             'byte_order': 'big',
             'signed': True,
@@ -574,6 +620,7 @@ class LIS3MDLTR(GenericSensor):
         'Mag_Z': {
             'start': 4,
             'size': 2,
+            'type': 'int',
             'conversion_function': lambda x: x/6842.,  # Gauss
             'byte_order': 'big',
             'signed': True,
@@ -604,6 +651,7 @@ class ABP(GenericSensor):
         'Pressure': {
             'start': 0,
             'size': 2,  # Byte
+            'type': 'int',
             'conversion_function': lambda x: (x - 1638.) / (14747. - 1638.) * 5. * 34474.,  # Pa
             'byte_order': 'big',
             'signed': False,
@@ -624,6 +672,223 @@ class ABP(GenericSensor):
         self.update_raw_data(frame, frame_time)
 
 
+class GPS(GenericSensor):
+    """ Pressure Sensor
+
+    GPS receiver on Sigmundr
+
+    """
+    fields = {
+        'Latitude': {
+            'start': 0,
+            'size': 4,  # Byte
+            'type': 'float',
+            'conversion_function': lambda x: (x-int(x/100.)*100)/60. + int(x/100.), # Decimal degrees
+            'byte_order': 'little',
+            'signed': True,
+        },
+        'Longitude': {
+            'start': 4,
+            'size': 4,  # Byte
+            'type': 'float',
+            'conversion_function': lambda x: (x-int(x/100.)*100)/60 + int(x/100.), # Decimal degrees
+            'byte_order': 'little',
+            'signed': True,
+        },
+        'Altitude': {
+            'start': 8,
+            'size': 4,  # Byte
+            'type': 'float',
+            'conversion_function': lambda x: x,
+            'byte_order': 'little',
+            'signed': True,
+        },
+        'pDOP': {
+            'start': 12,
+            'size': 4,  # Byte
+            'type': 'float',
+            'conversion_function': lambda x: x,
+            'byte_order': 'little',
+            'signed': True,
+        },
+        'hDOP': {
+            'start': 16,
+            'size': 4,  # Byte
+            'type': 'float',
+            'conversion_function': lambda x: x,
+            'byte_order': 'little',
+            'signed': True,
+        },
+        'vDOP': {
+            'start': 20,
+            'size': 4,  # Byte
+            'type': 'float',
+            'conversion_function': lambda x: x,
+            'byte_order': 'little',
+            'signed': True,
+        },
+        'Heading': {
+            'start': 24,
+            'size': 4,  # Byte
+            'type': 'float',
+            'conversion_function': lambda x: x,
+            'byte_order': 'little',
+            'signed': True,
+        },
+        'Ground_Speed': {
+            'start': 28,
+            'size': 4,  # Byte
+            'type': 'float',
+            'conversion_function': lambda x: x,
+            'byte_order': 'little',
+            'signed': True,
+        },
+        'Fix_Validity': {
+            'start': 32,
+            'size': 1,  # Byte
+            'type': 'int',
+            'conversion_function': lambda x: x & 1,
+            'byte_order': 'little',
+            'signed': True,
+        },
+        'Fix_Quality': {
+            'start': 32,
+            'size': 1,  # Byte
+            'type': 'int',
+            'conversion_function': lambda x: (x & 0x06) >> 1,
+            'byte_order': 'little',
+            'signed': True,
+        },
+        'Fix_Status': {
+            'start': 32,
+            'size': 1,  # Byte
+            'type': 'int',
+            'conversion_function': lambda x: (x & 0x18) >> 3,
+            'byte_order': 'big',
+            'signed': True,
+        },
+    }
+    sample_size = 33
+
+    def __init__(self, start_position, **kwargs):
+        super().__init__(start_position, self.fields, self.sample_size, **kwargs)
+
+        self.reset()
+
+    def reset(self):
+        self.data = {field: [0] for field in self.fields.keys()}
+        self.data['Distance'] = [0]
+        self.data['Bearing'] = [0]
+        self.data['Bearing_rad'] = [0]
+        self.reference_coord = None
+        self.set_default_values()
+        self.is_graph_init = False
+    
+    def set_reference(self):
+        self.reference_coord = (self.data['Latitude'][-1], self.data['Longitude'][-1])
+    
+    def distance_haversine(self, coord1, coord2):
+        """ Compute the distance between two GPS points
+
+        Coordinates must be in decimal degrees format
+
+        Parameters
+        ----------
+        coord1 : (float, float)
+            first coordinates in DD.MMMM format
+        coord2 : (float, float)
+            second coordinates in DD.MMMM format
+
+        Returns
+        -------
+        d : float
+            distance between the two points
+
+        """
+        R = 6372800  # Earth radius in meters
+        lat1, lon1 = coord1
+        lat2, lon2 = coord2
+        
+        phi1 = math.radians(lat1)
+        phi2 = math.radians(lat2) 
+        dphi = math.radians(lat2 - lat1)
+        dlambda = math.radians(lon2 - lon1)
+        
+        a = math.sin(dphi/2)**2 + \
+            math.cos(phi1)*math.cos(phi2)*math.sin(dlambda/2)**2
+
+        c = 2*math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+        d = R*c
+        
+        return d
+
+    def bearing(self, coord1, coord2):
+        """
+        Calculates the bearing between two points.
+        The formulae used is the following:
+            θ = atan2(sin(Δlong).cos(lat2),
+                    cos(lat1).sin(lat2) − sin(lat1).cos(lat2).cos(Δlong))
+        Parameters
+        ----------
+        coord1: (float, float) 
+            tuple representing the latitude/longitude for the first point
+            Latitude and longitude must be in decimal degrees
+        coord2: (float, float) 
+            tuple representing the latitude/longitude for the second point
+            Latitude and longitude must be in decimal degrees
+        
+        Returns
+        -------
+        compass_bearing : float
+            bearing in degrees
+
+        """
+        lat1, lon1 = coord1
+        lat2, lon2 = coord2
+
+        lat1 = math.radians(lat1)
+        lat2 = math.radians(lat2)
+
+        diffLong = math.radians(lon2 - lon1)
+
+        x = math.sin(diffLong) * math.cos(lat2)
+        y = math.cos(lat1) * math.sin(lat2) - (math.sin(lat1)
+                * math.cos(lat2) * math.cos(diffLong))
+
+        initial_bearing = math.atan2(x, y)
+
+        # Now we have the initial bearing but math.atan2 return values
+        # from -180° to + 180° which is not what we want for a compass bearing
+        # The solution is to normalize the initial bearing as shown below
+        initial_bearing = math.degrees(initial_bearing)
+        compass_bearing = (initial_bearing + 360) % 360
+
+        return compass_bearing
+
+    def update_data(self, frame, frame_time=None):
+        self.update_raw_data(frame, frame_time)
+
+        for field in self.fields.keys():
+            self.data[field].append(self.raw_data[field][-1])
+
+        # Just add 0 if the reference coordinates are not set
+        if self.reference_coord is None:
+            self.data['Distance'].append(0)
+            self.data['Bearing'].append(0)
+            self.data['Bearing_rad'].append(0)
+        else:
+            current_coord = (self.data['Latitude'][-1], self.data['Longitude'][-1])
+
+            distance = self.distance_haversine(self.reference_coord, current_coord)
+            bearing = self.bearing(self.reference_coord, current_coord)
+            
+            self.data['Distance'].append(distance)
+            self.data['Bearing'].append(bearing)
+            # Used in the polar plot
+            self.data['Bearing_rad'].append(math.radians(bearing))
+
+
 class Sigmundr:
     """ Extract data from a Telemetry frame received from Sigmundr
 
@@ -640,21 +905,26 @@ class Sigmundr:
         self.bmp3 = BMP280(80)
         self.mag = LIS3MDLTR(88)
         self.pitot = ABP(92)
+        self.gps = GPS(100)
 
     def update_sensors(self, frame):
         if len(frame) > 0:
             if frame[0] == 0x01 or frame[0] == 0x02:
-                self.rtc.update_data(frame)
-                frame_time = self.rtc.data['Time']
-                self.errmsg.update_data(frame, frame_time)
-                self.status.update_data(frame, frame_time)
-                self.timer.update_data(frame, frame_time)
-                self.batteries.update_data(frame, frame_time)
-                self.imu2.update_data(frame, frame_time)
-                self.bmp2.update_data(frame, frame_time)
-                self.bmp3.update_data(frame, frame_time)
-                self.mag.update_data(frame, frame_time)
-                self.pitot.update_data(frame, frame_time)
+                if len(frame) == 94 or len(frame) == 140:
+                    self.rtc.update_data(frame)
+                    frame_time = self.rtc.data['Time']
+                    self.errmsg.update_data(frame, frame_time)
+                    self.status.update_data(frame, frame_time)
+                    self.timer.update_data(frame, frame_time)
+                    self.batteries.update_data(frame, frame_time)
+                    self.imu2.update_data(frame, frame_time)
+                    self.bmp2.update_data(frame, frame_time)
+                    self.bmp3.update_data(frame, frame_time)
+                    self.mag.update_data(frame, frame_time)
+                    self.pitot.update_data(frame, frame_time)
+            if frame[0] == 0x02:
+                if len(frame) == 140:
+                    self.gps.update_data(frame, frame_time)
     
     def reset(self):
         self.errmsg.reset()
@@ -667,6 +937,10 @@ class Sigmundr:
         self.bmp3.reset()
         self.mag.reset()
         self.pitot.reset()
+        self.gps.reset()
+    
+    def set_reference(self):
+        self.gps.set_reference()
 
 
 # ########################## #
@@ -679,6 +953,7 @@ class LPSStatus(GenericSensor):
         'IS_FILLING': {
             'start': 0,
             'size': 1,  # Byte
+            'type': 'int',
             'conversion_function': lambda x: x & 1<<0,
             'byte_order': 'big',
             'signed': False,
@@ -686,6 +961,7 @@ class LPSStatus(GenericSensor):
         'IS_VENTING': {
             'start': 0,
             'size': 1,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<1) >> 1,
             'byte_order': 'big',
             'signed': False,
@@ -693,6 +969,7 @@ class LPSStatus(GenericSensor):
         'IS_ARMED': {
             'start': 0,
             'size': 1,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<2) >> 2,
             'byte_order': 'big',
             'signed': False,
@@ -700,6 +977,7 @@ class LPSStatus(GenericSensor):
         'IS_FIRING': {
             'start': 0,
             'size': 1,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<3) >> 3,
             'byte_order': 'big',
             'signed': False,
@@ -707,6 +985,7 @@ class LPSStatus(GenericSensor):
         'IS_TM_ENABLED': {
             'start': 0,
             'size': 1,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<4) >> 4,
             'byte_order': 'big',
             'signed': False,
@@ -714,6 +993,7 @@ class LPSStatus(GenericSensor):
         'IS_SAFE_MODE': {
             'start': 0,
             'size': 1,
+            'type': 'int',
             'conversion_function': lambda x: (x & 1<<5) >> 5,
             'byte_order': 'big',
             'signed': False,
@@ -742,6 +1022,7 @@ class RSSI(GenericSensor):
         'REMOTE_RSSI': {
             'start': 0,
             'size': 2,  # Byte
+            'type': 'int',
             'conversion_function': lambda x: x,
             'byte_order': 'big',
             'signed': True,

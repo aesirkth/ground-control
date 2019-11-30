@@ -301,10 +301,27 @@ class TelemetryWidget(tk.Frame):
         self.sensors = self.gateway.sensors
 
         self.telemetry_status = GatewayStatus(self, self.gateway, 'Telemetry')
-        self.button_set_reference = tk.Button()
 
         self.telemetry_status.grid(
             row=1, column=1, sticky=W, padx=10, pady=5)
+
+        self.Buttons = tk.Frame(self)
+        self.Buttons.grid(
+            row=2, column=1, sticky=W, padx=10, pady=(0, 5))
+
+        self.button_set_reference = tk.Button(
+            self.Buttons, text="Set reference", command=self._set_reference)
+        self.button_set_reference.grid(row=0, column=0)
+
+        self.button_reset = tk.Button(
+            self.Buttons, text="Reset", command=self._reset)
+        self.button_reset.grid(row=0, column=1)
+
+    def _set_reference(self):
+        self.sensors.set_reference()
+
+    def _reset(self):
+        self.sensors.reset()
 
 
 class InitStatus(tk.Frame):
@@ -399,7 +416,7 @@ class TimeIndicator(tk.Frame):
         self.rtc_txt.set(txt)
 
         timer_time = self.gateway.sensors.timer.data
-        txt = "{}".format(timer_time['Timer'])
+        txt = "{:7.3f}".format(timer_time['Timer'])
         self.timer_txt.set(txt)
         
         self.parent.after(100, self._update_time)
@@ -445,6 +462,282 @@ class RocketStatus(tk.Frame):
 
         self.init_status = InitStatus(self, self.gateway, bd=BD, relief="solid")
         self.init_status.grid(row=2, column=0, columnspan=2, padx=10, pady=(5, 5))
+
+
+class GPSValues(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.gps = self.gateway.sensors.gps
+
+        self.latitude = tk.Label(self, text="Latitude:")
+        self.latitude.grid(row=0, column=0, sticky=W, pady=(3, 0))
+        self.latitude_txt = tk.StringVar()
+        self.latitude_label = tk.Label(self, textvar=self.latitude_txt)
+        self.latitude_label.grid(row=0, column=1, sticky=W, pady=(3, 0))
+
+        self.longitude = tk.Label(self, text="Longitude:")
+        self.longitude.grid(row=1, column=0, sticky=W, pady=(3, 0))
+        self.longitude_txt = tk.StringVar()
+        self.longitude_label = tk.Label(self, textvar=self.longitude_txt)
+        self.longitude_label.grid(row=1, column=1, sticky=W, pady=(3, 0))
+
+        self.altitude = tk.Label(self, text="Altitude:")
+        self.altitude.grid(row=2, column=0, sticky=W, pady=(3, 0))
+        self.altitude_txt = tk.StringVar()
+        self.altitude_label = tk.Label(self, textvar=self.altitude_txt)
+        self.altitude_label.grid(row=2, column=1, sticky=W, pady=(3, 0))
+
+        self.heading = tk.Label(self, text="Heading:")
+        self.heading.grid(row=3, column=0, sticky=W, pady=(3, 0))
+        self.heading_txt = tk.StringVar()
+        self.heading_label = tk.Label(self, textvar=self.heading_txt)
+        self.heading_label.grid(row=3, column=1, sticky=W, pady=(3, 0))
+
+        self.speed = tk.Label(self, text="Ground speed:")
+        self.speed.grid(row=4, column=0, sticky=W, pady=(3, 0))
+        self.speed_txt = tk.StringVar()
+        self.speed_label = tk.Label(self, textvar=self.speed_txt)
+        self.speed_label.grid(row=4, column=1, sticky=W, pady=(3, 0))
+
+        self.distance = tk.Label(self, text="Distance:")
+        self.distance.grid(row=5, column=0, sticky=W, pady=(3, 0))
+        self.distance_txt = tk.StringVar()
+        self.distance_label = tk.Label(self, textvar=self.distance_txt)
+        self.distance_label.grid(row=5, column=1, sticky=W, pady=(3, 0))
+
+        self.bearing = tk.Label(self, text="Bearing:")
+        self.bearing.grid(row=6, column=0, sticky=W, pady=(3, 0))
+        self.bearing_txt = tk.StringVar()
+        self.bearing_label = tk.Label(self, textvar=self.bearing_txt)
+        self.bearing_label.grid(row=6, column=1, sticky=W, pady=(3, 0))
+
+        self._update_values()
+
+    def _update_values(self):
+        latitude = self.gps.data['Latitude'][-1]
+        txt_lat = "{:7.5f}".format(latitude)
+        self.latitude_txt.set(txt_lat)
+
+        longitude = self.gps.data['Longitude'][-1]
+        txt_long = "{:6.5f}".format(longitude)
+        self.longitude_txt.set(txt_long)
+
+        altitude = self.gps.data['Altitude'][-1]
+        txt_alt = "{:3.1f} MAMSL".format(altitude)
+        self.altitude_txt.set(txt_alt)
+
+        heading = self.gps.data['Heading'][-1]
+        txt_head = "{:3.1f}°".format(heading)
+        self.heading_txt.set(txt_head)
+
+        speed = self.gps.data['Ground_Speed'][-1]
+        txt_speed = "{:5.3f} kph".format(speed)
+        self.speed_txt.set(txt_speed)
+
+        distance = self.gps.data['Distance'][-1]
+        txt_distance = "{:3.1f} m".format(distance)
+        self.distance_txt.set(txt_distance)
+
+        bearing = self.gps.data['Bearing'][-1]
+        txt_bearing = "{:3.1f}°".format(bearing)
+        self.bearing_txt.set(txt_bearing)
+    
+        self.parent.after(100, self._update_values)
+
+
+class GPSStatus(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.gps = self.gateway.sensors.gps
+
+        self.validity = tk.Label(self, text="Fix validity:")
+        self.validity.grid(row=0, column=0, sticky=W, pady=(3, 0))
+        self.validity_txt = tk.StringVar()
+        self.validity_label = tk.Label(self, textvar=self.validity_txt)
+        self.validity_label.grid(row=0, column=1, sticky=W, pady=(3, 0))
+
+        self.quality = tk.Label(self, text="Fix quality:")
+        self.quality.grid(row=1, column=0, sticky=W, pady=(3, 0))
+        self.quality_txt = tk.StringVar()
+        self.quality_label = tk.Label(self, textvar=self.quality_txt)
+        self.quality_label.grid(row=1, column=1, sticky=W, pady=(3, 0))
+
+        self.status = tk.Label(self, text="Fix status:")
+        self.status.grid(row=2, column=0, sticky=W, pady=(3, 0))
+        self.status_txt = tk.StringVar()
+        self.status_label = tk.Label(self, textvar=self.status_txt)
+        self.status_label.grid(row=2, column=1, sticky=W, pady=(3, 0))
+
+        self.pdop = tk.Label(self, text="Position DOP:")
+        self.pdop.grid(row=3, column=0, sticky=W, pady=(3, 0))
+        self.pdop_txt = tk.StringVar()
+        self.pdop_label = tk.Label(self, textvar=self.pdop_txt)
+        self.pdop_label.grid(row=3, column=1, sticky=W, pady=(3, 0))
+
+        self.hdop = tk.Label(self, text="Horizontal DOP:")
+        self.hdop.grid(row=4, column=0, sticky=W, pady=(3, 0))
+        self.hdop_txt = tk.StringVar()
+        self.hdop_label = tk.Label(self, textvar=self.hdop_txt)
+        self.hdop_label.grid(row=4, column=1, sticky=W, pady=(3, 0))
+
+        self.vdop = tk.Label(self, text="Vertical DOP")
+        self.vdop.grid(row=5, column=0, sticky=W, pady=(3, 0))
+        self.vdop_txt = tk.StringVar()
+        self.vdop_label = tk.Label(self, textvar=self.vdop_txt)
+        self.vdop_label.grid(row=5, column=1, sticky=W, pady=(3, 0))
+
+        self.default_bg = self.validity.cget('background')
+
+        self._update_status()
+    
+    def _update_status(self):
+        validity = self.gps.data['Fix_Validity'][-1]
+        if validity:
+            txt_validity = "DATA VALID"
+            self.validity_label.config(bg="green")
+        else:
+            txt_validity = "DATA INVALID"
+            self.validity_label.config(bg="red")
+        self.validity_txt.set(txt_validity)
+
+        quality = self.gps.data['Fix_Quality'][-1]
+        if quality == 0:
+            txt_quality = "Invalid"
+            self.quality_label.config(bg="red")
+        elif quality == 1:
+            txt_quality = "GPS Fix"
+            self.quality_label.config(bg='green')
+        else:
+            txt_quality = "Other value {}".format(quality)
+            self.quality_label.config(bg='green')
+        self.quality_txt.set(txt_quality)
+
+        status = self.gps.data['Fix_Status'][-1]
+        if status == 1:
+            txt_status = "no fix"
+            self.status_label.config(bg='red')
+        elif status == 2:
+            txt_status = "2D fix"
+            self.status_label.config(bg='green yellow')
+        elif status == 3:
+            txt_status = "3D fix"
+            self.status_label.config(bg='green')
+        else:
+            txt_status = "-"
+            self.quality_label.config(bg=self.default_bg)
+        self.status_txt.set(txt_status)
+
+        pdop = self.gps.data['pDOP'][-1]
+        pdop_txt = "{:4.2f}".format(pdop)
+        self.pdop_txt.set(pdop_txt)
+
+        hdop = self.gps.data['hDOP'][-1]
+        hdop_txt = "{:4.2f}".format(hdop)
+        self.hdop_txt.set(hdop_txt)
+
+        vdop = self.gps.data['vDOP'][-1]
+        vdop_txt = "{:4.2f}".format(vdop)
+        self.vdop_txt.set(vdop_txt)
+
+        self.parent.after(100, self._update_status)
+
+
+class GPSGraph(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.gps = self.gateway.sensors.gps
+
+        self.rmax_init = 40
+
+        self.fig = Figure(figsize=(3.2, 3.5), dpi=100)
+        self.ax = self.fig.add_subplot(111, projection='polar')
+        self.line, = self.ax.plot([], [], lw=2)
+        self.ax.grid()
+
+        self.bearing = []
+        self.distance = []
+
+        self.canvas = FigureCanvasTkAgg(self.fig, self)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().grid(row=1, column=1)
+
+        ani = animation.FuncAnimation(self.fig, self._update_data, blit=True, interval=10,
+                                      repeat=False, init_func=self._init_figure)
+
+    def _init_figure(self):
+        """ Set the initial values and settings of the figure
+
+        """
+        rmax = self.rmax_init
+        self.ax.set_rlim(0, rmax)
+        self.ax.set_rticks([rmax/4., rmax/2., 3*rmax/4., rmax])
+        self.ax.set_rlabel_position(67.5)
+        self.ax.set_theta_direction(-1)
+        self.ax.set_theta_zero_location('N')
+        self.ax.set_title("Position from launch pad", y=1.1)
+        self.ax.grid(True)
+        self.canvas.draw()
+        del self.bearing[:]
+        del self.distance[:]
+        self.line.set_data(self.bearing, self.distance)
+        return self.line,
+
+    def _update_data(self, data):
+        """ Refresh the figure content
+
+        Parameters
+        ----------
+        data : unused
+            default parameter given by animation.FuncAnimation
+
+        Returns
+        -------
+        tupple
+            content of the figure for matplotlib        
+
+        """
+        if not self.gps.is_graph_init:
+            self._init_figure()
+            self.gps.is_graph_init = True
+
+        rmin, rmax = self.ax.get_ylim()
+
+        self.bearing = self.gps.data['Bearing_rad'][:]
+        self.distance = self.gps.data['Distance'][:]
+
+        if self.distance:
+            if max(self.distance) > 0.8*rmax:
+                rmax = rmax + self.rmax_init
+                self.ax.set_rlim(rmin, rmax)
+                self.ax.set_rticks([rmax/4., rmax/2., 3*rmax/4., rmax])
+                self.canvas.draw()
+
+        self.line.set_data(self.bearing, self.distance)
+
+        return self.line,
+
+
+class GPSWidget(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensors = self.gateway.sensors
+
+        self.values = GPSValues(self, self.gateway)
+        self.values.grid(row=0, column=0, sticky=W, padx=15, pady=10)
+
+        self.graph = GPSGraph(self, self.gateway)
+        self.graph.grid(row=1, column=0)
+
+        self.status = GPSStatus(self, self.gateway)
+        self.status.grid(row=2, column=0, sticky=W, padx=15, pady=10)
 
 
 # ####################### #

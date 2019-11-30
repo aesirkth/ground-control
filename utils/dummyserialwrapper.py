@@ -3,11 +3,15 @@ Class to read and write data from and to a serial connection
 
 """
 
-import time
 import datetime
+import struct
+import time
 
 import serial
 import serial.tools.list_ports
+
+dlat = 0.
+dlong = 0.
 
 
 class DummySerialWrapper:
@@ -75,12 +79,21 @@ class DummySerialWrapper:
         frame += b'\x00\x00\x00\x00\x00\x00'
         # PITOT
         frame += b'\x00\x00'
+        # GPS
+        frame += b'\x00\x00\x00\x00'
+        frame += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        frame += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        frame += b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        frame += b'\x00\x00\xFF'
+        # Garbage
+        frame += b'\x00\x00\x00\x00\x00\x00\x00'
         return frame
 
     def readlines(self, decode=False):
+        global dlat, dlong
         time.sleep(0.1)
         # Frame number
-        frame = b'\x01'
+        frame = b'\x02'
         # Status
         frame += b'\x00'
         # Err_msg
@@ -91,7 +104,7 @@ class DummySerialWrapper:
         hour = delay.seconds/3600
         minute = (delay.seconds%3600)/60
         second = delay.seconds%60
-        millisecond = 999-delay.microseconds/1000
+        millisecond = delay.microseconds/1000
         frame += bytes([int(hour)])
         frame += bytes([int(minute)])
         frame += bytes([int(second)])
@@ -115,4 +128,19 @@ class DummySerialWrapper:
         frame += b'\x00\x00\x00\x00\x00\x00'
         # PITOT
         frame += b'\x00\x00'
+        # GPS
+        frame += b'\x00\x00\x00\x00'
+        dlat += 0.0005
+        dlong -= 0.0015
+        frame += struct.pack('f', 5917.454 + dlat) # Latitude
+        frame += struct.pack('f', 1755.493 + dlong) # Longitude
+        frame += struct.pack('f', 40.3) # Altitude
+        frame += struct.pack('f', 1.2) # pDOP
+        frame += struct.pack('f', 1.3) # pDOP
+        frame += struct.pack('f', 1.4) # pDOP
+        frame += b'\x00\x00\x00\x00' # Heading
+        frame += b'\x00\x00\x00\x00' # Ground speed
+        frame += b'\x1B' # Fix parameter
+        # Garbage
+        frame += b'\x00\x00\x00\x00\x00\x00\x00'
         return [frame]
