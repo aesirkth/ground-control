@@ -241,6 +241,7 @@ class TelemetryWidget(tk.Frame):
 
     def _reset(self):
         self.sensors.reset()
+        self.gateway.reset()
 
 
 ################ Rocket Status ################
