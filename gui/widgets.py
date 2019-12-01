@@ -222,7 +222,7 @@ class TelemetryWidget(tk.Frame):
         self.telemetry_status = GatewayStatus(self, self.gateway, 'Telemetry')
 
         self.telemetry_status.grid(
-            row=1, column=1, sticky=W, padx=10, pady=5)
+            row=1, column=1, sticky=W, padx=10, pady=8)
 
         self.Buttons = tk.Frame(self)
         self.Buttons.grid(
@@ -237,7 +237,7 @@ class TelemetryWidget(tk.Frame):
         self.button_reset.grid(row=0, column=1)
 
         self.TimeInterval = tk.Frame(self)
-        self.TimeInterval.grid(row=3, column=1, sticky=W, padx=10, pady=(0, 5))
+        self.TimeInterval.grid(row=3, column=1, sticky=W, padx=10, pady=(0, 8))
 
         self.button_30s = tk.Button(
             self.TimeInterval, text="30s", command=self._set_30s)
@@ -478,7 +478,7 @@ class RocketStatus(tk.Frame):
         self.gateway = gateway
 
         self.batteries = BatteryIndicator(self, self.gateway, bd=BD, relief="solid")
-        self.batteries.grid(row=0, column=0, padx=10, pady=(5, 0))
+        self.batteries.grid(row=0, column=0, padx=10, pady=(8, 0))
 
         self.time = TimeIndicator(self, self.gateway, bd=BD, relief="solid")
         self.time.grid(row=0, column=1, padx=10, pady=(5, 0))
@@ -490,7 +490,7 @@ class RocketStatus(tk.Frame):
         self.flight.grid(row=2, column=0, columnspan=2, padx=10, pady=(5, 0), sticky=W)
 
         self.error_status = ErrorState(self, self.gateway, bd=BD, relief="solid")
-        self.error_status.grid(row=3, column=0, columnspan=2, padx=10, pady=(5, 5))
+        self.error_status.grid(row=3, column=0, columnspan=2, padx=10, pady=(5, 8))
 
         self.update()
 
@@ -1464,8 +1464,8 @@ class LPSWidget(tk.Frame):
         self.state = LPSState(self, self.gateway)
 
         self.lps_status.grid(
-            row=0, column=0, padx=10, pady=(5, 0), sticky=W)
+            row=0, column=0, padx=10, pady=(8, 0), sticky=W)
         self.state.grid(
             row=1, column=0, padx=10, pady=(5, 0))
         self.gateway_controls.grid(
-            row=2, column=0, padx=10, pady=(5, 5))
+            row=2, column=0, padx=10, pady=(5, 8))
