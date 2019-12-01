@@ -486,15 +486,12 @@ class LiveTimeGraphAirSpeed(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
+        self.sensors = self.gateway.sensors
         self.pitot = self.gateway.sensors.pitot
-
-        self.tmax_init = 30
 
         self.fig = Figure(figsize=(5, 3.4), dpi=100)
         self.ax = self.fig.add_subplot(111)
         self.line, = self.ax.plot([], [], lw=2)
-        # self.line.set_label('Air Speed')
-        # self.ax.legend()
         self.ax.grid()
         self.time = []
         self.data = []
@@ -511,7 +508,7 @@ class LiveTimeGraphAirSpeed(tk.Frame):
 
         """
         self.ax.set_ylim(0, 50)
-        self.ax.set_xlim(0, self.tmax_init)
+        self.ax.set_xlim(0, self.sensors.time_interval)
         self.ax.set_title("Air speed", y=1.1)
         self.canvas.draw()
         del self.time[:]
@@ -533,22 +530,33 @@ class LiveTimeGraphAirSpeed(tk.Frame):
             content of the figure for matplotlib        
 
         """
+        if not self.sensors.update_plot:
+            return self.line,
+
         if not self.pitot.is_pressure_graph_init:
             self._init_figure()
             self.pitot.is_pressure_graph_init = True
 
-        tmin, tmax = self.ax.get_xlim()
-
         self.time = self.pitot.raw_data['Seconds_since_start'][:]
         self.data = self.pitot.data['Air speed'][:]
+        len_t = len(self.time)
+        len_data = len(self.data)
 
-        if self.time:
-            if max(self.time) > 0.8*tmax:
-                tmax += self.tmax_init
-                self.ax.set_xlim(tmin, tmax)
-                self.canvas.draw()
+        if len_t == len_data:
+            if len_t > 0:
+                max_time = self.time[-1]
+                min_time = self.time[0]
 
-        self.line.set_data(self.time, self.data)
+                if max_time - min_time > self.sensors.time_interval:
+                    index = [i for i, e in enumerate(self.time) if max_time - e > self.sensors.time_interval][-1]
+                    
+                    self.time = self.time[index:]
+                    self.data = self.data[index:]
+
+                    self.ax.set_xlim(self.time[0], self.time[-1])
+                    self.canvas.draw()
+
+            self.line.set_data(self.time, self.data)
 
         return self.line,
 
@@ -575,9 +583,8 @@ class LiveTimeGraphAcc(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
+        self.sensors = self.gateway.sensors
         self.imu = gateway.sensors.imu2
-
-        self.tmax_init = 30
 
         self.fig = Figure(figsize=(5, 3.4), dpi=100)
         self.ax = self.fig.add_subplot(111)
@@ -606,7 +613,7 @@ class LiveTimeGraphAcc(tk.Frame):
 
         """
         self.ax.set_ylim(-16, 16)
-        self.ax.set_xlim(0, self.tmax_init)
+        self.ax.set_xlim(0, self.sensors.time_interval)
         self.ax.set_title("Accelerometer", y=1.1)
         self.canvas.draw()
         del self.time[:]
@@ -632,26 +639,41 @@ class LiveTimeGraphAcc(tk.Frame):
             content of the figure for matplotlib
 
         """
+        if not self.sensors.update_plot:
+            return self.x_value, self.y_value, self.z_value,
+
         if not self.imu.is_acc_graph_init:
             self._init_figure()
             self.imu.is_acc_graph_init = True
-
-        tmin, tmax = self.ax.get_xlim()
 
         self.time = self.imu.raw_data['Seconds_since_start'][:]
         self.x_data = self.imu.raw_data['Acc_X'][:]
         self.y_data = self.imu.raw_data['Acc_Y'][:]
         self.z_data = self.imu.raw_data['Acc_Z'][:]
+        len_t = len(self.time)
+        len_acc_x = len(self.x_data)
+        len_acc_y = len(self.y_data)
+        len_acc_z = len(self.z_data)
 
-        if self.time:
-            if max(self.time) > 0.8*tmax:
-                tmax += self.tmax_init
-                self.ax.set_xlim(tmin, tmax)
-                self.canvas.draw()
+        if len_t == len_acc_x and len_t == len_acc_y and len_t == len_acc_z:
+            if len_t > 0:
+                max_time = self.time[-1]
+                min_time = self.time[0]
 
-        self.x_value.set_data(self.time, self.x_data)
-        self.y_value.set_data(self.time, self.y_data)
-        self.z_value.set_data(self.time, self.z_data)
+                if max_time - min_time > self.sensors.time_interval:
+                    index = [i for i, e in enumerate(self.time) if max_time - e > self.sensors.time_interval][-1]
+                    
+                    self.time = self.time[index:]
+                    self.x_data = self.x_data[index:]
+                    self.y_data = self.y_data[index:]
+                    self.z_data = self.z_data[index:]
+
+                    self.ax.set_xlim(self.time[0], self.time[-1])
+                    self.canvas.draw()
+
+            self.x_value.set_data(self.time, self.x_data)
+            self.y_value.set_data(self.time, self.y_data)
+            self.z_value.set_data(self.time, self.z_data)
 
         return self.x_value, self.y_value, self.z_value,
 
@@ -678,9 +700,8 @@ class LiveTimeGraphGyro(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
+        self.sensors = self.gateway.sensors
         self.imu = self.gateway.sensors.imu2
-
-        self.tmax_init = 30
 
         self.fig = Figure(figsize=(5, 3.4), dpi=100)
         self.ax = self.fig.add_subplot(111)
@@ -709,7 +730,7 @@ class LiveTimeGraphGyro(tk.Frame):
 
         """
         self.ax.set_ylim(-1000, 1000)
-        self.ax.set_xlim(0, self.tmax_init)
+        self.ax.set_xlim(0, self.sensors.time_interval)
         self.ax.set_title("Gyrometer", y=1.1)
         self.canvas.draw()
         del self.time[:]
@@ -735,26 +756,41 @@ class LiveTimeGraphGyro(tk.Frame):
             content of the figure for matplotlib
 
         """
+        if not self.sensors.update_plot:
+             return self.x_value, self.y_value, self.z_value,
+
         if not self.imu.is_gyro_graph_init:
             self._init_figure()
             self.imu.is_gyro_graph_init = True
-
-        tmin, tmax = self.ax.get_xlim()
 
         self.time = self.imu.raw_data['Seconds_since_start'][:]
         self.x_data = self.imu.raw_data['Gyro_X'][:]
         self.y_data = self.imu.raw_data['Gyro_Y'][:]
         self.z_data = self.imu.raw_data['Gyro_Z'][:]
+        len_t = len(self.time)
+        len_gyro_x = len(self.x_data)
+        len_gyro_y = len(self.y_data)
+        len_gyro_z = len(self.z_data)
 
-        if self.time:
-            if max(self.time) > 0.8*tmax:
-                tmax += self.tmax_init
-                self.ax.set_xlim(tmin, tmax)
-                self.canvas.draw()
+        if len_t == len_gyro_x and len_t == len_gyro_y and len_t == len_gyro_z:
+            if len_t > 0:
+                max_time = self.time[-1]
+                min_time = self.time[0]
 
-        self.x_value.set_data(self.time, self.x_data)
-        self.y_value.set_data(self.time, self.y_data)
-        self.z_value.set_data(self.time, self.z_data)
+                if max_time - min_time > self.sensors.time_interval:
+                    index = [i for i, e in enumerate(self.time) if max_time - e > self.sensors.time_interval][-1]
+                    
+                    self.time = self.time[index:]
+                    self.x_data = self.x_data[index:]
+                    self.y_data = self.y_data[index:]
+                    self.z_data = self.z_data[index:]
+
+                    self.ax.set_xlim(self.time[0], self.time[-1])
+                    self.canvas.draw()
+
+            self.x_value.set_data(self.time, self.x_data)
+            self.y_value.set_data(self.time, self.y_data)
+            self.z_value.set_data(self.time, self.z_data)
 
         return self.x_value, self.y_value, self.z_value,
 
@@ -762,7 +798,7 @@ class LiveTimeGraphGyro(tk.Frame):
 class LiveTimeGraphAltitude(tk.Frame):
     """ TKinter frame that holds a matplotlib graph that is frequently updated
 
-    The graph is plotted against time. The sensor must have a data.time attribute.
+    The graph is plotted against time
 
     Parameters
     ----------
@@ -770,10 +806,6 @@ class LiveTimeGraphAltitude(tk.Frame):
         parent frame
     gateway : Gateway instance
         Gateway to monitor
-    sensor : attribute of a Sensors instance
-        sensor to display data from
-    field : str
-        name of the data field to display
 
     """
 
@@ -781,10 +813,9 @@ class LiveTimeGraphAltitude(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
+        self.sensors = self.gateway.sensors
         self.bmp2 = self.gateway.sensors.bmp2
         self.bmp3 = self.gateway.sensors.bmp3
-
-        self.tmax_init = 30
 
         self.fig = Figure(figsize=(5, 3.4), dpi=100)
         self.ax = self.fig.add_subplot(111)
@@ -810,7 +841,7 @@ class LiveTimeGraphAltitude(tk.Frame):
 
         """
         self.ax.set_ylim(900, 1250)
-        self.ax.set_xlim(0, self.tmax_init)
+        self.ax.set_xlim(0, self.sensors.time_interval)
         self.ax.set_title("Altitude", y=1.1)
         self.canvas.draw()
         del self.time[:]
@@ -834,24 +865,37 @@ class LiveTimeGraphAltitude(tk.Frame):
             content of the figure for matplotlib
 
         """
+        if not self.sensors.update_plot:
+            return self.altitude1, self.altitude2,
+
         if not self.bmp2.is_pressure_graph_init:
             self._init_figure()
             self.bmp2.is_pressure_graph_init = True
 
-        tmin, tmax = self.ax.get_xlim()
-
         self.time = self.bmp2.raw_data['Seconds_since_start'][:]
         self.x_data = self.bmp2.data['Pressure hPa'][:]
         self.y_data = self.bmp3.data['Pressure hPa'][:]
+        len_t = len(self.time)
+        len_bmp2 = len(self.x_data)
+        len_bmp3 = len(self.y_data)
 
-        if self.time:
-            if max(self.time) > 0.8*tmax:
-                tmax += self.tmax_init
-                self.ax.set_xlim(tmin, tmax)
-                self.canvas.draw()
+        if len_t == len_bmp2 and len_t == len_bmp3:
+            if len_t > 0:
+                max_time = self.time[-1]
+                min_time = self.time[0]
 
-        self.altitude1.set_data(self.time, self.x_data)
-        self.altitude2.set_data(self.time, self.y_data)
+                if max_time - min_time > self.sensors.time_interval:
+                    index = [i for i, e in enumerate(self.time) if max_time - e > self.sensors.time_interval][-1]
+                    
+                    self.time = self.time[index:]
+                    self.x_data = self.x_data[index:]
+                    self.y_data = self.y_data[index:]
+
+                    self.ax.set_xlim(self.time[0], self.time[-1])
+                    self.canvas.draw()
+
+            self.altitude1.set_data(self.time, self.x_data)
+            self.altitude2.set_data(self.time, self.y_data)
 
         return self.altitude1, self.altitude2,
 

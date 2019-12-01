@@ -887,6 +887,9 @@ class Sigmundr:
         self.pitot = ABP(92)
         self.gps = GPS(100)
 
+        self.time_interval = 30 #s
+        self.update_plot = True
+
     def update_sensors(self, frame):
         if len(frame) > 0:
             if frame[0] == 0x01 or frame[0] == 0x02:
