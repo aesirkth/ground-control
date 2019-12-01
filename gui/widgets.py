@@ -527,7 +527,7 @@ class LiveTimeGraphAirSpeed(tk.Frame):
 
         self.fig = Figure(figsize=(5, 3.4), dpi=100)
         self.ax = self.fig.add_subplot(111)
-        self.line, = self.ax.plot([], [], lw=2)
+        self.line, = self.ax.plot([], [], lw=1)
         self.ax.grid()
         self.time = []
         self.data = []
@@ -543,10 +543,11 @@ class LiveTimeGraphAirSpeed(tk.Frame):
         """ Set the initial values and settings of the figure
 
         """
-        self.ax.set_ylim(0, 50)
+        self.ax.set_ylim(900, 1300)
         self.ax.set_xlim(0, 1)
-        self.ax.set_title("Air speed", y=1.1)
+        self.ax.set_title("Stagnation pressure", y=1.1)
         self.canvas.draw()
+        self.last_update = 0
         del self.time[:]
         del self.data[:]
         self.line.set_data(self.time, self.data)
@@ -629,13 +630,13 @@ class LiveTimeGraphAcc(tk.Frame):
 
         self.fig = Figure(figsize=(5, 3.4), dpi=100)
         self.ax = self.fig.add_subplot(111)
-        self.x_value, = self.ax.plot([], [], lw=2)
-        self.y_value, = self.ax.plot([], [], lw=2)
-        self.z_value, = self.ax.plot([], [], lw=2)
+        self.x_value, = self.ax.plot([], [], lw=1)
+        self.y_value, = self.ax.plot([], [], lw=1)
+        self.z_value, = self.ax.plot([], [], lw=1)
         self.x_value.set_label('x-axis')
         self.y_value.set_label('y-axis')
         self.z_value.set_label('z-axis')
-        self.ax.legend()
+        self.ax.legend(loc="upper left")
         self.ax.grid()
         self.time = []
         self.x_data = []
@@ -657,6 +658,7 @@ class LiveTimeGraphAcc(tk.Frame):
         self.ax.set_xlim(0, 1)
         self.ax.set_title("Accelerometer", y=1.1)
         self.canvas.draw()
+        self.last_update = 0
         del self.time[:]
         del self.x_data[:]
         del self.y_data[:]
@@ -750,13 +752,13 @@ class LiveTimeGraphGyro(tk.Frame):
 
         self.fig = Figure(figsize=(5, 3.4), dpi=100)
         self.ax = self.fig.add_subplot(111)
-        self.x_value, = self.ax.plot([], [], lw=2)
-        self.y_value, = self.ax.plot([], [], lw=2)
-        self.z_value, = self.ax.plot([], [], lw=2)
+        self.x_value, = self.ax.plot([], [], lw=1)
+        self.y_value, = self.ax.plot([], [], lw=1)
+        self.z_value, = self.ax.plot([], [], lw=1)
         self.x_value.set_label('x-axis')
         self.y_value.set_label('y-axis')
         self.z_value.set_label('z-axis')
-        self.ax.legend()
+        self.ax.legend(loc="upper left")
         self.ax.grid()
         self.time = []
         self.x_data = []
@@ -778,6 +780,7 @@ class LiveTimeGraphGyro(tk.Frame):
         self.ax.set_xlim(0, 1)
         self.ax.set_title("Gyrometer", y=1.1)
         self.canvas.draw()
+        self.last_update = 0
         del self.time[:]
         del self.x_data[:]
         del self.y_data[:]
@@ -868,11 +871,11 @@ class LiveTimeGraphAltitude(tk.Frame):
 
         self.fig = Figure(figsize=(5, 3.4), dpi=100)
         self.ax = self.fig.add_subplot(111)
-        self.altitude1, = self.ax.plot([], [], lw=2)
-        self.altitude2, = self.ax.plot([], [], lw=2)
+        self.altitude1, = self.ax.plot([], [], lw=1)
+        self.altitude2, = self.ax.plot([], [], lw=1)
         self.altitude1.set_label('BMP2')
         self.altitude2.set_label('BMP3')
-        self.ax.legend()
+        self.ax.legend(loc="upper left")
         self.ax.grid()
         self.time = []
         self.bmp1_data = []
@@ -889,10 +892,11 @@ class LiveTimeGraphAltitude(tk.Frame):
         """ Set the initial values and settings of the figure
 
         """
-        self.ax.set_ylim(900, 1250)
+        self.ax.set_ylim(940, 1200)
         self.ax.set_xlim(0, 1)
-        self.ax.set_title("Altitude", y=1.1)
+        self.ax.set_title("Static pressure", y=1.1)
         self.canvas.draw()
+        self.last_update = 0
         del self.time[:]
         del self.bmp1_data[:]
         del self.bmp2_data[:]
@@ -1148,7 +1152,7 @@ class GPSGraph(tk.Frame):
 
         self.fig = Figure(figsize=(3.2, 3.5), dpi=100)
         self.ax = self.fig.add_subplot(111, projection='polar')
-        self.line, = self.ax.plot([], [], lw=2)
+        self.line, = self.ax.plot([], [], lw=1)
         self.ax.grid()
 
         self.bearing = []
