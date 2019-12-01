@@ -379,10 +379,6 @@ class RocketStatus(tk.Frame):
         self.init_status = ErrorState(self, self.gateway, bd=BD, relief="solid")
         self.init_status.grid(row=2, column=0, columnspan=2, padx=10, pady=(5, 5))
 
-        self.time_interval_txt = tk.StringVar()
-        self.time_interval = tk.Label(self, textvar=self.time_interval_txt)
-        self.time_interval.grid(row=3, column=0)
-
         self.status1_txt = tk.StringVar()
         self.status1 = tk.Label(self, textvar=self.status1_txt)
         self.status1.grid(row=4, column=0)
@@ -394,12 +390,6 @@ class RocketStatus(tk.Frame):
         self.update()
     
     def update(self):
-        if len(self.gateway.sensors.timer.raw_data['Timer']) >= 2:
-            t1 = self.gateway.sensors.timer.raw_data['Timer'][-1]
-            t2 = self.gateway.sensors.timer.raw_data['Timer'][-2]
-            interval = t1-t2
-            txt = "Timer interval: {}".format(interval)
-            self.time_interval_txt.set(txt)
         
         if not self.gateway.sensors.status.data['STATUS_1'] is None:
             status_1 = self.gateway.sensors.status.data['STATUS_1']
@@ -762,7 +752,7 @@ class LiveTimeGraphAltitude(tk.Frame):
         """ Set the initial values and settings of the figure
 
         """
-        self.ax.set_ylim(-10, 100)
+        self.ax.set_ylim(900, 1250)
         self.ax.set_xlim(0, self.tmax_init)
         self.ax.set_title("Altitude", y=1.1)
         self.canvas.draw()
@@ -794,8 +784,8 @@ class LiveTimeGraphAltitude(tk.Frame):
         tmin, tmax = self.ax.get_xlim()
 
         self.time = self.bmp2.raw_data['Seconds_since_start'][:]
-        self.x_data = self.bmp2.data['Altitude'][:]
-        self.y_data = self.bmp3.data['Altitude'][:]
+        self.x_data = self.bmp2.data['Pressure hPa'][:]
+        self.y_data = self.bmp3.data['Pressure hPa'][:]
 
         if self.time:
             if max(self.time) > 0.8*tmax:

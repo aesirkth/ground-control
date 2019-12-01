@@ -142,5 +142,5 @@ class DummySerialWrapper:
         frame += b'\x00\x00\x00\x00' # Ground speed
         frame += b'\x1B' # Fix parameter
         # Garbage
-        frame += b'\x00\x00\x00\x00\x00\x00\x00'
+        frame += b'\x00\x00\x00'
         return [frame]

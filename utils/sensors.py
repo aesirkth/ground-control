@@ -195,7 +195,7 @@ class Status(GenericSensor):
         self.reset()
     
     def reset(self):
-        self.data = {field: None for field in self.fields.keys()}
+        self.data = {field: 0 for field in self.fields.keys()}
         self.set_default_values()
 
     def update_data(self, frame, frame_time=None):
@@ -520,7 +520,9 @@ class BMP280(GenericSensor):
         self.is_altitude_graph_init = False
     
     def set_reference(self):
-        self.reference_pressure = self.raw_data['Pressure'][-1]
+        if len(self.raw_data['Pressure']) > 1:
+            self.reference_pressure = self.raw_data['Pressure'][-1]
+            print('BMP reference set')
     
     def altitude(self, T, p, p0):
         # Hypsometric formula
@@ -647,7 +649,7 @@ class GPS(GenericSensor):
             'start': 0,
             'size': 4,  # Byte
             'type': 'float',
-            'conversion_function': lambda x: (x-int(x/100.)*100)/60. + int(x/100.), # Decimal degrees
+            'conversion_function': lambda x: x,
             'byte_order': 'little',
             'signed': True,
         },
@@ -655,7 +657,7 @@ class GPS(GenericSensor):
             'start': 4,
             'size': 4,  # Byte
             'type': 'float',
-            'conversion_function': lambda x: (x-int(x/100.)*100)/60 + int(x/100.), # Decimal degrees
+            'conversion_function': lambda x: x,
             'byte_order': 'little',
             'signed': True,
         },
@@ -749,7 +751,9 @@ class GPS(GenericSensor):
         self.is_graph_init = False
     
     def set_reference(self):
-        self.reference_coord = (self.data['Latitude'][-1], self.data['Longitude'][-1])
+        if len(self.data['Latitude']) > 1 and len(self.data['Longitude']) > 1:
+            self.reference_coord = (self.data['Latitude'][-1], self.data['Longitude'][-1])
+            print('GPS reference set')
     
     def distance_haversine(self, coord1, coord2):
         """ Compute the distance between two GPS points
@@ -835,6 +839,18 @@ class GPS(GenericSensor):
 
         for field in self.fields.keys():
             self.data[field].append(self.raw_data[field][-1])
+        
+        lat = self.data['Latitude'][-1]
+        try:
+            self.data['Latitude'][-1] = (lat-int(lat/100.)*100)/60. + int(lat/100.) # Decimal degrees
+        except:
+            pass
+        
+        lon = self.data['Longitude'][-1]
+        try:
+            self.data['Longitude'][-1] = (lon-int(lon/100.)*100)/60. + int(lon/100.) # Decimal degrees
+        except:
+            pass
 
         # Just add 0 if the reference coordinates are not set
         if self.reference_coord is None:
@@ -874,7 +890,7 @@ class Sigmundr:
     def update_sensors(self, frame):
         if len(frame) > 0:
             if frame[0] == 0x01 or frame[0] == 0x02:
-                if len(frame) == 94 or len(frame) == 140:
+                if len(frame) == 96 or len(frame) == 136:
                     self.rtc.update_data(frame)
                     frame_time = self.rtc.data['Time']
                     self.errmsg.update_data(frame, frame_time)
@@ -889,7 +905,7 @@ class Sigmundr:
                     self.pitot.update_data(frame, frame_time, static_pressure=static_pressure)
 
             if frame[0] == 0x02:
-                if len(frame) == 140:
+                if len(frame) == 136:
                     self.gps.update_data(frame, frame_time)
     
     def reset(self):
