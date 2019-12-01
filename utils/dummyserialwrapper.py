@@ -95,9 +95,9 @@ class DummySerialWrapper:
         # Frame number
         frame = b'\x02'
         # Status
-        frame += b'\x00'
+        frame += b'\x00\x0A'
         # Err_msg
-        frame += b'\x00\x01'
+        frame += b'\x01'
         # RTC
         now = datetime.datetime.now()
         delay = now - self.start_time
@@ -142,5 +142,5 @@ class DummySerialWrapper:
         frame += b'\x00\x00\x00\x00' # Ground speed
         frame += b'\x1B' # Fix parameter
         # Garbage
-        frame += b'\x00\x00\x00\x00\x00\x00\x00'
+        frame += b'\x00\x00\x00'
         return [frame]

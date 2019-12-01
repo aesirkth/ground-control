@@ -212,7 +212,293 @@ class GeneralData(tk.Frame):
 # ############################# #
 
 
-class LiveTimeGraphTemp(tk.Frame):
+class TelemetryWidget(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensors = self.gateway.sensors
+
+        self.telemetry_status = GatewayStatus(self, self.gateway, 'Telemetry')
+
+        self.telemetry_status.grid(
+            row=1, column=1, sticky=W, padx=10, pady=8)
+
+        self.Buttons = tk.Frame(self)
+        self.Buttons.grid(
+            row=2, column=1, sticky=W, padx=10, pady=(0, 5))
+
+        self.button_set_reference = tk.Button(
+            self.Buttons, text="Set reference", command=self._set_reference)
+        self.button_set_reference.grid(row=0, column=0)
+
+        self.button_reset = tk.Button(
+            self.Buttons, text="Reset", command=self._reset)
+        self.button_reset.grid(row=0, column=1)
+
+        self.TimeInterval = tk.Frame(self)
+        self.TimeInterval.grid(row=3, column=1, sticky=W, padx=10, pady=(0, 8))
+
+        self.button_30s = tk.Button(
+            self.TimeInterval, text="30s", command=self._set_30s)
+        self.button_30s.grid(row=0, column=0)
+
+        self.button_6min = tk.Button(
+            self.TimeInterval, text="6min", command=self._set_6min)
+        self.button_6min.grid(row=0, column=1)
+
+        self.button_all = tk.Button(
+            self.TimeInterval, text="All", command=self._set_all)
+        self.button_all.grid(row=0, column=2)
+
+        self.button_freeze= tk.Button(
+            self.TimeInterval, text="Freeze", command=self._freeze)
+        self.button_freeze.grid(row=0, column=3)
+
+    def _set_reference(self):
+        self.sensors.set_reference()
+
+    def _reset(self):
+        self.sensors.reset()
+        self.gateway.reset()
+    
+    def _set_30s(self):
+        self.sensors.time_interval = 30
+    
+    def _set_6min(self):
+        self.sensors.time_interval = 6*60
+
+    def _set_all(self):
+        self.sensors.time_interval = float('inf')
+
+    def _freeze(self):
+        if self.sensors.update_plot:
+            self.sensors.update_plot = False
+        else:
+            self.sensors.update_plot = True
+
+
+################ Rocket Status ################
+
+
+class ErrorState(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.sensors = self.gateway.sensors
+
+        self.title = tk.Label(self, text="Errors")
+        self.title.grid(row=0, column=0, columnspan=2, sticky=W+E)
+
+        self.loop = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_LOOP_TIME", "loop time")
+        self.sd_write = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_WRITE_SD", "write SD")
+        self.sd_sync = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_SYNC_SD", "sync SD")
+        self.tm_send = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_SEND_TM", "send TM")
+        self.imu_read = BoolFieldIndicator(
+            self, self.sensors.errmsg, "ERR_READ_IMU", "read imu")
+
+        self.loop.grid(
+            row=1, column=0, sticky=W+E)
+        # self.imu3_status.grid(
+        #     row=2, column=0, sticky=W+E)
+        self.sd_write.grid(
+            row=2, column=0, sticky=W+E)
+        self.sd_sync.grid(
+            row=3, column=0, sticky=W+E)
+        self.tm_send.grid(
+            row=1, column=1, sticky=W+E)
+        self.imu_read.grid(
+            row=2, column=1, sticky=W+E)
+
+
+class BatteryIndicator(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+
+        self.battery1_txt = tk.StringVar()
+        self.battery1 = tk.Label(self, textvar=self.battery1_txt)
+        self.battery1.grid(row=0, column=0, sticky=W)
+
+        # self.battery2_txt = tk.StringVar()
+        # self.battery2 = tk.Label(self, textvar=self.battery2_txt)
+        # self.battery2.grid(row=1, column=0, sticky=W)
+
+        self._update_label()
+
+    def _update_label(self):
+        voltage_battery1 = self.gateway.sensors.batteries.data['Battery1']
+        txt1 = "Battery: {:05.2f}V".format(voltage_battery1)
+        self.battery1_txt.set(txt1)
+        # voltage_battery2 = self.gateway.sensors.batteries.data['Battery2']
+        # txt2 = "Battery 2 : {:3.2f}V".format(voltage_battery2)
+        # self.battery2_txt.set(txt2)
+
+        # Call this function again after 100 ms
+        self.parent.after(100, self._update_label)
+
+
+class TimeIndicator(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+
+        self.rtc_txt = tk.StringVar()
+        self.rtc = tk.Label(self, textvar=self.rtc_txt)
+        self.rtc.grid(row=0, column=0)
+
+        # self.timer_txt = tk.StringVar()
+        # self.timer = tk.Label(self, textvar=self.timer_txt)
+        # self.timer.grid(row=1, column=0)
+
+        self._update_time()
+
+    def _update_time(self):
+        rtc_time = self.gateway.sensors.rtc.data
+        txt = "{}:{:02d}:{:02d}.{:02d}".format(
+            rtc_time['Hour'], rtc_time['Minute'], rtc_time['Second'], int(rtc_time['Microsecond']/1e4))
+        self.rtc_txt.set(txt)
+
+        # timer_time = self.gateway.sensors.timer.data['Timer']
+        # txt = "{:7.3f}".format(timer_time)
+        # self.timer_txt.set(txt)
+        
+        self.parent.after(100, self._update_time)
+
+
+class ParachuteIndicator(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.status = self.gateway.sensors.status
+
+        self.parachute = tk.Label(self, text="Parachute")
+        self.parachute.grid(row=0, column=0)
+
+        self.parachute_ign_txt = tk.StringVar()
+        self.parachute_ign = tk.Label(self, textvar=self.parachute_ign_txt)
+        self.parachute_ign.grid(row=1, column=0, sticky=W)
+
+        self.parachute_arduino_arm_txt = tk.StringVar()
+        self.parachute_arduino_arm = tk.Label(self, textvar=self.parachute_arduino_arm_txt)
+        self.parachute_arduino_arm.grid(row=2, column=0, sticky=W)
+
+        self.parachute_arm_txt = tk.StringVar()
+        self.parachute_arm = tk.Label(self, textvar=self.parachute_arm_txt)
+        self.parachute_arm.grid(row=3, column=0, sticky=W)
+
+        self.parachute_trig_txt = tk.StringVar()
+        self.parachute_trig = tk.Label(self, textvar=self.parachute_trig_txt)
+        self.parachute_trig.grid(row=4, column=0, sticky=W)
+
+        self._update_parachute()
+    
+    def _update_parachute(self):
+        if self.status.data['STATUS_1'] & 1 << 3:
+            self.parachute_ign_txt.set('Igniting : yes')
+            self.parachute_ign.config(bg='green')
+        else:
+            self.parachute_ign_txt.set('Igniting : no')
+            self.parachute_ign.config(bg='grey')
+
+        if self.status.data['STATUS_1'] & 1 << 4:
+            self.parachute_arduino_arm_txt.set('Arduino arming : yes')
+            self.parachute_arduino_arm.config(bg='green')
+        else:
+            self.parachute_arduino_arm_txt.set('Arduino arming : no')
+            self.parachute_arduino_arm.config(bg='grey')
+
+        if self.status.data['STATUS_2'] & 1 << 2:
+            self.parachute_arm_txt.set('Arming : yes')
+            self.parachute_arm.config(bg='green')
+        else:
+            self.parachute_arm_txt.set('Arming : no')
+            self.parachute_arm.config(bg='grey')
+
+        if self.status.data['STATUS_2'] & 1 << 7:
+            self.parachute_trig_txt.set('Trigger : yes')
+            self.parachute_trig.config(bg='green')
+        else:
+            self.parachute_trig_txt.set('Trigger : no')
+            self.parachute_trig.config(bg='grey')
+        
+        self.parent.after(100, self._update_parachute)
+
+
+class FlightStatus(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.status = self.gateway.sensors.status
+
+        self.flight = tk.Label(self, text="Flight status")
+        self.flight.grid(row=0, column=0)
+
+        self.liftoff_txt = tk.StringVar()
+        self.liftoff = tk.Label(self, textvar=self.liftoff_txt)
+        self.liftoff.grid(row=1, column=0, sticky=W)
+
+        self.apogee_txt = tk.StringVar()
+        self.apogee = tk.Label(self, textvar=self.apogee_txt)
+        self.apogee.grid(row=2, column=0, sticky=W)
+
+        self._update_flight()
+    
+    def _update_flight(self):
+        if self.status.data['STATUS_1'] & 1 << 1:
+            self.liftoff_txt.set('Liftoff : yes')
+            self.liftoff.config(bg='green')
+        else:
+            self.liftoff_txt.set('Liftoff : no')
+            self.liftoff.config(bg='grey')
+
+        if self.status.data['STATUS_1'] & 1 << 2:
+            self.apogee_txt.set('Apogee : yes')
+            self.apogee.config(bg='green')
+        else:
+            self.apogee_txt.set('Apogee : no')
+            self.apogee.config(bg='grey')
+        
+        self.parent.after(100, self._update_flight)
+
+
+class RocketStatus(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+
+        self.batteries = BatteryIndicator(self, self.gateway, bd=BD, relief="solid")
+        self.batteries.grid(row=0, column=0, padx=10, pady=(8, 0))
+
+        self.time = TimeIndicator(self, self.gateway, bd=BD, relief="solid")
+        self.time.grid(row=0, column=1, padx=10, pady=(5, 0))
+
+        self.parachute = ParachuteIndicator(self, self.gateway, bd=BD, relief="solid")
+        self.parachute.grid(row=1, column=0, columnspan=2, padx=10, pady=(5, 0), sticky=W)
+
+        self.flight = FlightStatus(self, self.gateway, bd=BD, relief="solid")
+        self.flight.grid(row=2, column=0, columnspan=2, padx=10, pady=(5, 0), sticky=W)
+
+        self.error_status = ErrorState(self, self.gateway, bd=BD, relief="solid")
+        self.error_status.grid(row=3, column=0, columnspan=2, padx=10, pady=(5, 8))
+
+        self.update()
+
+
+################ Plots ################
+
+
+class LiveTimeGraphAirSpeed(tk.Frame):
     """ TKinter frame that holds a matplotlib graph that is frequently updated
 
     The graph is plotted against time. The sensor must have a data.time attribute.
@@ -230,19 +516,19 @@ class LiveTimeGraphTemp(tk.Frame):
 
     """
 
-    def __init__(self, parent, gateway, sensor, field, *args, **kwargs):
+    def __init__(self, parent, gateway, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
-        self.sensor = sensor
-        self.field = field
+        self.sensors = self.gateway.sensors
+        self.pitot = self.gateway.sensors.pitot
 
-        self.fig = Figure(figsize=(4, 3), dpi=100)
+        self.last_update = 0
+
+        self.fig = Figure(figsize=(5, 3.4), dpi=100)
         self.ax = self.fig.add_subplot(111)
-        self.line, = self.ax.plot([], [], lw=2)
+        self.line, = self.ax.plot([], [], lw=1)
         self.ax.grid()
-        # self.fig.set_label(self.field)
-        # self.fig.tight_layout()
         self.time = []
         self.data = []
 
@@ -250,21 +536,24 @@ class LiveTimeGraphTemp(tk.Frame):
         self.canvas.draw()
         self.canvas.get_tk_widget().grid(row=1, column=1)
 
-        ani = animation.FuncAnimation(self.fig, self.__update_data, blit=True, interval=10,
-                                      repeat=False, init_func=self.__init_figure)
+        ani = animation.FuncAnimation(self.fig, self._update_data, blit=True, interval=10,
+                                      repeat=False, init_func=self._init_figure)
 
-    def __init_figure(self):
+    def _init_figure(self):
         """ Set the initial values and settings of the figure
 
         """
-        self.ax.set_ylim(0, 50)
-        self.ax.set_xlim(0, 10)
+        self.ax.set_ylim(900, 1300)
+        self.ax.set_xlim(0, 1)
+        self.ax.set_title("Stagnation pressure", y=1.1)
+        self.canvas.draw()
+        self.last_update = 0
         del self.time[:]
         del self.data[:]
         self.line.set_data(self.time, self.data)
         return self.line,
 
-    def __update_data(self, data):
+    def _update_data(self, data):
         """ Refresh the figure content
 
         Parameters
@@ -278,190 +567,396 @@ class LiveTimeGraphTemp(tk.Frame):
             content of the figure for matplotlib        
 
         """
-        tmin, tmax = self.ax.get_xlim()
+        if not self.sensors.update_plot:
+            return self.line,
 
-        self.time = self.sensor.raw_data['Seconds_since_start']
-        self.data = self.sensor.raw_data[self.field]
+        if not self.pitot.is_pressure_graph_init:
+            self._init_figure()
+            self.pitot.is_pressure_graph_init = True
 
-        if self.time:
-            if max(self.time) > tmax:
-                self.ax.set_xlim(tmin, 2*tmax)
-                self.canvas.draw()
+        self.time = self.pitot.raw_data['Seconds_since_start'][:]
+        self.data = self.pitot.data['Air speed'][:]
+        len_t = len(self.time)
+        len_data = len(self.data)
 
-        self.line.set_data(self.time, self.data)
+        if len_t == len_data:
+            if len_t > 0:
+                max_time = self.time[-1]
+                min_time = self.time[0]
+
+                if max_time - min_time > self.sensors.time_interval:
+                    index = [i for i, e in enumerate(self.time) if max_time - e > self.sensors.time_interval][-1]
+                else:
+                    index = 0
+
+                new_tmax = self.time[-1]
+                if new_tmax - self.last_update > 0.5:
+                    self.last_update = new_tmax
+                    new_tmin = self.time[index]
+                    self.ax.set_xlim(new_tmin, new_tmax + (new_tmax-new_tmin)*0.1)
+                    self.canvas.draw()
+
+            self.line.set_data(self.time, self.data)
 
         return self.line,
 
 
-class TelemetryWidget(tk.Frame):
+class LiveTimeGraphAcc(tk.Frame):
+    """ TKinter frame that holds a matplotlib graph that is frequently updated
+
+    The graph is plotted against time. The sensor must have a data.time attribute.
+
+    Parameters
+    ----------
+    parent : TKinter Frame
+        parent frame
+    gateway : Gateway instance
+        Gateway to monitor
+    sensor : attribute of a Sensors instance
+        sensor to display data from
+    field : str
+        name of the data field to display
+
+    """
+
     def __init__(self, parent, gateway, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
         self.sensors = self.gateway.sensors
+        self.imu = gateway.sensors.imu2
 
-        self.telemetry_status = GatewayStatus(self, self.gateway, 'Telemetry')
+        self.last_update = 0
 
-        self.telemetry_status.grid(
-            row=1, column=1, sticky=W, padx=10, pady=5)
+        self.fig = Figure(figsize=(5, 3.4), dpi=100)
+        self.ax = self.fig.add_subplot(111)
+        self.x_value, = self.ax.plot([], [], lw=1)
+        self.y_value, = self.ax.plot([], [], lw=1)
+        self.z_value, = self.ax.plot([], [], lw=1)
+        self.x_value.set_label('x-axis')
+        self.y_value.set_label('y-axis')
+        self.z_value.set_label('z-axis')
+        self.ax.legend(loc="upper left")
+        self.ax.grid()
+        self.time = []
+        self.x_data = []
+        self.y_data = []
+        self.z_data = []
 
-        self.Buttons = tk.Frame(self)
-        self.Buttons.grid(
-            row=2, column=1, sticky=W, padx=10, pady=(0, 5))
+        self.canvas = FigureCanvasTkAgg(self.fig, self)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().grid(row=1, column=1)
 
-        self.button_set_reference = tk.Button(
-            self.Buttons, text="Set reference", command=self._set_reference)
-        self.button_set_reference.grid(row=0, column=0)
+        ani = animation.FuncAnimation(self.fig, self._update_data, blit=True, interval=10,
+                                      repeat=False, init_func=self._init_figure)
 
-        self.button_reset = tk.Button(
-            self.Buttons, text="Reset", command=self._reset)
-        self.button_reset.grid(row=0, column=1)
+    def _init_figure(self):
+        """ Set the initial values and settings of the figure
 
-    def _set_reference(self):
-        self.sensors.set_reference()
+        """
+        self.ax.set_ylim(-16, 16)
+        self.ax.set_xlim(0, 1)
+        self.ax.set_title("Accelerometer", y=1.1)
+        self.canvas.draw()
+        self.last_update = 0
+        del self.time[:]
+        del self.x_data[:]
+        del self.y_data[:]
+        del self.z_data[:]
+        self.x_value.set_data(self.time, self.x_data)
+        self.y_value.set_data(self.time, self.y_data)
+        self.z_value.set_data(self.time, self.z_data)
+        return self.x_value, self.y_value, self.z_value,
 
-    def _reset(self):
-        self.sensors.reset()
+    def _update_data(self, data):
+        """ Refresh the figure content
+
+        Parameters
+        ----------
+        data : unused
+            default parameter given by animation.FuncAnimation
+
+        Returns
+        -------
+        tupple
+            content of the figure for matplotlib
+
+        """
+        if not self.sensors.update_plot:
+            return self.x_value, self.y_value, self.z_value,
+
+        if not self.imu.is_acc_graph_init:
+            self._init_figure()
+            self.imu.is_acc_graph_init = True
+
+        self.time = self.imu.raw_data['Seconds_since_start'][:]
+        self.x_data = self.imu.raw_data['Acc_X'][:]
+        self.y_data = self.imu.raw_data['Acc_Y'][:]
+        self.z_data = self.imu.raw_data['Acc_Z'][:]
+        len_t = len(self.time)
+        len_acc_x = len(self.x_data)
+        len_acc_y = len(self.y_data)
+        len_acc_z = len(self.z_data)
+
+        if len_t == len_acc_x and len_t == len_acc_y and len_t == len_acc_z:
+            if len_t > 0:
+                max_time = self.time[-1]
+                min_time = self.time[0]
+
+                if max_time - min_time > self.sensors.time_interval:
+                    index = [i for i, e in enumerate(self.time) if max_time - e > self.sensors.time_interval][-1]
+                    
+                else:
+                    index = 0
+
+                new_tmax = self.time[-1]
+                if new_tmax - self.last_update > 0.5:
+                    self.last_update = new_tmax
+                    new_tmin = self.time[index]
+                    self.ax.set_xlim(new_tmin, new_tmax + (new_tmax-new_tmin)*0.1)
+                    self.canvas.draw()
+
+            self.x_value.set_data(self.time, self.x_data)
+            self.y_value.set_data(self.time, self.y_data)
+            self.z_value.set_data(self.time, self.z_data)
+
+        return self.x_value, self.y_value, self.z_value,
 
 
-class InitStatus(tk.Frame):
+class LiveTimeGraphGyro(tk.Frame):
+    """ TKinter frame that holds a matplotlib graph that is frequently updated
+
+    The graph is plotted against time. The sensor must have a data.time attribute.
+
+    Parameters
+    ----------
+    parent : TKinter Frame
+        parent frame
+    gateway : Gateway instance
+        Gateway to monitor
+    sensor : attribute of a Sensors instance
+        sensor to display data from
+    field : str
+        name of the data field to display
+
+    """
+
     def __init__(self, parent, gateway, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
         self.sensors = self.gateway.sensors
+        self.imu = self.gateway.sensors.imu2
 
-        self.title = tk.Label(self, text="Initialization status")
-        self.title.grid(row=0, column=0, columnspan=2, sticky=W+E)
+        self.last_update = 0
 
-        self.imu2_status = BoolFieldIndicator(
-            self, self.sensors.errmsg, "ERR_INIT_IMU2", "IMU2")
-        # self.imu3_status = BoolFieldIndicator(
-        #     self, self.sensors.errmsg, "ERR_INIT_IMU3", "IMU3")
-        self.bmp2_status = BoolFieldIndicator(
-            self, self.sensors.errmsg, "ERR_INIT_BMP2", "BMP2")
-        self.bmp3_status = BoolFieldIndicator(
-            self, self.sensors.errmsg, "ERR_INIT_BMP3", "BMP3")
-        self.mag_status = BoolFieldIndicator(
-            self, self.sensors.errmsg, "ERR_INIT_MAG", "MAG")
-        self.adc_status = BoolFieldIndicator(
-            self, self.sensors.errmsg, "ERR_INIT_ADC", "ADC")
-        self.card_status = BoolFieldIndicator(
-            self, self.sensors.errmsg, "ERR_INIT_SD_CARD", "SD")
+        self.fig = Figure(figsize=(5, 3.4), dpi=100)
+        self.ax = self.fig.add_subplot(111)
+        self.x_value, = self.ax.plot([], [], lw=1)
+        self.y_value, = self.ax.plot([], [], lw=1)
+        self.z_value, = self.ax.plot([], [], lw=1)
+        self.x_value.set_label('x-axis')
+        self.y_value.set_label('y-axis')
+        self.z_value.set_label('z-axis')
+        self.ax.legend(loc="upper left")
+        self.ax.grid()
+        self.time = []
+        self.x_data = []
+        self.y_data = []
+        self.z_data = []
 
-        self.imu2_status.grid(
-            row=1, column=0, sticky=W+E)
-        # self.imu3_status.grid(
-        #     row=2, column=0, sticky=W+E)
-        self.bmp2_status.grid(
-            row=2, column=0, sticky=W+E)
-        self.bmp3_status.grid(
-            row=3, column=0, sticky=W+E)
-        self.mag_status.grid(
-            row=1, column=1, sticky=W+E)
-        self.adc_status.grid(
-            row=2, column=1, sticky=W+E)
-        self.card_status.grid(
-            row=3, column=1, sticky=W+E)
+        self.canvas = FigureCanvasTkAgg(self.fig, self)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().grid(row=1, column=1)
+
+        ani = animation.FuncAnimation(self.fig, self._update_data, blit=True, interval=10,
+                                      repeat=False, init_func=self._init_figure)
+
+    def _init_figure(self):
+        """ Set the initial values and settings of the figure
+
+        """
+        self.ax.set_ylim(-1000, 1000)
+        self.ax.set_xlim(0, 1)
+        self.ax.set_title("Gyrometer", y=1.1)
+        self.canvas.draw()
+        self.last_update = 0
+        del self.time[:]
+        del self.x_data[:]
+        del self.y_data[:]
+        del self.z_data[:]
+        self.x_value.set_data(self.time, self.x_data)
+        self.y_value.set_data(self.time, self.y_data)
+        self.z_value.set_data(self.time, self.z_data)
+        return self.x_value, self.y_value, self.z_value,
+
+    def _update_data(self, data):
+        """ Refresh the figure content
+
+        Parameters
+        ----------
+        data : unused
+            default parameter given by animation.FuncAnimation
+
+        Returns
+        -------
+        tupple
+            content of the figure for matplotlib
+
+        """
+        if not self.sensors.update_plot:
+             return self.x_value, self.y_value, self.z_value,
+
+        if not self.imu.is_gyro_graph_init:
+            self._init_figure()
+            self.imu.is_gyro_graph_init = True
+
+        self.time = self.imu.raw_data['Seconds_since_start'][:]
+        self.x_data = self.imu.raw_data['Gyro_X'][:]
+        self.y_data = self.imu.raw_data['Gyro_Y'][:]
+        self.z_data = self.imu.raw_data['Gyro_Z'][:]
+        len_t = len(self.time)
+        len_gyro_x = len(self.x_data)
+        len_gyro_y = len(self.y_data)
+        len_gyro_z = len(self.z_data)
+
+        if len_t == len_gyro_x and len_t == len_gyro_y and len_t == len_gyro_z:
+            if len_t > 0:
+                max_time = self.time[-1]
+                min_time = self.time[0]
+
+                if max_time - min_time > self.sensors.time_interval:
+                    index = [i for i, e in enumerate(self.time) if max_time - e > self.sensors.time_interval][-1]
+                    
+                else:
+                    index = 0
+
+                new_tmax = self.time[-1]
+                if new_tmax - self.last_update > 0.5:
+                    self.last_update = new_tmax
+                    new_tmin = self.time[index]
+                    self.ax.set_xlim(new_tmin, new_tmax + (new_tmax-new_tmin)*0.1)
+                    self.canvas.draw()
+
+            self.x_value.set_data(self.time, self.x_data)
+            self.y_value.set_data(self.time, self.y_data)
+            self.z_value.set_data(self.time, self.z_data)
+
+        return self.x_value, self.y_value, self.z_value,
 
 
-class BatteryIndicator(tk.Frame):
+class LiveTimeGraphAltitude(tk.Frame):
+    """ TKinter frame that holds a matplotlib graph that is frequently updated
+
+    The graph is plotted against time
+
+    Parameters
+    ----------
+    parent : TKinter Frame
+        parent frame
+    gateway : Gateway instance
+        Gateway to monitor
+
+    """
+
     def __init__(self, parent, gateway, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
+        self.sensors = self.gateway.sensors
+        self.bmp2 = self.gateway.sensors.bmp2
+        self.bmp3 = self.gateway.sensors.bmp3
 
-        self.battery1_txt = tk.StringVar()
-        self.battery1 = tk.Label(self, textvar=self.battery1_txt)
-        self.battery1.grid(row=0, column=0, sticky=W)
+        self.last_update = 0
 
-        self.battery2_txt = tk.StringVar()
-        self.battery2 = tk.Label(self, textvar=self.battery2_txt)
-        self.battery2.grid(row=1, column=0, sticky=W)
+        self.fig = Figure(figsize=(5, 3.4), dpi=100)
+        self.ax = self.fig.add_subplot(111)
+        self.altitude1, = self.ax.plot([], [], lw=1)
+        self.altitude2, = self.ax.plot([], [], lw=1)
+        self.altitude1.set_label('BMP2')
+        self.altitude2.set_label('BMP3')
+        self.ax.legend(loc="upper left")
+        self.ax.grid()
+        self.time = []
+        self.bmp1_data = []
+        self.bmp2_data = []
 
-        self._update_label()
+        self.canvas = FigureCanvasTkAgg(self.fig, self)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().grid(row=1, column=1)
 
-    def _update_label(self):
-        voltage_battery1 = self.gateway.sensors.batteries.data['Battery1']
-        txt1 = "Battery 1 : {:05.2f}V".format(voltage_battery1)
-        self.battery1_txt.set(txt1)
-        voltage_battery2 = self.gateway.sensors.batteries.data['Battery2']
-        txt2 = "Battery 2 : {:3.2f}V".format(voltage_battery2)
-        self.battery2_txt.set(txt2)
+        ani = animation.FuncAnimation(self.fig, self._update_data, blit=True, interval=10,
+                                      repeat=False, init_func=self._init_figure)
 
-        # Call this function again after 100 ms
-        self.parent.after(100, self._update_label)
+    def _init_figure(self):
+        """ Set the initial values and settings of the figure
+
+        """
+        self.ax.set_ylim(940, 1200)
+        self.ax.set_xlim(0, 1)
+        self.ax.set_title("Static pressure", y=1.1)
+        self.canvas.draw()
+        self.last_update = 0
+        del self.time[:]
+        del self.bmp1_data[:]
+        del self.bmp2_data[:]
+        self.altitude1.set_data(self.time, self.bmp1_data)
+        self.altitude2.set_data(self.time, self.bmp2_data)
+        return self.altitude1, self.altitude2,
+
+    def _update_data(self, data):
+        """ Refresh the figure content
+
+        Parameters
+        ----------
+        data : unused
+            default parameter given by animation.FuncAnimation
+
+        Returns
+        -------
+        tupple
+            content of the figure for matplotlib
+
+        """
+        if not self.sensors.update_plot:
+            return self.altitude1, self.altitude2,
+
+        if not self.bmp2.is_pressure_graph_init:
+            self._init_figure()
+            self.bmp2.is_pressure_graph_init = True
+
+        self.time = self.bmp2.raw_data['Seconds_since_start'][:]
+        self.x_data = self.bmp2.data['Pressure hPa'][:]
+        self.y_data = self.bmp3.data['Pressure hPa'][:]
+        len_t = len(self.time)
+        len_bmp2 = len(self.x_data)
+        len_bmp3 = len(self.y_data)
+
+        if len_t == len_bmp2 and len_t == len_bmp3:
+            if len_t > 0:
+                max_time = self.time[-1]
+                min_time = self.time[0]
+
+                if max_time - min_time > self.sensors.time_interval:
+                    index = [i for i, e in enumerate(self.time) if max_time - e > self.sensors.time_interval][-1]
+                    
+                else:
+                    index = 0
+
+                new_tmax = self.time[-1]
+                if new_tmax - self.last_update > 0.5:
+                    self.last_update = new_tmax
+                    new_tmin = self.time[index]
+                    self.ax.set_xlim(new_tmin, new_tmax + (new_tmax-new_tmin)*0.1)
+                    self.canvas.draw()
+
+            self.altitude1.set_data(self.time, self.x_data)
+            self.altitude2.set_data(self.time, self.y_data)
+
+        return self.altitude1, self.altitude2,
 
 
-class TimeIndicator(tk.Frame):
-    def __init__(self, parent, gateway, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.parent = parent
-        self.gateway = gateway
-
-        self.rtc_txt = tk.StringVar()
-        self.rtc = tk.Label(self, textvar=self.rtc_txt)
-        self.rtc.grid(row=0, column=0)
-
-        self.timer_txt = tk.StringVar()
-        self.timer = tk.Label(self, textvar=self.timer_txt)
-        self.timer.grid(row=1, column=0)
-
-        self._update_time()
-
-    def _update_time(self):
-        rtc_time = self.gateway.sensors.rtc.data
-        txt = "{}:{:02d}:{:02d}.{:02d}".format(
-            rtc_time['Hour'], rtc_time['Minute'], rtc_time['Second'], int(rtc_time['Microsecond']/1e4))
-        self.rtc_txt.set(txt)
-
-        timer_time = self.gateway.sensors.timer.data
-        txt = "{:7.3f}".format(timer_time['Timer'])
-        self.timer_txt.set(txt)
-        
-        self.parent.after(100, self._update_time)
-
-
-class ParachuteIndicator(tk.Frame):
-    def __init__(self, parent, gateway, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.parent = parent
-        self.gateway = gateway
-
-        self.parachute_txt = tk.StringVar()
-        self.parachute_indicator = tk.Label(self, textvar=self.parachute_txt)
-        self.parachute_indicator.grid(row=0, column=0)
-
-        self._update_parachute()
-    
-    def _update_parachute(self):
-        if self.gateway.sensors.status.data['PARACHUTE_DEPLOYED']:
-            self.parachute_txt.set('Parachute deployed !')
-            self.parachute_indicator.config(bg='green')
-        else:
-            self.parachute_txt.set('Parachute not deployed')
-            self.parachute_indicator.config(bg='grey')
-        
-        self.parent.after(100, self._update_parachute)
-
-
-class RocketStatus(tk.Frame):
-    def __init__(self, parent, gateway, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.parent = parent
-        self.gateway = gateway
-
-        self.parachute = ParachuteIndicator(self, self.gateway, bd=BD, relief="solid")
-        self.parachute.grid(row=0, column=0, columnspan=2, padx=10, pady=(5, 0))
-
-        self.batteries = BatteryIndicator(self, self.gateway, bd=BD, relief="solid")
-        self.batteries.grid(row=1, column=0, padx=10, pady=(5, 0))
-
-        self.time = TimeIndicator(self, self.gateway, bd=BD, relief="solid")
-        self.time.grid(row=1, column=1, padx=10, pady=(5, 0))
-
-        self.init_status = InitStatus(self, self.gateway, bd=BD, relief="solid")
-        self.init_status.grid(row=2, column=0, columnspan=2, padx=10, pady=(5, 5))
+################ GPS ################
 
 
 class GPSValues(tk.Frame):
@@ -657,7 +1152,7 @@ class GPSGraph(tk.Frame):
 
         self.fig = Figure(figsize=(3.2, 3.5), dpi=100)
         self.ax = self.fig.add_subplot(111, projection='polar')
-        self.line, = self.ax.plot([], [], lw=2)
+        self.line, = self.ax.plot([], [], lw=1)
         self.ax.grid()
 
         self.bearing = []
@@ -969,8 +1464,8 @@ class LPSWidget(tk.Frame):
         self.state = LPSState(self, self.gateway)
 
         self.lps_status.grid(
-            row=0, column=0, padx=10, pady=(5, 0), sticky=W)
+            row=0, column=0, padx=10, pady=(8, 0), sticky=W)
         self.state.grid(
             row=1, column=0, padx=10, pady=(5, 0))
         self.gateway_controls.grid(
-            row=2, column=0, padx=10, pady=(5, 5))
+            row=2, column=0, padx=10, pady=(5, 8))

@@ -170,16 +170,24 @@ class GenericSensor:
 
 class Status(GenericSensor):
     fields = {
-        'PARACHUTE_DEPLOYED': {
+        'STATUS_1': {
             'start': 0,
-            'size': 1,  # Byte
+            'size': 2,  # Byte
             'type': 'int',
-            'conversion_function': lambda x: (x & 1<<7) >> 7,
+            'conversion_function': lambda x: (x & 0xFF00) >> 8,
             'byte_order': 'big',
             'signed': False,
         },
+        'STATUS_2': {
+            'start': 0,
+            'size': 2,  # Byte
+            'type': 'int',
+            'conversion_function': lambda x: (x & 0x00FF) >> 0,
+            'byte_order': 'big',
+            'signed': False,
+        }
     }
-    sample_size = 1
+    sample_size = 2
 
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
@@ -187,7 +195,7 @@ class Status(GenericSensor):
         self.reset()
     
     def reset(self):
-        self.data = {field: None for field in self.fields.keys()}
+        self.data = {field: 0 for field in self.fields.keys()}
         self.set_default_values()
 
     def update_data(self, frame, frame_time=None):
@@ -198,136 +206,48 @@ class Status(GenericSensor):
 
 class ErrMsg(GenericSensor):
     fields = {
-        'ERR_INIT_IMU2': {
+        'ERR_LOOP_TIME': {
             'start': 0,
-            'size': 2,  # Byte
+            'size': 1,
             'type': 'int',
-            'conversion_function': lambda x: x & 1<<0,
+            'conversion_function': lambda x: (x & 1<<0) >> 0,
             'byte_order': 'big',
             'signed': False,
         },
-        'ERR_INIT_IMU3': {
+        'ERR_WRITE_SD': {
             'start': 0,
-            'size': 2,
+            'size': 1,
             'type': 'int',
             'conversion_function': lambda x: (x & 1<<1) >> 1,
             'byte_order': 'big',
             'signed': False,
         },
-        'ERR_INIT_BMP2': {
+        'ERR_SYNC_SD': {
             'start': 0,
-            'size': 2,
+            'size': 1,
             'type': 'int',
             'conversion_function': lambda x: (x & 1<<2) >> 2,
             'byte_order': 'big',
             'signed': False,
         },
-        'ERR_INIT_BMP3': {
+        'ERR_SEND_TM': {
             'start': 0,
-            'size': 2,
+            'size': 1,
             'type': 'int',
             'conversion_function': lambda x: (x & 1<<3) >> 3,
             'byte_order': 'big',
             'signed': False,
         },
-        'ERR_INIT_MAG': {
+        'ERR_READ_IMU': {
             'start': 0,
-            'size': 2,
+            'size': 1,
             'type': 'int',
             'conversion_function': lambda x: (x & 1<<4) >> 4,
             'byte_order': 'big',
             'signed': False,
         },
-        'ERR_INIT_ADC': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<5) >> 5,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'ERR_INIT_SD_CARD': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<6) >> 6,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'ERR_LOOP_TIME': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<7) >> 7,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'ERR_SPI2_ERRORCALLBACK': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<8) >> 8,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'ERR_SPI3_ERRORCALLBACK': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<9) >> 9,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'ERR_ADC_ERRORCALLBACK': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<10) >> 10,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'ERR_UART_ERRORCALLBACK': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<11) >> 11,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'WAIT_IMU2_FINISH_BEFORE_GPS': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<12) >> 12,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'WAIT_IMU3_FINISH_BEFORE_BMP3': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<13) >> 13,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'WAIT_GPS_FINISH_BEFORE_BMP2': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<14) >> 14,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'WAIT_ADC_TO_FINISH': {
-            'start': 0,
-            'size': 2,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<15) >> 15,
-            'byte_order': 'big',
-            'signed': False,
-        },
     }
-    sample_size = 2
+    sample_size = 1
 
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
@@ -417,7 +337,7 @@ class Timer(GenericSensor):
             'start': 0,
             'size': 4,  # Byte
             'type': 'int',
-            'conversion_function': lambda x: x*5e-4,  # s
+            'conversion_function': lambda x: x*1e-4,  # s
             'byte_order': 'little',
             'signed': False,
         },
@@ -552,6 +472,8 @@ class ICM20602(GenericSensor):
     def reset(self):
         self.data = {}
         self.set_default_values()
+        self.is_acc_graph_init = False
+        self.is_gyro_graph_init = False
 
     def update_data(self, frame, frame_time=None):
         self.update_raw_data(frame, frame_time)
@@ -590,10 +512,38 @@ class BMP280(GenericSensor):
     
     def reset(self):
         self.data = {}
+        self.data['Pressure hPa'] = []
+        self.data['Altitude'] = []
         self.set_default_values()
+        self.reference_pressure = None
+        self.is_pressure_graph_init = False
+        self.is_altitude_graph_init = False
+    
+    def set_reference(self):
+        if len(self.raw_data['Pressure']) > 1:
+            self.reference_pressure = self.raw_data['Pressure'][-1]
+            print('BMP reference set')
+    
+    def altitude(self, T, p, p0):
+        # Hypsometric formula
+        if p > 0.:
+            h = ( pow(p0/p, 1/5.257) - 1) * (T + 273.15) / 0.0065
+        else:
+            h = 0
+        return h
 
     def update_data(self, frame, frame_time=None):
         self.update_raw_data(frame, frame_time)
+        self.data['Pressure hPa'].append(self.raw_data['Pressure'][-1]/100.)
+
+        if self.reference_pressure is None:
+            self.data['Altitude'].append(0)
+        else:
+            T = self.raw_data['Temperature'][-1]
+            p = self.raw_data['Pressure'][-1]
+            p0 = self.reference_pressure
+            h = self.altitude(T, p, p0)
+            self.data['Altitude'].append(h)
 
 
 class LIS3MDLTR(GenericSensor):
@@ -666,10 +616,26 @@ class ABP(GenericSensor):
     
     def reset(self):
         self.data = {}
+        self.data['Pressure hPa'] = []
+        self.data['Air speed'] = []
         self.set_default_values()
+        self.is_pressure_graph_init = False
+        self.is_speed_graph_init = False
 
-    def update_data(self, frame, frame_time=None):
+    def flow_velocity(self, ps, pt):
+        rho = 1.2754 #  kg/m^3, IUPAC  0°C 100kPa
+        if pt > ps:
+            u = math.sqrt(2*(pt-ps)/rho)
+        else:
+            u = 0
+        return u
+
+    def update_data(self, frame, frame_time=None, static_pressure=0):
         self.update_raw_data(frame, frame_time)
+        self.data['Pressure hPa'].append(self.raw_data['Pressure'][-1]/100.)
+        stagnation_pressure = self.raw_data['Pressure'][-1]
+        air_speed = self.flow_velocity(static_pressure, stagnation_pressure)
+        self.data['Air speed'].append(air_speed)
 
 
 class GPS(GenericSensor):
@@ -683,7 +649,7 @@ class GPS(GenericSensor):
             'start': 0,
             'size': 4,  # Byte
             'type': 'float',
-            'conversion_function': lambda x: (x-int(x/100.)*100)/60. + int(x/100.), # Decimal degrees
+            'conversion_function': lambda x: x,
             'byte_order': 'little',
             'signed': True,
         },
@@ -691,7 +657,7 @@ class GPS(GenericSensor):
             'start': 4,
             'size': 4,  # Byte
             'type': 'float',
-            'conversion_function': lambda x: (x-int(x/100.)*100)/60 + int(x/100.), # Decimal degrees
+            'conversion_function': lambda x: x,
             'byte_order': 'little',
             'signed': True,
         },
@@ -785,7 +751,9 @@ class GPS(GenericSensor):
         self.is_graph_init = False
     
     def set_reference(self):
-        self.reference_coord = (self.data['Latitude'][-1], self.data['Longitude'][-1])
+        if len(self.data['Latitude']) > 1 and len(self.data['Longitude']) > 1:
+            self.reference_coord = (self.data['Latitude'][-1], self.data['Longitude'][-1])
+            print('GPS reference set')
     
     def distance_haversine(self, coord1, coord2):
         """ Compute the distance between two GPS points
@@ -871,6 +839,18 @@ class GPS(GenericSensor):
 
         for field in self.fields.keys():
             self.data[field].append(self.raw_data[field][-1])
+        
+        lat = self.data['Latitude'][-1]
+        try:
+            self.data['Latitude'][-1] = (lat-int(lat/100.)*100)/60. + int(lat/100.) # Decimal degrees
+        except:
+            pass
+        
+        lon = self.data['Longitude'][-1]
+        try:
+            self.data['Longitude'][-1] = (lon-int(lon/100.)*100)/60. + int(lon/100.) # Decimal degrees
+        except:
+            pass
 
         # Just add 0 if the reference coordinates are not set
         if self.reference_coord is None:
@@ -896,7 +876,7 @@ class Sigmundr:
 
     def __init__(self):
         self.status = Status(1)
-        self.errmsg = ErrMsg(2)
+        self.errmsg = ErrMsg(3)
         self.rtc = RTC(4, is_rtc=True)
         self.timer = Timer(8)
         self.batteries = Batteries(12)
@@ -907,10 +887,13 @@ class Sigmundr:
         self.pitot = ABP(92)
         self.gps = GPS(100)
 
+        self.time_interval = 30 #s
+        self.update_plot = True
+
     def update_sensors(self, frame):
         if len(frame) > 0:
             if frame[0] == 0x01 or frame[0] == 0x02:
-                if len(frame) == 94 or len(frame) == 140:
+                if len(frame) == 96 or len(frame) == 136:
                     self.rtc.update_data(frame)
                     frame_time = self.rtc.data['Time']
                     self.errmsg.update_data(frame, frame_time)
@@ -919,11 +902,13 @@ class Sigmundr:
                     self.batteries.update_data(frame, frame_time)
                     self.imu2.update_data(frame, frame_time)
                     self.bmp2.update_data(frame, frame_time)
+                    static_pressure = self.bmp2.raw_data['Pressure'][-1]
                     self.bmp3.update_data(frame, frame_time)
                     self.mag.update_data(frame, frame_time)
-                    self.pitot.update_data(frame, frame_time)
+                    self.pitot.update_data(frame, frame_time, static_pressure=static_pressure)
+
             if frame[0] == 0x02:
-                if len(frame) == 140:
+                if len(frame) == 136:
                     self.gps.update_data(frame, frame_time)
     
     def reset(self):
@@ -941,6 +926,8 @@ class Sigmundr:
     
     def set_reference(self):
         self.gps.set_reference()
+        self.bmp2.set_reference()
+        self.bmp3.set_reference()
 
 
 # ########################## #

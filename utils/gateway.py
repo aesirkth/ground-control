@@ -51,6 +51,13 @@ class Gateway:
 
         self.is_reading = False
 
+        # Create the folder to store the files if it does not already exist
+        if not isdir(self.path):
+            mkdir(self.path)
+        
+        self.reset()
+    
+    def reset(self):
         self.date_created = datetime.datetime.now().replace(microsecond=0).isoformat()
 
         self.log_file = "{}_{}.log".format(
@@ -58,9 +65,6 @@ class Gateway:
             self.name)
         self.log_path = join(self.path, self.log_file)
 
-        # Create the folder to store the files if it does not already exist
-        if not isdir(self.path):
-            mkdir(self.path)
 
     def __write_frame(self, frame):
         """ Append a line in the file located at `self.log_path`
