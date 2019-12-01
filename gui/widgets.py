@@ -343,22 +343,97 @@ class ParachuteIndicator(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
+        self.status = self.gateway.sensors.status
 
-        self.parachute_txt = tk.StringVar()
-        self.parachute_indicator = tk.Label(self, textvar=self.parachute_txt)
-        self.parachute_indicator.grid(row=0, column=0)
+        self.parachute = tk.Label(self, text="Parachute")
+        self.parachute.grid(row=0, column=0)
+
+        self.parachute_ign_txt = tk.StringVar()
+        self.parachute_ign = tk.Label(self, textvar=self.parachute_ign_txt)
+        self.parachute_ign.grid(row=1, column=0, sticky=W)
+
+        self.parachute_arduino_arm_txt = tk.StringVar()
+        self.parachute_arduino_arm = tk.Label(self, textvar=self.parachute_arduino_arm_txt)
+        self.parachute_arduino_arm.grid(row=2, column=0, sticky=W)
+
+        self.parachute_arm_txt = tk.StringVar()
+        self.parachute_arm = tk.Label(self, textvar=self.parachute_arm_txt)
+        self.parachute_arm.grid(row=3, column=0, sticky=W)
+
+        self.parachute_trig_txt = tk.StringVar()
+        self.parachute_trig = tk.Label(self, textvar=self.parachute_trig_txt)
+        self.parachute_trig.grid(row=4, column=0, sticky=W)
 
         self._update_parachute()
     
     def _update_parachute(self):
-        if self.gateway.sensors.status.data['PARACHUTE_DEPLOYED']:
-            self.parachute_txt.set('Parachute deployed !')
-            self.parachute_indicator.config(bg='green')
+        if self.status.data['STATUS_1'] & 1 << 3:
+            self.parachute_ign_txt.set('Igniting : yes')
+            self.parachute_ign.config(bg='green')
         else:
-            self.parachute_txt.set('Parachute not deployed')
-            self.parachute_indicator.config(bg='grey')
+            self.parachute_ign_txt.set('Igniting : no')
+            self.parachute_ign.config(bg='grey')
+
+        if self.status.data['STATUS_1'] & 1 << 4:
+            self.parachute_arduino_arm_txt.set('Arduino arming : yes')
+            self.parachute_arduino_arm.config(bg='green')
+        else:
+            self.parachute_arduino_arm_txt.set('Arduino arming : no')
+            self.parachute_arduino_arm.config(bg='grey')
+
+        if self.status.data['STATUS_2'] & 1 << 2:
+            self.parachute_arm_txt.set('Arming : yes')
+            self.parachute_arm.config(bg='green')
+        else:
+            self.parachute_arm_txt.set('Arming : no')
+            self.parachute_arm.config(bg='grey')
+
+        if self.status.data['STATUS_2'] & 1 << 7:
+            self.parachute_trig_txt.set('Trigger : yes')
+            self.parachute_trig.config(bg='green')
+        else:
+            self.parachute_trig_txt.set('Trigger : no')
+            self.parachute_trig.config(bg='grey')
         
         self.parent.after(100, self._update_parachute)
+
+
+class FlightStatus(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+        self.status = self.gateway.sensors.status
+
+        self.flight = tk.Label(self, text="Flight status")
+        self.flight.grid(row=0, column=0)
+
+        self.liftoff_txt = tk.StringVar()
+        self.liftoff = tk.Label(self, textvar=self.liftoff_txt)
+        self.liftoff.grid(row=1, column=0, sticky=W)
+
+        self.apogee_txt = tk.StringVar()
+        self.apogee = tk.Label(self, textvar=self.apogee_txt)
+        self.apogee.grid(row=2, column=0, sticky=W)
+
+        self._update_flight()
+    
+    def _update_flight(self):
+        if self.status.data['STATUS_1'] & 1 << 1:
+            self.liftoff_txt.set('Liftoff : yes')
+            self.liftoff.config(bg='green')
+        else:
+            self.liftoff_txt.set('Liftoff : no')
+            self.liftoff.config(bg='grey')
+
+        if self.status.data['STATUS_1'] & 1 << 2:
+            self.apogee_txt.set('Apogee : yes')
+            self.apogee.config(bg='green')
+        else:
+            self.apogee_txt.set('Apogee : no')
+            self.apogee.config(bg='grey')
+        
+        self.parent.after(100, self._update_flight)
 
 
 class RocketStatus(tk.Frame):
@@ -367,41 +442,22 @@ class RocketStatus(tk.Frame):
         self.parent = parent
         self.gateway = gateway
 
-        # self.parachute = ParachuteIndicator(self, self.gateway, bd=BD, relief="solid")
-        # self.parachute.grid(row=0, column=0, columnspan=2, padx=10, pady=(5, 0))
-
         self.batteries = BatteryIndicator(self, self.gateway, bd=BD, relief="solid")
-        self.batteries.grid(row=1, column=0, padx=10, pady=(5, 0))
+        self.batteries.grid(row=0, column=0, padx=10, pady=(5, 0))
 
         self.time = TimeIndicator(self, self.gateway, bd=BD, relief="solid")
-        self.time.grid(row=1, column=1, padx=10, pady=(5, 0))
+        self.time.grid(row=0, column=1, padx=10, pady=(5, 0))
 
-        self.init_status = ErrorState(self, self.gateway, bd=BD, relief="solid")
-        self.init_status.grid(row=2, column=0, columnspan=2, padx=10, pady=(5, 5))
+        self.parachute = ParachuteIndicator(self, self.gateway, bd=BD, relief="solid")
+        self.parachute.grid(row=1, column=0, columnspan=2, padx=10, pady=(5, 0), sticky=W)
 
-        self.status1_txt = tk.StringVar()
-        self.status1 = tk.Label(self, textvar=self.status1_txt)
-        self.status1.grid(row=4, column=0)
+        self.flight = FlightStatus(self, self.gateway, bd=BD, relief="solid")
+        self.flight.grid(row=2, column=0, columnspan=2, padx=10, pady=(5, 0), sticky=W)
 
-        self.status2_txt = tk.StringVar()
-        self.status2 = tk.Label(self, textvar=self.status2_txt)
-        self.status2.grid(row=5, column=0)
+        self.error_status = ErrorState(self, self.gateway, bd=BD, relief="solid")
+        self.error_status.grid(row=3, column=0, columnspan=2, padx=10, pady=(5, 5))
 
         self.update()
-    
-    def update(self):
-        
-        if not self.gateway.sensors.status.data['STATUS_1'] is None:
-            status_1 = self.gateway.sensors.status.data['STATUS_1']
-            txt = "Status 1: {0:08b}".format(status_1)
-            self.status1_txt.set(txt)
-        
-        if not self.gateway.sensors.status.data['STATUS_2'] is None:
-            status_2 = self.gateway.sensors.status.data['STATUS_2']
-            txt = "Status 2: {:08b}".format(status_2)
-            self.status2_txt.set(txt)
-        
-        self.parent.after(100, self.update)
 
 
 ################ Plots ################
