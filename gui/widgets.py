@@ -291,19 +291,19 @@ class BatteryIndicator(tk.Frame):
         self.battery1 = tk.Label(self, textvar=self.battery1_txt)
         self.battery1.grid(row=0, column=0, sticky=W)
 
-        self.battery2_txt = tk.StringVar()
-        self.battery2 = tk.Label(self, textvar=self.battery2_txt)
-        self.battery2.grid(row=1, column=0, sticky=W)
+        # self.battery2_txt = tk.StringVar()
+        # self.battery2 = tk.Label(self, textvar=self.battery2_txt)
+        # self.battery2.grid(row=1, column=0, sticky=W)
 
         self._update_label()
 
     def _update_label(self):
         voltage_battery1 = self.gateway.sensors.batteries.data['Battery1']
-        txt1 = "Battery 1 : {:05.2f}V".format(voltage_battery1)
+        txt1 = "Battery: {:05.2f}V".format(voltage_battery1)
         self.battery1_txt.set(txt1)
-        voltage_battery2 = self.gateway.sensors.batteries.data['Battery2']
-        txt2 = "Battery 2 : {:3.2f}V".format(voltage_battery2)
-        self.battery2_txt.set(txt2)
+        # voltage_battery2 = self.gateway.sensors.batteries.data['Battery2']
+        # txt2 = "Battery 2 : {:3.2f}V".format(voltage_battery2)
+        # self.battery2_txt.set(txt2)
 
         # Call this function again after 100 ms
         self.parent.after(100, self._update_label)
@@ -319,9 +319,9 @@ class TimeIndicator(tk.Frame):
         self.rtc = tk.Label(self, textvar=self.rtc_txt)
         self.rtc.grid(row=0, column=0)
 
-        self.timer_txt = tk.StringVar()
-        self.timer = tk.Label(self, textvar=self.timer_txt)
-        self.timer.grid(row=1, column=0)
+        # self.timer_txt = tk.StringVar()
+        # self.timer = tk.Label(self, textvar=self.timer_txt)
+        # self.timer.grid(row=1, column=0)
 
         self._update_time()
 
@@ -331,9 +331,9 @@ class TimeIndicator(tk.Frame):
             rtc_time['Hour'], rtc_time['Minute'], rtc_time['Second'], int(rtc_time['Microsecond']/1e4))
         self.rtc_txt.set(txt)
 
-        timer_time = self.gateway.sensors.timer.data['Timer']
-        txt = "{:7.3f}".format(timer_time)
-        self.timer_txt.set(txt)
+        # timer_time = self.gateway.sensors.timer.data['Timer']
+        # txt = "{:7.3f}".format(timer_time)
+        # self.timer_txt.set(txt)
         
         self.parent.after(100, self._update_time)
 
