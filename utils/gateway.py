@@ -103,8 +103,11 @@ class Gateway:
                 else:
                     lines = self.serial.readlines()
                     for line in lines:
-                        self.sensors.update_sensors(line)
                         self.__write_frame(line)
+                        try:
+                            self.sensors.update_sensors(line)
+                        except:
+                            pass
 
         self.serial.open_serial()
 
