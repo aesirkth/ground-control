@@ -894,7 +894,7 @@ class LiveTimeGraphAltitude(tk.Frame):
         """
         self.ax.set_ylim(800, 1200)
         self.ax.set_xlim(0, 1)
-        self.ax.set_title("Static pressure hPa", y=1.1)
+        self.ax.set_title("Static pressure (hPa)", y=1.1)
         self.canvas.draw()
         self.last_update = 0
         del self.time[:]
