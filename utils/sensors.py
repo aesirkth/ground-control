@@ -847,13 +847,13 @@ class GPS(GenericSensor):
         try:
             self.data['Latitude'][-1] = (lat-int(lat/100.)*100)/60. + int(lat/100.) # Decimal degrees
         except:
-            pass
+            self.data['Latitude'][-1] = float('nan')
         
         lon = self.data['Longitude'][-1]
         try:
             self.data['Longitude'][-1] = (lon-int(lon/100.)*100)/60. + int(lon/100.) # Decimal degrees
         except:
-            pass
+            self.data['Latitude'][-1] = float('nan')
 
         # Just add 0 if the reference coordinates are not set
         if self.reference_coord is None:
