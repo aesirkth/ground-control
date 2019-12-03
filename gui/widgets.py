@@ -543,9 +543,9 @@ class LiveTimeGraphAirSpeed(tk.Frame):
         """ Set the initial values and settings of the figure
 
         """
-        self.ax.set_ylim(900, 1300)
+        self.ax.set_ylim(0, 150)
         self.ax.set_xlim(0, 1)
-        self.ax.set_title("Stagnation pressure", y=1.1)
+        self.ax.set_title("Pitot pressure (hPa)", y=1.1)
         self.canvas.draw()
         self.last_update = 0
         del self.time[:]
@@ -656,7 +656,7 @@ class LiveTimeGraphAcc(tk.Frame):
         """
         self.ax.set_ylim(-16, 16)
         self.ax.set_xlim(0, 1)
-        self.ax.set_title("Accelerometer", y=1.1)
+        self.ax.set_title("Accelerometer (g)", y=1.1)
         self.canvas.draw()
         self.last_update = 0
         del self.time[:]
@@ -778,7 +778,7 @@ class LiveTimeGraphGyro(tk.Frame):
         """
         self.ax.set_ylim(-1000, 1000)
         self.ax.set_xlim(0, 1)
-        self.ax.set_title("Gyrometer", y=1.1)
+        self.ax.set_title("Gyrometer (dps)", y=1.1)
         self.canvas.draw()
         self.last_update = 0
         del self.time[:]
@@ -892,9 +892,9 @@ class LiveTimeGraphAltitude(tk.Frame):
         """ Set the initial values and settings of the figure
 
         """
-        self.ax.set_ylim(940, 1200)
+        self.ax.set_ylim(800, 1200)
         self.ax.set_xlim(0, 1)
-        self.ax.set_title("Static pressure", y=1.1)
+        self.ax.set_title("Static pressure hPa", y=1.1)
         self.canvas.draw()
         self.last_update = 0
         del self.time[:]
