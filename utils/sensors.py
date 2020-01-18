@@ -883,7 +883,7 @@ class Sigmundr:
         self.rtc = RTC(4, is_rtc=True)
         self.timer = Timer(8)
         self.batteries = Batteries(12)
-        self.imu2 = ICM20602(16, nb_samples=4, sample_rate=200)
+        self.imu2 = ICM20602(16)
         self.bmp2 = BMP280(72)
         self.bmp3 = BMP280(80)
         self.mag = LIS3MDLTR(88)
