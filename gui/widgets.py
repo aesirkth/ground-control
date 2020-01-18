@@ -543,9 +543,9 @@ class LiveTimeGraphAirSpeed(tk.Frame):
         """ Set the initial values and settings of the figure
 
         """
-        self.ax.set_ylim(900, 1300)
+        self.ax.set_ylim(0, 150)
         self.ax.set_xlim(0, 1)
-        self.ax.set_title("Stagnation pressure", y=1.1)
+        self.ax.set_title("Pitot pressure (hPa)", y=1.1)
         self.canvas.draw()
         self.last_update = 0
         del self.time[:]
@@ -656,7 +656,7 @@ class LiveTimeGraphAcc(tk.Frame):
         """
         self.ax.set_ylim(-16, 16)
         self.ax.set_xlim(0, 1)
-        self.ax.set_title("Accelerometer", y=1.1)
+        self.ax.set_title("Accelerometer (g)", y=1.1)
         self.canvas.draw()
         self.last_update = 0
         del self.time[:]
@@ -778,7 +778,7 @@ class LiveTimeGraphGyro(tk.Frame):
         """
         self.ax.set_ylim(-1000, 1000)
         self.ax.set_xlim(0, 1)
-        self.ax.set_title("Gyrometer", y=1.1)
+        self.ax.set_title("Gyrometer (dps)", y=1.1)
         self.canvas.draw()
         self.last_update = 0
         del self.time[:]
@@ -892,9 +892,9 @@ class LiveTimeGraphAltitude(tk.Frame):
         """ Set the initial values and settings of the figure
 
         """
-        self.ax.set_ylim(940, 1200)
+        self.ax.set_ylim(800, 1200)
         self.ax.set_xlim(0, 1)
-        self.ax.set_title("Static pressure", y=1.1)
+        self.ax.set_title("Static pressure (hPa)", y=1.1)
         self.canvas.draw()
         self.last_update = 0
         del self.time[:]
@@ -1203,17 +1203,32 @@ class GPSGraph(tk.Frame):
 
         rmin, rmax = self.ax.get_ylim()
 
-        self.bearing = self.gps.data['Bearing_rad'][:]
-        self.distance = self.gps.data['Distance'][:]
+        bearing_tmp = self.gps.data['Bearing_rad'][:]
+        distance_tmp = self.gps.data['Distance'][:]
 
-        if self.distance:
-            if max(self.distance) > 0.8*rmax:
-                rmax = rmax + self.rmax_init
-                self.ax.set_rlim(rmin, rmax)
-                self.ax.set_rticks([rmax/4., rmax/2., 3*rmax/4., rmax])
-                self.canvas.draw()
+        len_b = len(self.bearing)
+        len_d = len(self.distance)
 
-        self.line.set_data(self.bearing, self.distance)
+        self.bearing = []
+        self.distance = []
+
+        if len_b == len_d:
+            for i, e in enumerate(bearing_tmp):
+                bearing = bearing_tmp[i]
+                distance = distance_tmp[i]
+                if str(bearing) != 'nan' and str(distance) != 'nan' and distance < 10000.:
+                    self.bearing.append(bearing)
+                    self.distance.append(distance)
+
+            if self.distance:
+                if max(self.distance) > 0.8*rmax:
+                    rmax = rmax + self.rmax_init
+                    if rmax < 5000:
+                        self.ax.set_rlim(rmin, rmax)
+                        self.ax.set_rticks([rmax/4., rmax/2., 3*rmax/4., rmax])
+                        self.canvas.draw()
+
+            self.line.set_data(self.bearing, self.distance)
 
         return self.line,
 
