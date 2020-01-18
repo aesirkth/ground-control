@@ -236,6 +236,83 @@ class SerialWrapper:
         self.failed = True
         self.is_ready = False
 
+    def __read_serial_buffer(self):
+        """ Read the last received bytes from the serial buffer
+
+        Returns
+        -------
+        error_code : int
+            0 if no error occured
+        error_msg : string
+            python string describing the error if one occured
+        buffer : bytearray
+            bytes read from the serial buffer
+
+        """
+        error_code = 0
+        error_msg = ""
+        buffer = bytearray()
+
+        # Get the number of bytes in the buffer
+        i = max(1, min(2048, self.ser.in_waiting))
+
+        # Read the buffer
+        try:
+            buffer = self.ser.read(i)
+        # This mostly means that the device is disconnected
+        except serial.SerialException as e:
+            error_code = 1
+            error_msg = "Device disconnected"
+        # We get an error "an integer is required (got type NoneType)" when forcing GUI destruction without
+        # closing the serial port before (in the thread that reads data)
+        except TypeError as e:
+            error_code = 2
+            error_msg = "Catched program closing"
+        # Catch any other exception
+        except Exception as e:
+            error_code = 3
+            error_msg = "{}".format(e)
+
+        return error_code, error_msg, buffer
+
+    def __read_serial_line(self):
+        """ Read a line from serial link and return it as a string
+
+        The line is decoded to ascii and the newline character is removed
+
+        Returns
+        -------
+        error_code : int
+            0 if no error occured
+        error_msg : string
+            python string describing the error if one occured
+        line : string
+            the processed line read from serial
+
+        """
+        error_code = 0
+        error_msg = ""
+        line = ""
+
+        try:
+            line = self.ser.readline()
+
+        # This mostly means that the device is disconnected
+        except serial.SerialException as e:
+            error_msg = "Device disconnected"
+            error_code = 1
+        # We get an error "an integer is required (got type NoneType)" when forcing GUI destruction without
+        # closing the serial port before (in the thread that reads data)
+        except TypeError as e:
+            error_code = 2
+            error_msg = "Catched program closing"
+        # Catch any other exception
+        except Exception as e:
+            error_code = 3
+            error_msg = "{}".format(e)
+
+        return error_code, error_msg, line
+
     def __safe_mode(self):
         """ Revert the Instance attributes to normal after error recovery
 
@@ -348,7 +425,7 @@ class SerialWrapper:
         """
         if self.failed:
             return
-        
+
         if encode:
             self.ser.write(data.encode('utf-8'))
         else:
@@ -357,88 +434,56 @@ class SerialWrapper:
     def readline(self):
         """ Read a line from serial link and return it as a string
 
-        The line is decoded to ascii and the newline character is removed
-
-        Parameters
-        ----------
-        ser : Serial instance
-            the Serial instance to read a line from
+        The line is decoded to utf-8 and the newline character is removed
 
         Returns
         -------
         line : string
-            the processed line read from serial
+            the processed line read from serial. Empty if an error occured
 
         """
         if self.failed:
-            return
+            return ""
 
-        try:
-            line = self.ser.readline()
-            line = line.decode('utf-8', 'backslashreplace')
-            line = line.replace('\r\n', "")
-            if line == self.bonjour:
-                self.is_ready = True
-            error = ""
-        # This mostly means that the device is disconnected
-        except serial.SerialException as e:
-            error = "Device disconnected"
-        # We get an error "an integer is required (got type NoneType)" when forcing GUI destruction without
-        # closing the serial port before (in the thread that reads data)
-        except TypeError as e:
-            error = "Catched program closing"
-        except Exception as e:
-            error = "{} : {}".format(
-                self.bonjour, e)
-        finally:
-            if error:
-                self.__fail_mode(error)
-                self.close_serial()
-                return
-            else:
-                return line
+        error_code, error_msg, line = self.__read_serial_line()
+
+        if error_code:
+            error = "{} : {}".format(self.name, error_msg)
+            self.__fail_mode(error)
+            self.close_serial()
+            return ""
+
+        line = line.decode('utf-8', 'backslashreplace')
+        line = line.replace('\r\n', "")
+
+        if line == self.bonjour:
+            self.is_ready = True
+
+        return line
 
     def readlines(self, decode=False):
         """ Read the last received lines from the serial buffer
 
-        The lines are decoded to ascii and the newline character is removed
+        The lines are decoded to utf-8 and the newline character is removed
         Incomplete lines are saved for later
-
-        Parameters
-        ----------
-        ser : Serial instance
-            the Serial instance to read a line from
 
         Returns
         -------
         lines : [string, ]
-            the processed lines read from the serial buffer
+            the processed lines read from the serial buffer. Empty if an error occured
         """
         if self.failed:
             return []
 
-        # Get the number of bytes in the buffer
-        i = max(1, min(2048, self.ser.in_waiting))
-        error = ""
-        # Read the buffer
-        try:
-            data = self.ser.read(i)
-            self.buffer.extend(data)
-        # This mostly means that the device is disconnected
-        except serial.SerialException as e:
-            error = "Device disconnected"
-        # We get an error "an integer is required (got type NoneType)" when forcing GUI destruction without
-        # closing the serial port before (in the thread that reads data)
-        except TypeError as e:
-            error = "Catched program closing"
-        except Exception as e:
-            error = "{} : {}".format(
-                self.bonjour, e)
-        finally:
-            if error:
-                self.__fail_mode(error)
-                self.close_serial()
-                return []
+        error_code, error_msg, buffer = self.__read_serial_buffer()
+
+        if error_code:
+            error = "{} : {}".format(self.name, error_msg)
+            self.__fail_mode(error)
+            self.close_serial()
+            return []
+
+        self.buffer.extend(buffer)
 
         # Do not run this if no new data has been retrieved
         if self.buffer:
