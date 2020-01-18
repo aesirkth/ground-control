@@ -64,6 +64,14 @@ class SerialWrapper:
 
     def __init__(self, baudrate, name, bonjour="", rfd900=False, port=""):
         self.name = name
+
+        if bonjour:
+            self.mode = "BONJOUR"
+        elif rfd900:
+            self.mode = "RFD900"
+        elif port:
+            self.mode = "PORT"
+
         self.bonjour = bonjour
         self.rfd900 = rfd900
         self.port = port
