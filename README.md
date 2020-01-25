@@ -187,7 +187,7 @@ Enjoy
 ``` py
 .
 ├── README.md                   # This file
-├── data/                       # (Ungitted) folder to store the received telemetry
+├── data/                       # Folder to store the received telemetry
 ├── doc/                        # The documentation goes there
 ├── gui/
 │   └── widgets.py              # Widgets used in the LPS control GUI
