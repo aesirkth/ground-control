@@ -3,6 +3,8 @@ Class to read and write data from and to a serial connection
 
 """
 
+import datetime
+import os
 import time
 
 import serial
@@ -20,7 +22,10 @@ class SerialWrapper:
 
     If `port` is provided, the serial connection will be opened on port `port`
 
-    The priority order for optional parameters is `bonjour` > `rfd900` > 'port
+    If `filepath` is provided, the data will be read from the file. `sensors` must
+    be given to read data from a file
+
+    The priority order for optional parameters is `bonjour` > `rfd900` > `port` > `filepath`
     If more than one of them is given, the one with the highest priority will be used
 
     Parameters
@@ -35,6 +40,10 @@ class SerialWrapper:
         True to automatically find a RFD900 modem among the serial devices
     port : string, optional
         port to open
+    filepath : string, optional
+        path to the file to read
+    sensors : Sensors() instance, optional
+        Sensors() instance to compute the time stamps from the file
 
     Attributes
     ----------
@@ -64,7 +73,7 @@ class SerialWrapper:
     # Use lower case
     serial_desc_substrings = ("usb", "ch340", "arduino")
 
-    def __init__(self, baudrate, name, bonjour="", rfd900=False, port=""):
+    def __init__(self, baudrate, name, bonjour="", rfd900=False, port="", filepath="", sensors=None):
         self.name = name
 
         self.failed = False
@@ -77,6 +86,8 @@ class SerialWrapper:
             self.mode = "RFD900"
         elif port:
             self.mode = "PORT"
+        elif filepath:
+            self.mode = "FILE"
         else:
             self.__fail_mode(
                 "At least one of the optional arguments is needed for SerialWrapper")
@@ -84,11 +95,18 @@ class SerialWrapper:
         self.bonjour = bonjour
         self.rfd900 = rfd900
         self.port = port
+        self.filepath = filepath
+        self.sensors = sensors
 
         self.ser = serial.Serial()
         self.ser.baudrate = baudrate
         self.ser.timeout = 0.1
         self.buffer = bytearray()
+
+        self.time_start_computer = 0
+        self.time_start_obc = 0
+        self.lines_from_file = []
+        self.current_index = 0
 
         self.is_device_found = False
 
@@ -269,6 +287,69 @@ class SerialWrapper:
 
         return error_code, error_msg, buffer
 
+    def __read_file_buffer(self):
+        """ Read lines in "real time" from file
+
+        Lines are returned only when their time stamp is equal (roughly) to the time delay since
+        the reading has started
+
+        Returns
+        -------
+        buffer : bytearray
+            all the relevant lines in a bytearray
+
+        """
+        time.sleep(0.1)
+
+        if(self.current_index < len(self.lines_from_file)):
+            now = datetime.datetime.now() + datetime.timedelta(minutes=2, seconds=30)
+            delta = now - self.time_start_computer
+            
+            count = 0
+            # Time stamps are previously computed using a dummy Sensors() instance
+            for i, e in enumerate(self.sensors.imu2.raw_data['Seconds_since_start'][self.current_index:]):
+                if e < delta.total_seconds():
+                    count += 1
+                else:
+                    break
+            
+            lines = self.lines_from_file[self.current_index:self.current_index+count]
+            self.current_index += count
+
+            error_code = 0
+            error_msg = ""
+            buffer = b'\r\n'.join(lines)
+        
+        else:
+            error_code = 4
+            error_msg = "End of file"
+            buffer = b''
+        
+        return error_code, error_msg, buffer
+
+    def __read_file_line(self):
+        """ Read the next line in the file
+
+        Lines are separated by b'\r\n'
+
+        Returns
+        -------
+        line : bytearray
+            line from the file as bytes
+
+        """
+        if self.current_index < len(self.lines_from_file):
+            line = self.lines_from_file[self.current_index]
+            self.current_index += 1
+            error_code = 0
+            error_msg = ""
+        else:
+            line = b''
+            error_code = 4
+            error_msg = "End of file"
+
+        return error_code, error_msg, line
+
     def __read_serial_line(self):
         """ Read a line from serial link and return it as a string
 
@@ -354,6 +435,41 @@ class SerialWrapper:
                 self.__fail_mode(error_msg)
                 self.close_serial()
                 return False
+    
+    def __load_file(self):
+        """ Read Telemetry data from a file and store each line in memory
+
+        Returns
+        -------
+        success : bool
+            True if the file is successfuly loaded
+
+        """
+        error_msg = ""
+
+        try:
+            with open(self.filepath, 'rb') as file:
+                file_buffer = file.read()
+            lines = file_buffer.split(b'\r\n')
+            # Remove incomplete lines
+            self.lines_from_file = [l for l in lines if len(l) == 96 or len(l) == 136]  # /!\ Hardcoded lengths for Sigmundr /!\
+            # Feed the Sensors() instance with all lines to compute the time stamps
+            for line in self.lines_from_file:
+                self.sensors.update_sensors(line)
+        
+        except Exception as e:
+            error_msg = "{} : {}".format(
+                self.bonjour, e)
+
+        finally:
+            if error_msg:
+                self.__fail_mode(error_msg)
+                self.close_serial()
+                success = False
+            else:
+                success = True
+        
+        return success
 
     def open_link(self):
         """ Open the link to the Gateway
@@ -381,6 +497,12 @@ class SerialWrapper:
 
             elif self.mode in ["RFD900", "BONJOUR"]:
                 success = self.__auto_find_gateway()  # The port is left open if successful
+            
+            elif self.mode == "FILE":
+                success = self.__load_file()
+                if success:
+                    self.is_ready = True
+                    self.time_start_computer = datetime.datetime.now()
 
             return success
 
@@ -411,7 +533,10 @@ class SerialWrapper:
             True if the serial port is open
 
         """
-        return self.ser.is_open
+        if self.mode == "FILE":
+            return self.is_ready
+        else:
+            return self.ser.is_open
 
     def write(self, data, encode=False):
         """ Send data via serial link
@@ -430,21 +555,30 @@ class SerialWrapper:
         else:
             self.ser.write(data)
 
-    def readline(self):
+    def readline(self, decode=False):
         """ Read a line from serial link and return it as a string
 
         The line is decoded to utf-8 and the newline character is removed
 
+        Parameters
+        ----------
+        decode : bool
+            True if the line is to be decoded using utf-8
+
         Returns
         -------
-        line : string
-            the processed line read from serial. Empty if an error occured
+        line : [string]
+            the processed line read from serial. Empty if an error occured or
+            if the buffer is empty
 
         """
         if self.failed:
             return ""
 
-        error_code, error_msg, line = self.__read_serial_line()
+        if self.mode in ["RFD900", "BONJOUR"]:
+            error_code, error_msg, line = self.__read_serial_line()
+        elif self.mode == "FILE":
+            error_code, error_msg, line = self.__read_file_line()
 
         if error_code:
             error = "{} : {}".format(self.name, error_msg)
@@ -452,12 +586,14 @@ class SerialWrapper:
             self.close_serial()
             return ""
 
-        line = line.decode('utf-8', 'backslashreplace')
-        line = line.replace('\r\n', "")
+        if decode:
+            line = line.decode('utf-8', 'backslashreplace')
+            line = line.replace('\r\n', "")
 
         if line == self.bonjour:
             self.is_ready = True
 
+        line = [line]
         return line
 
     def readlines(self, decode=False):
@@ -466,15 +602,25 @@ class SerialWrapper:
         The lines are decoded to utf-8 and the newline character is removed
         Incomplete lines are saved for later
 
+        Parameters
+        ----------
+        decode : bool
+            True if the line is to be decoded using utf-8
+
         Returns
         -------
         lines : [string, ]
-            the processed lines read from the serial buffer. Empty if an error occured
+            the processed lines read from the serial buffer. Empty if an error occured or
+            if the buffer is empty
+
         """
         if self.failed:
             return []
 
-        error_code, error_msg, buffer = self.__read_serial_buffer()
+        if self.mode in ["RFD900", "BONJOUR"]:
+            error_code, error_msg, buffer = self.__read_serial_buffer()
+        elif self.mode == "FILE":
+            error_code, error_msg, buffer = self.__read_file_buffer()
 
         if error_code:
             error = "{} : {}".format(self.name, error_msg)
@@ -484,7 +630,7 @@ class SerialWrapper:
 
         self.buffer.extend(buffer)
 
-        # Do not run this if no new data has been retrieved
+        # Not run if no new data has been retrieved
         if self.buffer:
             # Convert the buffer into a list of bytearray (one bytearray for each line)
             r = self.buffer.split(b'\r\n')

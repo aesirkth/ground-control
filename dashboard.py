@@ -81,7 +81,12 @@ if __name__ == "__main__":
     else:
         serial_telemetry = SerialWrapper(115200, "Telemetry", rfd900=True)
 
+    #### Override ####
+    dummy_sensors = Sigmundr()
+    serial_telemetry = SerialWrapper(115200, "Telemetry", filepath="./data/2019-12-04T11-15-39_Telemetry.log", sensors=dummy_sensors)
+
     rocket_sensors = Sigmundr()
+
     telemetry = Gateway(serial_telemetry, rocket_sensors, "./data")
 
     serial_lps = SerialWrapper(115200, "LPS", bonjour="LAUNCHPADSTATION")
