@@ -204,7 +204,7 @@ class SerialWrapper:
                 print("Testing : {}...".format(self.ser.port))
 
                 if self.__open_serial_port():  # If the connection cannot be oppened, no need to read from it
-                    line = self.readline()
+                    line = self.readline(decode=True)
 
                     if line == self.bonjour:
                         found_device = True
@@ -567,7 +567,7 @@ class SerialWrapper:
 
         Returns
         -------
-        line : [string]
+        line : string
             the processed line read from serial. Empty if an error occured or
             if the buffer is empty
 
@@ -593,7 +593,6 @@ class SerialWrapper:
         if line == self.bonjour:
             self.is_ready = True
 
-        line = [line]
         return line
 
     def readlines(self, decode=False):
