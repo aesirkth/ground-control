@@ -8,7 +8,7 @@ The telemetry data is received via radio link by an Arduino board and sent to th
 
 The raw telemetry data is processed on the fly on the Ground Station and not on the rocket
 
-The dashboard can also control the Launch Pad Station (see [lps_control](doc/lps_control.md))
+The dashboard can also control the Launch Pad Station (see [lps_control](lps_control.md))
 
 First click on "Open Link" in the Telemetry box
 
