@@ -76,14 +76,19 @@ if __name__ == "__main__":
         elif sys.argv[1] == "dummy":
             # Use this to simulate a telemetry data flow
             serial_telemetry = DummySerialWrapper('Dummy')
+        elif sys.argv[1] == "file":
+            # Use this to feed previously recorded data into the dashboard
+            if len(sys.argv) >= 3:
+                filepath = sys.argv[2]
+            else:
+                filepath = "./data/2019-12-04T11-15-39_Telemetry.log"
+            dummy_sensors = Sigmundr()
+            serial_telemetry = SerialWrapper(115200, "Telemetry", filepath=filepath, sensors=dummy_sensors)
+
         else:
             serial_telemetry = SerialWrapper(115200, "Telemetry", rfd900=True)
     else:
         serial_telemetry = SerialWrapper(115200, "Telemetry", rfd900=True)
-
-    #### Override ####
-    dummy_sensors = Sigmundr()
-    serial_telemetry = SerialWrapper(115200, "Telemetry", filepath="./data/2019-12-04T11-15-39_Telemetry.log", sensors=dummy_sensors)
 
     rocket_sensors = Sigmundr()
 

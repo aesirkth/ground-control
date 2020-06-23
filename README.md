@@ -125,6 +125,12 @@ Run `dashboard.py` with a dummy telemetry link
 python ./dashboard.py dummy
 ```
 
+or
+
+```
+python ./dashboard.py file ./data/2019-12-04T11-15-39_Telemetry.log
+```
+
 Enjoy
 
 
