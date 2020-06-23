@@ -109,7 +109,7 @@ class Gateway:
                         except:
                             pass
 
-        self.serial.open_serial()
+        self.serial.open_link()
 
         self.is_reading = True
 

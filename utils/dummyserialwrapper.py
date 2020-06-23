@@ -27,7 +27,7 @@ class DummySerialWrapper:
         self.error = ""
         self.is_ready = False
 
-    def open_serial(self):
+    def open_link(self):
         self.is_ready = True
         return True
  
@@ -132,7 +132,10 @@ class DummySerialWrapper:
         frame += b'\x00\x00\x00\x00'
         dlat += 0.0005
         dlong -= 0.0015
-        frame += struct.pack('f', 5917.454 + dlat) # Latitude
+        if dlat < 0.01 or dlat > 0.1:
+            frame += struct.pack('f', 5917.454 + dlat) # Latitude
+        else:
+            frame += struct.pack('f', 0)
         frame += struct.pack('f', 1755.493 + dlong) # Longitude
         frame += struct.pack('f', 40.3) # Altitude
         frame += struct.pack('f', 1.2) # pDOP

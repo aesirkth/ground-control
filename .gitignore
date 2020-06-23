@@ -145,3 +145,4 @@ dmypy.json
 
 data/*
 .idea/*
+!data/2019-12-04T11-15-39_Telemetry.log

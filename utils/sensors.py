@@ -622,19 +622,22 @@ class ABP(GenericSensor):
         self.is_pressure_graph_init = False
         self.is_speed_graph_init = False
 
-    def flow_velocity(self, ps, pt):
+    def flow_velocity(self, pressure):
         rho = 1.2754 #  kg/m^3, IUPAC  0°C 100kPa
-        if pt > ps:
-            u = math.sqrt(2*(pt-ps)/rho)
-        else:
+        try:
+            if pressure > 0:
+                u = math.sqrt(2*(pressure)/rho)
+            else:
+                u = 0
+        except:
             u = 0
         return u
 
-    def update_data(self, frame, frame_time=None, static_pressure=0):
+    def update_data(self, frame, frame_time=None):
         self.update_raw_data(frame, frame_time)
         self.data['Pressure hPa'].append(self.raw_data['Pressure'][-1]/100.)
-        stagnation_pressure = self.raw_data['Pressure'][-1]
-        air_speed = self.flow_velocity(static_pressure, stagnation_pressure)
+        pressure = self.raw_data['Pressure'][-1]
+        air_speed = self.flow_velocity(pressure)
         self.data['Air speed'].append(air_speed)
 
 
@@ -844,13 +847,13 @@ class GPS(GenericSensor):
         try:
             self.data['Latitude'][-1] = (lat-int(lat/100.)*100)/60. + int(lat/100.) # Decimal degrees
         except:
-            pass
+            self.data['Latitude'][-1] = float('nan')
         
         lon = self.data['Longitude'][-1]
         try:
             self.data['Longitude'][-1] = (lon-int(lon/100.)*100)/60. + int(lon/100.) # Decimal degrees
         except:
-            pass
+            self.data['Latitude'][-1] = float('nan')
 
         # Just add 0 if the reference coordinates are not set
         if self.reference_coord is None:
@@ -880,7 +883,7 @@ class Sigmundr:
         self.rtc = RTC(4, is_rtc=True)
         self.timer = Timer(8)
         self.batteries = Batteries(12)
-        self.imu2 = ICM20602(16, nb_samples=4, sample_rate=200)
+        self.imu2 = ICM20602(16)
         self.bmp2 = BMP280(72)
         self.bmp3 = BMP280(80)
         self.mag = LIS3MDLTR(88)
@@ -902,10 +905,9 @@ class Sigmundr:
                     self.batteries.update_data(frame, frame_time)
                     self.imu2.update_data(frame, frame_time)
                     self.bmp2.update_data(frame, frame_time)
-                    static_pressure = self.bmp2.raw_data['Pressure'][-1]
                     self.bmp3.update_data(frame, frame_time)
                     self.mag.update_data(frame, frame_time)
-                    self.pitot.update_data(frame, frame_time, static_pressure=static_pressure)
+                    self.pitot.update_data(frame, frame_time)
 
             if frame[0] == 0x02:
                 if len(frame) == 136:
