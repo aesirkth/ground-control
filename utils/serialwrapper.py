@@ -299,10 +299,10 @@ class SerialWrapper:
             all the relevant lines in a bytearray
 
         """
-        time.sleep(0.1)
+        time.sleep(0.1) # This reduces the CPU load
 
         if(self.current_index < len(self.lines_from_file)):
-            now = datetime.datetime.now() + datetime.timedelta(minutes=2, seconds=30)
+            now = datetime.datetime.now()
             delta = now - self.time_start_computer
             
             count = 0
@@ -318,7 +318,7 @@ class SerialWrapper:
 
             error_code = 0
             error_msg = ""
-            buffer = b'\r\n'.join(lines)
+            buffer = b'\r\n' + b'\r\n'.join(lines)
         
         else:
             error_code = 4
