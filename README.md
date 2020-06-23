@@ -125,6 +125,12 @@ Run `dashboard.py` with a dummy telemetry link
 python ./dashboard.py dummy
 ```
 
+or
+
+```
+python ./dashboard.py file ./data/2019-12-04T11-15-39_Telemetry.log
+```
+
 Enjoy
 
 
@@ -187,7 +193,7 @@ Enjoy
 ``` py
 .
 ├── README.md                   # This file
-├── data/                       # (Ungitted) folder to store the received telemetry
+├── data/                       # Folder to store the received telemetry
 ├── doc/                        # The documentation goes there
 ├── gui/
 │   └── widgets.py              # Widgets used in the LPS control GUI

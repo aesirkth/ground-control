@@ -27,7 +27,7 @@ class DummySerialWrapper:
         self.error = ""
         self.is_ready = False
 
-    def open_serial(self):
+    def open_link(self):
         self.is_ready = True
         return True
  
