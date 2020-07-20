@@ -1,9 +1,9 @@
-""" Simple Graphical User Gateway that can control the Launch Pad Station
+""" Simple Graphical User Gateway that can control the Launchpad Controller
 
 This GUI can:
-    - Open and close the Serial link to the LPS Gateway
-    - Send commands to the LPS Gateway via simple buttons
-    - Display the messages received from the LPS Gateway
+    - Open and close the Serial link to the Launchpad Gateway
+    - Send commands to the Launchpad Gateway via simple buttons
+    - Display the messages received from the Launchpad Gateway
 """
 
 import tkinter as tk
@@ -21,7 +21,7 @@ class MainApplication(tk.Frame):
     parent : Tkinter TK() instance
         TK() instance to hold the widgets
     gateway : Gateway instance
-        Gateway instance correctly set for the LPS Gateway
+        Gateway instance correctly set for the Launchpad Gateway
 
     """
 
@@ -33,7 +33,7 @@ class MainApplication(tk.Frame):
 
 
 if __name__ == "__main__":
-    serial = SerialWrapper(115200, "LPS", bonjour="LAUNCHPADSTATION")
+    serial = SerialWrapper(115200, "LC", bonjour="LAUNCHPADCONTROLLER")
 
     sensors = LaunchpadControl()
 
