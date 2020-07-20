@@ -939,51 +939,35 @@ class Sigmundr:
 
 class LPSStatus(GenericSensor):
     fields = {
-        'IS_FILLING': {
+        'IS_OUTPUT1_EN': {
             'start': 0,
             'size': 1,  # Byte
-            'type': 'int',
-            'conversion_function': lambda x: x & 1<<0,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'IS_VENTING': {
-            'start': 0,
-            'size': 1,
             'type': 'int',
             'conversion_function': lambda x: (x & 1<<1) >> 1,
             'byte_order': 'big',
             'signed': False,
         },
-        'IS_ARMED': {
+        'IS_OUTPUT2_EN': {
             'start': 0,
-            'size': 1,
+            'size': 1,  # Byte
             'type': 'int',
             'conversion_function': lambda x: (x & 1<<2) >> 2,
             'byte_order': 'big',
             'signed': False,
         },
-        'IS_FIRING': {
+        'IS_OUTPUT3_EN': {
             'start': 0,
-            'size': 1,
+            'size': 1,  # Byte
             'type': 'int',
             'conversion_function': lambda x: (x & 1<<3) >> 3,
             'byte_order': 'big',
             'signed': False,
         },
-        'IS_TM_ENABLED': {
+        'IS_OUTPUT4_EN': {
             'start': 0,
-            'size': 1,
+            'size': 1,  # Byte
             'type': 'int',
             'conversion_function': lambda x: (x & 1<<4) >> 4,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'IS_SAFE_MODE': {
-            'start': 0,
-            'size': 1,
-            'type': 'int',
-            'conversion_function': lambda x: (x & 1<<5) >> 5,
             'byte_order': 'big',
             'signed': False,
         },
