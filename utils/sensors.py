@@ -932,9 +932,9 @@ class Sigmundr:
         self.bmp3.set_reference()
 
 
-# ########################## #
-#      Sensors for LPS       #
-# ########################## #
+# ######################################## #
+#      Sensors for Launchpad Control       #
+# ######################################## #
 
 
 class LPSStatus(GenericSensor):
@@ -1018,7 +1018,7 @@ class RSSI(GenericSensor):
             self.data[field] = self.raw_data[field][-1]
 
 
-class LaunchPadStation:
+class LaunchpadControl:
     def __init__(self):
         self.status = LPSStatus(0)
         self.rssi = RSSI(1)

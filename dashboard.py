@@ -3,9 +3,9 @@ import tkinter as tk
 from tkinter import E, N, S, W
 
 from gui import (GPSWidget, LiveTimeGraphAcc, LiveTimeGraphAirSpeed,
-                 LiveTimeGraphAltitude, LiveTimeGraphGyro, LPSWidget,
+                 LiveTimeGraphAltitude, LiveTimeGraphGyro, LaunchpadWidget,
                  RocketStatus, TelemetryWidget)
-from utils import (DummySerialWrapper, Gateway, LaunchPadStation,
+from utils import (DummySerialWrapper, Gateway, LaunchpadControl,
                    SerialWrapper, Sigmundr)
 
 
@@ -32,7 +32,7 @@ class MainApplication(tk.Frame):
         self.left_column = tk.Frame(self)
         self.left_column.grid(row=1, column=0, sticky=W+N)
 
-        self.lps_widget = LPSWidget(
+        self.lps_widget = LaunchpadWidget(
             self.left_column, self.lps, bd=2, relief="ridge")
         self.lps_widget.grid(row=0, column=1, sticky=W+E+N+S)
 
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     telemetry = Gateway(serial_telemetry, rocket_sensors, "./data")
 
     serial_lps = SerialWrapper(115200, "LPS", bonjour="LAUNCHPADSTATION")
-    lps_sensors = LaunchPadStation()
+    lps_sensors = LaunchpadControl()
     lps = Gateway(serial_lps, lps_sensors, "./data")
 
     root = tk.Tk()
