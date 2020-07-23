@@ -1301,28 +1301,28 @@ class LaunchpadCommandButtons(tk.Frame):
         # Update text and commands for buttons
         if not is_output1_en:
             self.button_output1_text.set("Enable OUT1")
-            self.button_output1.config(command=lambda: self.gateway.send_command(bytes([0x61])))
+            self.button_output1.config(command=lambda: self.gateway.send_command(bytes([0x26, 0x63, 0x61, 0x01])))
         else:
             self.button_output1_text.set("Disable OUT1")
-            self.button_output1.config(command=lambda: self.gateway.send_command(bytes([0x62])))
+            self.button_output1.config(command=lambda: self.gateway.send_command(bytes([0x26, 0x63, 0x61, 0x00])))
         if not is_output2_en:
             self.button_output2_text.set("Enable OUT2")
-            self.button_output2.config(command=lambda: self.gateway.send_command(bytes([0x63])))
+            self.button_output2.config(command=lambda: self.gateway.send_command(bytes([0x26, 0x63, 0x62, 0x01])))
         else:
             self.button_output2_text.set("Disable OUT2")
-            self.button_output2.config(command=lambda: self.gateway.send_command(bytes([0x64])))
+            self.button_output2.config(command=lambda: self.gateway.send_command(bytes([0x26, 0x63, 0x62, 0x00])))
         if not is_output3_en:
             self.button_output3_text.set("Enable OUT3")
-            self.button_output3.config(command=lambda: self.gateway.send_command(bytes([0x65])))
+            self.button_output3.config(command=lambda: self.gateway.send_command(bytes([0x26, 0x63, 0x63, 0x01])))
         else:
             self.button_output3_text.set("Disable OUT3")
-            self.button_output3.config(command=lambda: self.gateway.send_command(bytes([0x66])))
+            self.button_output3.config(command=lambda: self.gateway.send_command(bytes([0x26, 0x63, 0x63, 0x00])))
         if not is_output4_en:
             self.button_output4_text.set("Enable OUT4")
-            self.button_output4.config(command=lambda: self.gateway.send_command(bytes([0x67])))
+            self.button_output4.config(command=lambda: self.gateway.send_command(bytes([0x26, 0x63, 0x64, 0x01])))
         else:
             self.button_output4_text.set("Disable OUT4")
-            self.button_output4.config(command=lambda: self.gateway.send_command(bytes([0x68])))
+            self.button_output4.config(command=lambda: self.gateway.send_command(bytes([0x26, 0x63, 0x64, 0x00])))
         
         # Enable the relevant buttons
         if self.gateway.serial.is_ready:
@@ -1380,7 +1380,7 @@ class LaunchpadState(tk.Frame):
 
         self.default_bg = self.output1.cget("background")
 
-        self._ping_lps()
+        self._ping_launchpad()
         self._update_state()
 
     def _update_state(self):
@@ -1425,11 +1425,11 @@ class LaunchpadState(tk.Frame):
 
         self.parent.after(100, self._update_state)
 
-    def _ping_lps(self):
-        # Unused command, just to get an answer
-        self.gateway.send_command(bytes([0xFF]))
+    def _ping_launchpad(self):
+        # Unused command, just to get a reply from the controller
+        self.gateway.send_command(bytes([0x26, 0x63, 0xFF, 0xFF]))
 
-        self.parent.after(5000, self._ping_lps)
+        self.parent.after(5000, self._ping_launchpad)
 
 
 class LaunchpadWidget(tk.Frame):
@@ -1439,10 +1439,10 @@ class LaunchpadWidget(tk.Frame):
         self.gateway = gateway
 
         self.gateway_controls = LaunchpadCommandButtons(self, self.gateway, bd=BD, relief="solid")
-        self.lps_status = GatewayStatus(self, self.gateway, 'LPS')
+        self.launchpad_status = GatewayStatus(self, self.gateway, 'LPS')
         self.state = LaunchpadState(self, self.gateway)
 
-        self.lps_status.grid(
+        self.launchpad_status.grid(
             row=0, column=0, padx=10, pady=(8, 0), sticky=W)
         self.state.grid(
             row=1, column=0, padx=10, pady=(5, 0))
