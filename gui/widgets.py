@@ -1445,20 +1445,28 @@ class Servos(tk.Frame):
         self.parent = parent
         self.gateway = gateway
 
+        self._do_not_update = False
+
         self.servo_txt = tk.Label(self, text="SERVO")
 
         self.servo1_txt = tk.Label(self, text="Servo 1")
         self.servo1_angle = tk.IntVar()
         self.servo1_scale = tk.Scale(self, from_=0, to=180, length=200, orient=tk.HORIZONTAL,
-                                     variable=self.servo1_angle, command=self._update_servo1)
+                                     variable=self.servo1_angle)
+        self.servo1_scale.bind("<ButtonRelease-1>", self._update_servo1)
+        self.servo1_scale.bind("<Button-1>", self._block_servo_update)
         self.servo2_txt = tk.Label(self, text="Servo 2")
         self.servo2_angle = tk.IntVar()
         self.servo2_scale = tk.Scale(self, from_=0, to=180, length=200, orient=tk.HORIZONTAL,
-                                     variable=self.servo2_angle, command=self._update_servo2)
+                                     variable=self.servo2_angle)
+        self.servo2_scale.bind("<ButtonRelease-1>", self._update_servo2)
+        self.servo2_scale.bind("<Button-1>", self._block_servo_update)
         self.servo3_txt = tk.Label(self, text="Servo 3")
         self.servo3_angle = tk.IntVar()
         self.servo3_scale = tk.Scale(self, from_=0, to=180, length=200, orient=tk.HORIZONTAL,
-                                     variable=self.servo3_angle, command=self._update_servo3)
+                                     variable=self.servo3_angle)
+        self.servo3_scale.bind("<ButtonRelease-1>", self._update_servo3)
+        self.servo3_scale.bind("<Button-1>", self._block_servo_update)
 
         self.servo_txt.grid(row=0, column=0, columnspan=2, sticky=W+E)
         self.servo1_txt.grid(row=1, column=0, sticky=W+E+S)
@@ -1471,23 +1479,33 @@ class Servos(tk.Frame):
         self._read_servo_values()
 
     def _read_servo_values(self):
-        self.servo1_angle.set(self.gateway.sensors.status.data['SERVO1_ANGLE'])
-        self.servo2_angle.set(self.gateway.sensors.status.data['SERVO2_ANGLE'])
-        self.servo3_angle.set(self.gateway.sensors.status.data['SERVO3_ANGLE'])
+        if not self._do_not_update:
+            self.servo1_angle.set(self.gateway.sensors.status.data['SERVO1_ANGLE'])
+            self.servo2_angle.set(self.gateway.sensors.status.data['SERVO2_ANGLE'])
+            self.servo3_angle.set(self.gateway.sensors.status.data['SERVO3_ANGLE'])
 
         self.parent.after(200, self._read_servo_values)
+
+    def _block_servo_update(self, env=None):
+        self._do_not_update = True
+    
+    def _allow_servo_update(self):
+        self._do_not_update = False
 
     def _update_servo1(self, env=None):
         angle = self.servo1_angle.get()
         self.gateway.send_command(bytes([0x26, 0x63, 0x6A, angle]))
+        self.parent.after(200, self._allow_servo_update)
 
     def _update_servo2(self, env=None):
         angle = self.servo2_angle.get()
         self.gateway.send_command(bytes([0x26, 0x63, 0x6B, angle]))
+        self.parent.after(200, self._allow_servo_update)
 
     def _update_servo3(self, env=None):
         angle = self.servo3_angle.get()
         self.gateway.send_command(bytes([0x26, 0x63, 0x6C, angle]))
+        self.parent.after(200, self._allow_servo_update)
 
 class LaunchpadWidget(tk.Frame):
     def __init__(self, parent, gateway, *args, **kwargs):
