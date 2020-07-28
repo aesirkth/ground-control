@@ -7,8 +7,6 @@ import matplotlib.animation as animation
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
-BD = 0
-
 
 # ########################### #
 #   General purpose widgets   #
@@ -1250,13 +1248,13 @@ class GPSWidget(tk.Frame):
         self.status.grid(row=2, column=0, sticky=W, padx=15, pady=10)
 
 
-# ####################### #
-#   Widgets for the LPS   #
-# ####################### #
+# ############################ #
+#   Widgets for the Launchpad  #
+# ############################ #
 
 
-class LaunchpadCommandButtons(tk.Frame):
-    """ TKinter frame with two control the LPS
+class Outputs(tk.Frame):
+    """ TKinter frame with everything
 
     Parameters
     ----------
@@ -1273,21 +1271,44 @@ class LaunchpadCommandButtons(tk.Frame):
         self.gateway = gateway
         self.status = self.gateway.sensors.status
 
-        self.button_output1_text = tk.StringVar()
-        self.button_output1 = tk.Button(self, textvar=self.button_output1_text)
-        self.button_output2_text = tk.StringVar()
-        self.button_output2 = tk.Button(self, textvar=self.button_output2_text)
-        self.button_output3_text = tk.StringVar()
-        self.button_output3 = tk.Button(self, textvar=self.button_output3_text)
-        self.button_output4_text = tk.StringVar()
-        self.button_output4 = tk.Button(self, textvar=self.button_output4_text)
+        MAIN = tk.Frame(self)
+        MAIN.grid(row=0, column=0, padx=15, pady=(5, 5))
 
-        self.button_output1.grid(row=1, column=1, sticky=W+E)
-        self.button_output2.grid(row=2, column=1, sticky=W+E)
-        self.button_output3.grid(row=1, column=2, sticky=W+E)
-        self.button_output4.grid(row=2, column=2, sticky=W+E)
+        self.output_txt = tk.Label(MAIN, text="  OUTPUT  ")
+        self.legend1 = tk.Label(MAIN, text=" - 12V - ")
+        self.legend2 = tk.Label(MAIN, text=" - 24V - ")
+
+        self.output1 = tk.Label(MAIN, text="1")
+        self.output2 = tk.Label(MAIN, text="2")
+        self.output3 = tk.Label(MAIN, text="3")
+        self.output4 = tk.Label(MAIN, text="4")
+
+        self.output_txt.grid(row=0, column=0, columnspan=6)
+        self.output1.grid(row=1, column=0)
+        self.legend1.grid(row=1, column=1)
+        self.output2.grid(row=1, column=2)
+        self.output3.grid(row=1, column=3)
+        self.legend2.grid(row=1, column=4)
+        self.output4.grid(row=1, column=5)
+
+        self.default_bg = self.output1.cget("background")
+
+        self.button_output1_text = tk.StringVar()
+        self.button_output1 = tk.Button(MAIN, textvar=self.button_output1_text, width=10)
+        self.button_output2_text = tk.StringVar()
+        self.button_output2 = tk.Button(MAIN, textvar=self.button_output2_text, width=10)
+        self.button_output3_text = tk.StringVar()
+        self.button_output3 = tk.Button(MAIN, textvar=self.button_output3_text, width=10)
+        self.button_output4_text = tk.StringVar()
+        self.button_output4 = tk.Button(MAIN, textvar=self.button_output4_text, width=10)
+
+        self.button_output1.grid(row=2, column=0, columnspan=3, sticky=W)
+        self.button_output2.grid(row=3, column=0, columnspan=3, sticky=W)
+        self.button_output3.grid(row=2, column=3, columnspan=3, sticky=E)
+        self.button_output4.grid(row=3, column=3, columnspan=3, sticky=E)
 
         self._update_buttons()
+        self._update_state()
 
     def _update_buttons(self):
         """ Set the buttons inactive when the gateway is not ready
@@ -1340,6 +1361,31 @@ class LaunchpadCommandButtons(tk.Frame):
         # Call this function again after 100 ms
         self.parent.after(100, self._update_buttons)
 
+    def _update_state(self):
+        if self.gateway.serial.is_ready:
+
+            if self.gateway.sensors.status.data['IS_OUTPUT1_EN']:
+                self.output1.config(bg='yellow green')
+            else:
+                self.output1.config(bg=self.default_bg)
+
+            if self.gateway.sensors.status.data['IS_OUTPUT2_EN']:
+                self.output2.config(bg='yellow green')
+            else:
+                self.output2.config(bg=self.default_bg)
+
+            if self.gateway.sensors.status.data['IS_OUTPUT3_EN']:
+                self.output3.config(bg='yellow green')
+            else:
+                self.output3.config(bg=self.default_bg)
+
+            if self.gateway.sensors.status.data['IS_OUTPUT4_EN']:
+                self.output4.config(bg='yellow green')
+            else:
+                self.output4.config(bg=self.default_bg)
+
+        self.parent.after(100, self._update_state)
+
 
 class LaunchpadState(tk.Frame):
     def __init__(self, parent, gateway, *args, **kwargs):
@@ -1357,29 +1403,6 @@ class LaunchpadState(tk.Frame):
         self.rssi_txt.grid(row=0, column=0)
         self.rssi_value.grid(row=0, column=1)
 
-        OUTPUT = tk.Frame(self, bd=2, relief="groove")
-        OUTPUT.grid(row=3, column=0, rowspan=2, sticky=W+E, padx=(0, 2))
-
-        self.output_txt = tk.Label(OUTPUT, text="  OUTPUT  ")
-        self.output_legend= tk.Label(OUTPUT, text="     1  -12V-  2            3  -24V-  4     ")
-        self.output1_txt = tk.StringVar()
-        self.output1 = tk.Label(OUTPUT, textvar=self.output1_txt)
-        self.output2_txt = tk.StringVar()
-        self.output2 = tk.Label(OUTPUT, textvar=self.output2_txt)
-        self.output3_txt = tk.StringVar()
-        self.output3 = tk.Label(OUTPUT, textvar=self.output3_txt)
-        self.output4_txt = tk.StringVar()
-        self.output4 = tk.Label(OUTPUT, textvar=self.output4_txt)
-
-        self.output_txt.grid(row=0, column=0, columnspan=4)
-        self.output_legend.grid(row=1, column=0, columnspan=4)
-        self.output1.grid(row=2, column=0)
-        self.output2.grid(row=2, column=1)
-        self.output3.grid(row=2, column=2)
-        self.output4.grid(row=2, column=3)
-
-        self.default_bg = self.output1.cget("background")
-
         self._ping_launchpad()
         self._update_state()
 
@@ -1388,40 +1411,8 @@ class LaunchpadState(tk.Frame):
             rssi = self.gateway.sensors.rssi.data['REMOTE_RSSI']
             self.rssi_value_txt.set(str(rssi))
 
-            if self.gateway.sensors.status.data['IS_OUTPUT1_EN']:
-                self.output1_txt.set('on ')
-                self.output1.config(bg='yellow green')
-            else:
-                self.output1_txt.set('off')
-                self.output1.config(bg=self.default_bg)
-
-            if self.gateway.sensors.status.data['IS_OUTPUT2_EN']:
-                self.output2_txt.set('on ')
-                self.output2.config(bg='yellow green')
-            else:
-                self.output2_txt.set('off')
-                self.output2.config(bg=self.default_bg)
-
-            if self.gateway.sensors.status.data['IS_OUTPUT3_EN']:
-                self.output3_txt.set('on ')
-                self.output3.config(bg='yellow green')
-            else:
-                self.output3_txt.set('off')
-                self.output3.config(bg=self.default_bg)
-
-            if self.gateway.sensors.status.data['IS_OUTPUT4_EN']:
-                self.output4_txt.set('on ')
-                self.output4.config(bg='yellow green')
-            else:
-                self.output4_txt.set('off')
-                self.output4.config(bg=self.default_bg)
-
         else:
             self.rssi_value_txt.set('')
-            self.output1_txt.set(' - ')
-            self.output2_txt.set(' - ')
-            self.output3_txt.set(' - ')
-            self.output4_txt.set(' - ')
 
         self.parent.after(100, self._update_state)
 
@@ -1437,22 +1428,19 @@ class Servos(tk.Frame):
         self.parent = parent
         self.gateway = gateway
 
-        SERVO = tk.Frame(self, bd=2, relief="groove")
-        SERVO.grid(row=0, column=0, sticky=W+E, padx=(0, 2))
+        self.servo_txt = tk.Label(self, text="SERVO")
 
-        self.servo_txt = tk.Label(SERVO, text="SERVO")
-
-        self.servo1_txt = tk.Label(SERVO, text="Servo 1")
+        self.servo1_txt = tk.Label(self, text="Servo 1")
         self.servo1_angle = tk.IntVar()
-        self.servo1_scale = tk.Scale(SERVO, from_=0, to=180, length=200, orient=tk.HORIZONTAL,
+        self.servo1_scale = tk.Scale(self, from_=0, to=180, length=200, orient=tk.HORIZONTAL,
                                      variable=self.servo1_angle, command=self._update_servo1)
-        self.servo2_txt = tk.Label(SERVO, text="Servo 2")
+        self.servo2_txt = tk.Label(self, text="Servo 2")
         self.servo2_angle = tk.IntVar()
-        self.servo2_scale = tk.Scale(SERVO, from_=0, to=180, length=200, orient=tk.HORIZONTAL,
+        self.servo2_scale = tk.Scale(self, from_=0, to=180, length=200, orient=tk.HORIZONTAL,
                                      variable=self.servo2_angle, command=self._update_servo2)
-        self.servo3_txt = tk.Label(SERVO, text="Servo 3")
+        self.servo3_txt = tk.Label(self, text="Servo 3")
         self.servo3_angle = tk.IntVar()
-        self.servo3_scale = tk.Scale(SERVO, from_=0, to=180, length=200, orient=tk.HORIZONTAL,
+        self.servo3_scale = tk.Scale(self, from_=0, to=180, length=200, orient=tk.HORIZONTAL,
                                      variable=self.servo3_angle, command=self._update_servo3)
 
         self.servo_txt.grid(row=0, column=0, columnspan=2, sticky=W+E)
@@ -1490,16 +1478,16 @@ class LaunchpadWidget(tk.Frame):
         self.parent = parent
         self.gateway = gateway
 
-        self.gateway_controls = LaunchpadCommandButtons(self, self.gateway, bd=BD, relief="solid")
+        self.main_outputs = Outputs(self, self.gateway, bd=2, relief="groove")
         self.launchpad_status = GatewayStatus(self, self.gateway, 'LPS')
         self.state = LaunchpadState(self, self.gateway)
-        self.servos = Servos(self, self.gateway)
+        self.servos = Servos(self, self.gateway, bd=2, relief="groove")
 
         self.launchpad_status.grid(
             row=0, column=0, padx=10, pady=(8, 0), sticky=W)
         self.state.grid(
             row=1, column=0, padx=10, pady=(5, 0))
-        self.gateway_controls.grid(
-            row=2, column=0, padx=10, pady=(5, 8))
+        self.main_outputs.grid(
+            row=2, column=0, padx=10, pady=(5, 8), sticky=W+E)
         self.servos.grid(
-            row=3, column=0, padx=10, pady=(5, 8))
+            row=3, column=0, padx=10, pady=(5, 8), sticky=W+E)
