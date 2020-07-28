@@ -937,7 +937,7 @@ class Sigmundr:
 # ######################################## #
 
 
-class LPSStatus(GenericSensor):
+class LaunchpadStatus(GenericSensor):
     fields = {
         'IS_OUTPUT1_EN': {
             'start': 0,
@@ -971,8 +971,32 @@ class LPSStatus(GenericSensor):
             'byte_order': 'big',
             'signed': False,
         },
+        'SERVO1_ANGLE': {
+            'start': 1,
+            'size': 1,  # Byte
+            'type': 'int',
+            'conversion_function': lambda x: x,
+            'byte_order': 'big',
+            'signed': False,
+        },
+        'SERVO2_ANGLE': {
+            'start': 2,
+            'size': 1,  # Byte
+            'type': 'int',
+            'conversion_function': lambda x: x,
+            'byte_order': 'big',
+            'signed': False,
+        },
+        'SERVO3_ANGLE': {
+            'start': 3,
+            'size': 1,  # Byte
+            'type': 'int',
+            'conversion_function': lambda x: x,
+            'byte_order': 'big',
+            'signed': False,
+        },
     }
-    sample_size = 1
+    sample_size = 4
 
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
@@ -1020,11 +1044,11 @@ class RSSI(GenericSensor):
 
 class LaunchpadControl:
     def __init__(self):
-        self.status = LPSStatus(0)
-        self.rssi = RSSI(1)
+        self.status = LaunchpadStatus(0)
+        self.rssi = RSSI(4)
     
     def update_sensors(self, frame):
-        if len(frame) == 3:
+        if len(frame) == 6:
             time = datetime.datetime.now().time()
             self.status.update_data(frame, frame_time=time)
             self.rssi.update_data(frame, frame_time=time)

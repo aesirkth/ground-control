@@ -1431,6 +1431,58 @@ class LaunchpadState(tk.Frame):
 
         self.parent.after(5000, self._ping_launchpad)
 
+class Servos(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+
+        SERVO = tk.Frame(self, bd=2, relief="groove")
+        SERVO.grid(row=0, column=0, sticky=W+E, padx=(0, 2))
+
+        self.servo_txt = tk.Label(SERVO, text="SERVO")
+
+        self.servo1_txt = tk.Label(SERVO, text="Servo 1")
+        self.servo1_angle = tk.IntVar()
+        self.servo1_scale = tk.Scale(SERVO, from_=0, to=180, length=200, orient=tk.HORIZONTAL,
+                                     variable=self.servo1_angle, command=self._update_servo1)
+        self.servo2_txt = tk.Label(SERVO, text="Servo 2")
+        self.servo2_angle = tk.IntVar()
+        self.servo2_scale = tk.Scale(SERVO, from_=0, to=180, length=200, orient=tk.HORIZONTAL,
+                                     variable=self.servo2_angle, command=self._update_servo2)
+        self.servo3_txt = tk.Label(SERVO, text="Servo 3")
+        self.servo3_angle = tk.IntVar()
+        self.servo3_scale = tk.Scale(SERVO, from_=0, to=180, length=200, orient=tk.HORIZONTAL,
+                                     variable=self.servo3_angle, command=self._update_servo3)
+
+        self.servo_txt.grid(row=0, column=0, columnspan=2, sticky=W+E)
+        self.servo1_txt.grid(row=1, column=0, sticky=W+E+S)
+        self.servo1_scale.grid(row=1, column=1, sticky=W+E)
+        self.servo2_txt.grid(row=2, column=0, sticky=W+E+S)
+        self.servo2_scale.grid(row=2, column=1, sticky=W+E)
+        self.servo3_txt.grid(row=3, column=0, sticky=W+E+S)
+        self.servo3_scale.grid(row=3, column=1, sticky=W+E)
+
+        self._read_servo_values()
+
+    def _read_servo_values(self):
+        self.servo1_angle.set(self.gateway.sensors.status.data['SERVO1_ANGLE'])
+        self.servo2_angle.set(self.gateway.sensors.status.data['SERVO2_ANGLE'])
+        self.servo3_angle.set(self.gateway.sensors.status.data['SERVO3_ANGLE'])
+
+        self.parent.after(200, self._read_servo_values)
+
+    def _update_servo1(self, env=None):
+        angle = self.servo1_angle.get()
+        self.gateway.send_command(bytes([0x26, 0x63, 0x6A, angle]))
+
+    def _update_servo2(self, env=None):
+        angle = self.servo2_angle.get()
+        self.gateway.send_command(bytes([0x26, 0x63, 0x6B, angle]))
+
+    def _update_servo3(self, env=None):
+        angle = self.servo3_angle.get()
+        self.gateway.send_command(bytes([0x26, 0x63, 0x6C, angle]))
 
 class LaunchpadWidget(tk.Frame):
     def __init__(self, parent, gateway, *args, **kwargs):
@@ -1441,6 +1493,7 @@ class LaunchpadWidget(tk.Frame):
         self.gateway_controls = LaunchpadCommandButtons(self, self.gateway, bd=BD, relief="solid")
         self.launchpad_status = GatewayStatus(self, self.gateway, 'LPS')
         self.state = LaunchpadState(self, self.gateway)
+        self.servos = Servos(self, self.gateway)
 
         self.launchpad_status.grid(
             row=0, column=0, padx=10, pady=(8, 0), sticky=W)
@@ -1448,3 +1501,5 @@ class LaunchpadWidget(tk.Frame):
             row=1, column=0, padx=10, pady=(5, 0))
         self.gateway_controls.grid(
             row=2, column=0, padx=10, pady=(5, 8))
+        self.servos.grid(
+            row=3, column=0, padx=10, pady=(5, 8))
