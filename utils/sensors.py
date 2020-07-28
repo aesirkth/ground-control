@@ -1024,8 +1024,16 @@ class RSSI(GenericSensor):
             'byte_order': 'big',
             'signed': True,
         },
+        'LOCAL_RSSI': {
+            'start': 2,
+            'size': 2,  # Byte
+            'type': 'int',
+            'conversion_function': lambda x: x,
+            'byte_order': 'big',
+            'signed': True,
+        },
     }
-    sample_size = 2
+    sample_size = 4
 
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
@@ -1048,7 +1056,7 @@ class LaunchpadControl:
         self.rssi = RSSI(4)
     
     def update_sensors(self, frame):
-        if len(frame) == 6:
+        if len(frame) == 8:
             time = datetime.datetime.now().time()
             self.status.update_data(frame, frame_time=time)
             self.rssi.update_data(frame, frame_time=time)

@@ -1393,26 +1393,43 @@ class LaunchpadState(tk.Frame):
         self.parent = parent
         self.gateway = gateway
 
-        RSSI = tk.Frame(self, bd=0)
-        RSSI.grid(row=0, column=0, sticky=W+E, padx=(0, 2))
+        LRSSI = tk.Frame(self, bd=0)
+        LRSSI.grid(row=0, column=0, sticky=W, padx=(0, 2))
 
-        self.rssi_txt = tk.Label(RSSI, text="RSSI: ")
-        self.rssi_value_txt = tk.StringVar()
-        self.rssi_value = tk.Label(RSSI, textvar=self.rssi_value_txt)
+        self.local_rssi_txt = tk.Label(LRSSI, text="Local RSSI: ")
+        self.local_rssi_dbm = tk.Label(LRSSI, text=" dBm")
+        self.local_rssi_value_txt = tk.StringVar()
+        self.local_rssi_value = tk.Label(LRSSI, textvar=self.local_rssi_value_txt)
 
-        self.rssi_txt.grid(row=0, column=0)
-        self.rssi_value.grid(row=0, column=1)
+        self.local_rssi_txt.grid(row=0, column=0, sticky=W)
+        self.local_rssi_value.grid(row=0, column=1)
+        self.local_rssi_dbm.grid(row=0, column=2)
+
+        RRSSI = tk.Frame(self, bd=0)
+        RRSSI.grid(row=1, column=0, sticky=W, padx=(0, 2))
+
+        self.remote_rssi_txt = tk.Label(RRSSI, text="Remote RSSI: ")
+        self.remote_rssi_dbm = tk.Label(RRSSI, text=" dBm")
+        self.remote_rssi_value_txt = tk.StringVar()
+        self.remote_rssi_value = tk.Label(RRSSI, textvar=self.remote_rssi_value_txt)
+
+        self.remote_rssi_txt.grid(row=0, column=0)
+        self.remote_rssi_value.grid(row=0, column=1)
+        self.remote_rssi_dbm.grid(row=0, column=2)
 
         self._ping_launchpad()
         self._update_state()
 
     def _update_state(self):
         if self.gateway.serial.is_ready:
-            rssi = self.gateway.sensors.rssi.data['REMOTE_RSSI']
-            self.rssi_value_txt.set(str(rssi))
+            remote_rssi = self.gateway.sensors.rssi.data['REMOTE_RSSI']
+            self.remote_rssi_value_txt.set(str(remote_rssi))
+            local_rssi = self.gateway.sensors.rssi.data['LOCAL_RSSI']
+            self.local_rssi_value_txt.set(str(local_rssi))
 
         else:
-            self.rssi_value_txt.set('')
+            self.remote_rssi_value_txt.set('-')
+            self.local_rssi_value_txt.set('-')
 
         self.parent.after(100, self._update_state)
 
@@ -1478,15 +1495,15 @@ class LaunchpadWidget(tk.Frame):
         self.parent = parent
         self.gateway = gateway
 
-        self.main_outputs = Outputs(self, self.gateway, bd=2, relief="groove")
-        self.launchpad_status = GatewayStatus(self, self.gateway, 'LPS')
         self.state = LaunchpadState(self, self.gateway)
+        self.launchpad_status = GatewayStatus(self, self.gateway, 'Launchpad')
+        self.main_outputs = Outputs(self, self.gateway, bd=2, relief="groove")
         self.servos = Servos(self, self.gateway, bd=2, relief="groove")
 
         self.launchpad_status.grid(
             row=0, column=0, padx=10, pady=(8, 0), sticky=W)
         self.state.grid(
-            row=1, column=0, padx=10, pady=(5, 0))
+            row=1, column=0, padx=10, pady=(5, 0), sticky=W)
         self.main_outputs.grid(
             row=2, column=0, padx=10, pady=(5, 8), sticky=W+E)
         self.servos.grid(
