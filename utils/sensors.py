@@ -932,63 +932,71 @@ class Sigmundr:
         self.bmp3.set_reference()
 
 
-# ########################## #
-#      Sensors for LPS       #
-# ########################## #
+# ######################################## #
+#      Sensors for Launchpad Control       #
+# ######################################## #
 
 
-class LPSStatus(GenericSensor):
+class LaunchpadStatus(GenericSensor):
     fields = {
-        'IS_FILLING': {
+        'IS_OUTPUT1_EN': {
             'start': 0,
             'size': 1,  # Byte
-            'type': 'int',
-            'conversion_function': lambda x: x & 1<<0,
-            'byte_order': 'big',
-            'signed': False,
-        },
-        'IS_VENTING': {
-            'start': 0,
-            'size': 1,
             'type': 'int',
             'conversion_function': lambda x: (x & 1<<1) >> 1,
             'byte_order': 'big',
             'signed': False,
         },
-        'IS_ARMED': {
+        'IS_OUTPUT2_EN': {
             'start': 0,
-            'size': 1,
+            'size': 1,  # Byte
             'type': 'int',
             'conversion_function': lambda x: (x & 1<<2) >> 2,
             'byte_order': 'big',
             'signed': False,
         },
-        'IS_FIRING': {
+        'IS_OUTPUT3_EN': {
             'start': 0,
-            'size': 1,
+            'size': 1,  # Byte
             'type': 'int',
             'conversion_function': lambda x: (x & 1<<3) >> 3,
             'byte_order': 'big',
             'signed': False,
         },
-        'IS_TM_ENABLED': {
+        'IS_OUTPUT4_EN': {
             'start': 0,
-            'size': 1,
+            'size': 1,  # Byte
             'type': 'int',
             'conversion_function': lambda x: (x & 1<<4) >> 4,
             'byte_order': 'big',
             'signed': False,
         },
-        'IS_SAFE_MODE': {
-            'start': 0,
-            'size': 1,
+        'SERVO1_ANGLE': {
+            'start': 1,
+            'size': 1,  # Byte
             'type': 'int',
-            'conversion_function': lambda x: (x & 1<<5) >> 5,
+            'conversion_function': lambda x: x,
+            'byte_order': 'big',
+            'signed': False,
+        },
+        'SERVO2_ANGLE': {
+            'start': 2,
+            'size': 1,  # Byte
+            'type': 'int',
+            'conversion_function': lambda x: x,
+            'byte_order': 'big',
+            'signed': False,
+        },
+        'SERVO3_ANGLE': {
+            'start': 3,
+            'size': 1,  # Byte
+            'type': 'int',
+            'conversion_function': lambda x: x,
             'byte_order': 'big',
             'signed': False,
         },
     }
-    sample_size = 1
+    sample_size = 4
 
     def __init__(self, start_position, **kwargs):
         super().__init__(start_position, self.fields, self.sample_size, **kwargs)
@@ -1010,7 +1018,15 @@ class RSSI(GenericSensor):
     fields = {
         'REMOTE_RSSI': {
             'start': 0,
-            'size': 2,  # Byte
+            'size': 1,  # Byte
+            'type': 'int',
+            'conversion_function': lambda x: x,
+            'byte_order': 'big',
+            'signed': True,
+        },
+        'LOCAL_RSSI': {
+            'start': 1,
+            'size': 1,  # Byte
             'type': 'int',
             'conversion_function': lambda x: x,
             'byte_order': 'big',
@@ -1034,17 +1050,62 @@ class RSSI(GenericSensor):
             self.data[field] = self.raw_data[field][-1]
 
 
-class LaunchPadStation:
+class Battery(GenericSensor):
+    fields = {
+        'BAT1_RAW': {
+            'start': 0,
+            'size': 2,  # Byte
+            'type': 'int',
+            'conversion_function': lambda x: x,
+            'byte_order': 'big',
+            'signed': True,
+        },
+        'BAT2_RAW': {
+            'start': 2,
+            'size': 2,  # Byte
+            'type': 'int',
+            'conversion_function': lambda x: x,
+            'byte_order': 'big',
+            'signed': True,
+        },
+    }
+    sample_size = 4
+
+    def __init__(self, start_position, **kwargs):
+        super().__init__(start_position, self.fields, self.sample_size, **kwargs)
+
+        self.reset()
+    
+    def reset(self):
+        self.data = {field: 0 for field in self.fields.keys()}
+        self.data['BAT1_VOLTAGE'] = 0
+        self.data['BAT2_VOLTAGE'] = 0
+        self.set_default_values()
+
+    def update_data(self, frame, frame_time=None):
+        self.update_raw_data(frame, frame_time)
+        for field in self.fields.keys():
+            self.data[field] = self.raw_data[field][-1]
+        bat1_raw = self.data['BAT1_RAW']
+        self.data['BAT1_VOLTAGE'] = 77.1 - 0.080 * bat1_raw + 2.50e-5 * bat1_raw ** 2 # Hardcoded calibration
+        bat2_raw = self.data['BAT2_RAW']
+        self.data['BAT2_VOLTAGE'] = 40.9 - 0.037 * bat2_raw + 1.01e-5 * bat2_raw ** 2 # Hardcoded calibration
+
+
+class LaunchpadControl:
     def __init__(self):
-        self.status = LPSStatus(0)
-        self.rssi = RSSI(1)
+        self.status = LaunchpadStatus(0)
+        self.battery = Battery(4)
+        self.rssi = RSSI(8)
     
     def update_sensors(self, frame):
-        if len(frame) == 3:
+        if len(frame) == 10:
             time = datetime.datetime.now().time()
             self.status.update_data(frame, frame_time=time)
+            self.battery.update_data(frame, frame_time=time)
             self.rssi.update_data(frame, frame_time=time)
     
     def reset(self):
         self.status.reset()
+        self.battery.reset()
         self.rssi.reset()

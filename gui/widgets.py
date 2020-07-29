@@ -7,13 +7,13 @@ import matplotlib.animation as animation
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
-BD = 0
-
 
 # ########################### #
 #   General purpose widgets   #
 # ########################### #
 
+
+BD=0
 
 class GatewayStatus(tk.Frame):
     """ TKinter frame to monitor the status of the Serial link
@@ -1250,13 +1250,13 @@ class GPSWidget(tk.Frame):
         self.status.grid(row=2, column=0, sticky=W, padx=15, pady=10)
 
 
-# ####################### #
-#   Widgets for the LPS   #
-# ####################### #
+# ############################ #
+#   Widgets for the Launchpad  #
+# ############################ #
 
 
-class LPSCommandButtons(tk.Frame):
-    """ TKinter frame with two control the LPS
+class Outputs(tk.Frame):
+    """ TKinter frame with everything
 
     Parameters
     ----------
@@ -1273,214 +1273,282 @@ class LPSCommandButtons(tk.Frame):
         self.gateway = gateway
         self.status = self.gateway.sensors.status
 
-        self.button_fill_text = tk.StringVar()
-        self.button_fill = tk.Button(self, textvar=self.button_fill_text)
-        self.button_vent_text = tk.StringVar()
-        self.button_vent = tk.Button(self, textvar=self.button_vent_text)
-        self.button_arm_text = tk.StringVar()
-        self.button_arm = tk.Button(self, textvar=self.button_arm_text)
-        self.button_fire_text = tk.StringVar()
-        self.button_fire = tk.Button(self, textvar=self.button_fire_text)
-        self.button_tm_text = tk.StringVar()
-        self.button_tm = tk.Button(self, textvar=self.button_tm_text)
-        self.button_safe_text = tk.StringVar()
-        self.button_safe = tk.Button(self, textvar=self.button_safe_text)
+        MAIN = tk.Frame(self)
+        MAIN.grid(row=0, column=0, padx=15, pady=(5, 5))
 
-        self.button_fill.grid(row=1, column=1, sticky=W+E)
-        self.button_vent.grid(row=1, column=2, sticky=W+E)
-        self.button_arm.grid(row=2, column=1, sticky=W+E)
-        self.button_fire.grid(row=2, column=2, sticky=W+E)
-        self.button_tm.grid(row=3, column=1, sticky=W+E)
-        self.button_safe.grid(row=3, column=2, sticky=W+E)
+        self.output_txt = tk.Label(MAIN, text="  OUTPUT  ")
+        self.legend1 = tk.Label(MAIN, text=" - 12V - ")
+        self.legend2 = tk.Label(MAIN, text=" - 24V - ")
+
+        self.output1 = tk.Label(MAIN, text="1")
+        self.output2 = tk.Label(MAIN, text="2")
+        self.output3 = tk.Label(MAIN, text="3")
+        self.output4 = tk.Label(MAIN, text="4")
+
+        self.output_txt.grid(row=0, column=0, columnspan=6)
+        self.output1.grid(row=1, column=0)
+        self.legend1.grid(row=1, column=1)
+        self.output2.grid(row=1, column=2)
+        self.output3.grid(row=1, column=3)
+        self.legend2.grid(row=1, column=4)
+        self.output4.grid(row=1, column=5)
+
+        self.default_bg = self.output1.cget("background")
+
+        self.button_output1_text = tk.StringVar()
+        self.button_output1 = tk.Button(MAIN, textvar=self.button_output1_text, width=10)
+        self.button_output2_text = tk.StringVar()
+        self.button_output2 = tk.Button(MAIN, textvar=self.button_output2_text, width=10)
+        self.button_output3_text = tk.StringVar()
+        self.button_output3 = tk.Button(MAIN, textvar=self.button_output3_text, width=10)
+        self.button_output4_text = tk.StringVar()
+        self.button_output4 = tk.Button(MAIN, textvar=self.button_output4_text, width=10)
+
+        self.button_output1.grid(row=2, column=0, columnspan=3, sticky=W)
+        self.button_output2.grid(row=3, column=0, columnspan=3, sticky=W)
+        self.button_output3.grid(row=2, column=3, columnspan=3, sticky=E)
+        self.button_output4.grid(row=3, column=3, columnspan=3, sticky=E)
 
         self._update_buttons()
+        self._update_state()
 
     def _update_buttons(self):
         """ Set the buttons inactive when the gateway is not ready
 
         """
-        is_filling = self.status.data['IS_FILLING']
-        is_venting = self.status.data['IS_VENTING']
-        is_armed = self.status.data['IS_ARMED']
-        is_firing = self.status.data['IS_FIRING']
-        is_safe_mode = self.status.data['IS_SAFE_MODE']
-        is_tm_enabled = self.status.data['IS_TM_ENABLED']
+        is_output1_en = self.status.data['IS_OUTPUT1_EN']
+        is_output2_en = self.status.data['IS_OUTPUT2_EN']
+        is_output3_en = self.status.data['IS_OUTPUT3_EN']
+        is_output4_en = self.status.data['IS_OUTPUT4_EN']
 
         # Update text and commands for buttons
-        if not is_filling:
-            self.button_fill_text.set("Start filling")
-            self.button_fill.config(command=lambda: self.gateway.send_command(bytes([0x61])))
+        if not is_output1_en:
+            self.button_output1_text.set("Enable OUT1")
+            self.button_output1.config(command=lambda: self.gateway.send_command(bytes([0x26, 0x63, 0x61, 0x01])))
         else:
-            self.button_fill_text.set("Stop filling")
-            self.button_fill.config(command=lambda: self.gateway.send_command(bytes([0x62])))
-        
-        if not is_venting:
-            self.button_vent_text.set("Start venting")
-            self.button_vent.config(command=lambda: self.gateway.send_command(bytes([0x63])))
+            self.button_output1_text.set("Disable OUT1")
+            self.button_output1.config(command=lambda: self.gateway.send_command(bytes([0x26, 0x63, 0x61, 0x00])))
+        if not is_output2_en:
+            self.button_output2_text.set("Enable OUT2")
+            self.button_output2.config(command=lambda: self.gateway.send_command(bytes([0x26, 0x63, 0x62, 0x01])))
         else:
-            self.button_vent_text.set("Stop venting")
-            self.button_vent.config(command=lambda: self.gateway.send_command(bytes([0x64])))
-
-        if not is_armed:
-            self.button_arm_text.set("Arm")
-            self.button_arm.config(command=lambda: self.gateway.send_command(bytes([0x65])))
+            self.button_output2_text.set("Disable OUT2")
+            self.button_output2.config(command=lambda: self.gateway.send_command(bytes([0x26, 0x63, 0x62, 0x00])))
+        if not is_output3_en:
+            self.button_output3_text.set("Enable OUT3")
+            self.button_output3.config(command=lambda: self.gateway.send_command(bytes([0x26, 0x63, 0x63, 0x01])))
         else:
-            self.button_arm_text.set("Disarm")
-            self.button_arm.config(command=lambda: self.gateway.send_command(bytes([0x66])))
-
-        if not is_firing:
-            self.button_fire_text.set("Start ignition")
-            self.button_fire.config(command=lambda: self.gateway.send_command(bytes([0x67])))
+            self.button_output3_text.set("Disable OUT3")
+            self.button_output3.config(command=lambda: self.gateway.send_command(bytes([0x26, 0x63, 0x63, 0x00])))
+        if not is_output4_en:
+            self.button_output4_text.set("Enable OUT4")
+            self.button_output4.config(command=lambda: self.gateway.send_command(bytes([0x26, 0x63, 0x64, 0x01])))
         else:
-            self.button_fire_text.set("Stop ignition")
-            self.button_fire.config(command=lambda: self.gateway.send_command(bytes([0x68])))
-        
-        if not is_safe_mode:
-            self.button_safe_text.set("Safe mode")
-            self.button_safe.config(command=lambda: self.gateway.send_command(bytes([0x59])))
-        else:
-            self.button_safe_text.set("Normal mode")
-            self.button_safe.config(command=lambda: self.gateway.send_command(bytes([0x5A])))
-        
-        if not is_tm_enabled:
-            self.button_tm_text.set("Enable TM ")
-            self.button_tm.config(command=lambda: self.gateway.send_command(bytes([0x41])))
-        else:
-            self.button_tm_text.set("Disable TM")
-            self.button_tm.config(command=lambda: self.gateway.send_command(bytes([0x42])))
+            self.button_output4_text.set("Disable OUT4")
+            self.button_output4.config(command=lambda: self.gateway.send_command(bytes([0x26, 0x63, 0x64, 0x00])))
         
         # Enable the relevant buttons
         if self.gateway.serial.is_ready:
-
-            self.button_tm.config(state=tk.NORMAL)
-
-            if is_safe_mode:
-                self.button_fill.config(state=tk.DISABLED)
-                self.button_vent.config(state=tk.DISABLED)
-                self.button_arm.config(state=tk.DISABLED)
-                self.button_fire.config(state=tk.DISABLED)
-            
-            else:
-                self.button_fill.config(state=tk.NORMAL)
-                self.button_vent.config(state=tk.NORMAL)
-                self.button_arm.config(state=tk.NORMAL)
-                self.button_fire.config(state=tk.NORMAL)
-
-            if not is_filling and not is_venting and not is_armed and not is_firing:
-                self.button_safe.config(state=tk.NORMAL)
-            else:
-                self.button_safe.config(state=tk.DISABLED)
+            self.button_output1.config(state=tk.NORMAL)
+            self.button_output2.config(state=tk.NORMAL)
+            self.button_output3.config(state=tk.NORMAL)
+            self.button_output4.config(state=tk.NORMAL)
 
         else:
-            self.button_fill.config(state=tk.DISABLED)
-            self.button_vent.config(state=tk.DISABLED)
-            self.button_arm.config(state=tk.DISABLED)
-            self.button_fire.config(state=tk.DISABLED)
-            self.button_tm.config(state=tk.DISABLED)
-            self.button_safe.config(state=tk.DISABLED)
+            self.button_output1.config(state=tk.DISABLED)
+            self.button_output2.config(state=tk.DISABLED)
+            self.button_output3.config(state=tk.DISABLED)
+            self.button_output4.config(state=tk.DISABLED)
 
         # Call this function again after 100 ms
         self.parent.after(100, self._update_buttons)
 
+    def _update_state(self):
+        if self.gateway.serial.is_ready:
 
-class LPSState(tk.Frame):
+            if self.gateway.sensors.status.data['IS_OUTPUT1_EN']:
+                self.output1.config(bg='yellow green')
+            else:
+                self.output1.config(bg=self.default_bg)
+
+            if self.gateway.sensors.status.data['IS_OUTPUT2_EN']:
+                self.output2.config(bg='yellow green')
+            else:
+                self.output2.config(bg=self.default_bg)
+
+            if self.gateway.sensors.status.data['IS_OUTPUT3_EN']:
+                self.output3.config(bg='yellow green')
+            else:
+                self.output3.config(bg=self.default_bg)
+
+            if self.gateway.sensors.status.data['IS_OUTPUT4_EN']:
+                self.output4.config(bg='yellow green')
+            else:
+                self.output4.config(bg=self.default_bg)
+
+        self.parent.after(100, self._update_state)
+
+
+class LaunchpadState(tk.Frame):
     def __init__(self, parent, gateway, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
 
-        Motor = tk.Frame(self, bd=2, relief="groove")
-        Motor.grid(row=0, column=1, sticky=W+E, padx=2)
+        LRSSI = tk.Frame(self, bd=0)
+        LRSSI.grid(row=0, column=0, sticky=W, padx=(0, 2))
 
-        self.motor_txt = tk.Label(Motor, text="  Motor  ")
-        self.motor_state_txt = tk.StringVar()
-        self.motor_state = tk.Label(Motor, textvar=self.motor_state_txt)
-        self.default_bg = self.motor_state.cget("background")
+        self.local_rssi_txt = tk.Label(LRSSI, text="Local RSSI: ")
+        self.local_rssi_dbm = tk.Label(LRSSI, text=" dBm")
+        self.local_rssi_value_txt = tk.StringVar()
+        self.local_rssi_value = tk.Label(LRSSI, textvar=self.local_rssi_value_txt)
 
-        self.motor_txt.grid(row=0, column=0)
-        self.motor_state.grid(row=1, column=0)
+        self.local_rssi_txt.grid(row=0, column=0, sticky=W)
+        self.local_rssi_value.grid(row=0, column=1)
+        self.local_rssi_dbm.grid(row=0, column=2)
 
-        Telemetry = tk.Frame(self, bd=2, relief="groove")
-        Telemetry.grid(row=0, column=2, sticky=W+E, padx=(2, 0))
+        RRSSI = tk.Frame(self, bd=0)
+        RRSSI.grid(row=1, column=0, sticky=W, padx=(0, 2))
 
-        self.tm_txt = tk.Label(Telemetry, text="  Telemetry  ")
-        self.tm_state_txt = tk.StringVar()
-        self.tm_state = tk.Label(Telemetry, textvar=self.tm_state_txt)
+        self.remote_rssi_txt = tk.Label(RRSSI, text="Remote RSSI: ")
+        self.remote_rssi_dbm = tk.Label(RRSSI, text=" dBm")
+        self.remote_rssi_value_txt = tk.StringVar()
+        self.remote_rssi_value = tk.Label(RRSSI, textvar=self.remote_rssi_value_txt)
 
-        self.tm_txt.grid(row=0, column=0)
-        self.tm_state.grid(row=1, column=0)
+        self.remote_rssi_txt.grid(row=0, column=0)
+        self.remote_rssi_value.grid(row=0, column=1)
+        self.remote_rssi_dbm.grid(row=0, column=2)
 
-        RSSI = tk.Frame(self, bd=2, relief="groove")
-        RSSI.grid(row=0, column=0, rowspan=2, sticky=W+E, padx=(0, 2))
+        BATTERY1 = tk.Frame(self)
+        BATTERY1.grid(row=2, column=0, sticky=W, padx=(0, 2))
 
-        self.rssi_txt = tk.Label(RSSI, text="  RSSI  ")
-        self.rssi_value_txt = tk.StringVar()
-        self.rssi_value = tk.Label(RSSI, textvar=self.rssi_value_txt)
+        self.battery1_value_txt = tk.StringVar()
+        self.battery1_value = tk.Label(BATTERY1, textvar=self.battery1_value_txt)
 
-        self.rssi_txt.grid(row=0, column=0)
-        self.rssi_value.grid(row=1, column=0)
+        self.battery1_value.grid(row=0, column=0)
 
-        self._ping_lps()
+        BATTERY2 = tk.Frame(self)
+        BATTERY2.grid(row=3, column=0, sticky=W, padx=(0, 2))
+
+        self.battery2_value_txt = tk.StringVar()
+        self.battery2_value = tk.Label(BATTERY2, textvar=self.battery2_value_txt)
+
+        self.battery2_value.grid(row=0, column=0)
+
+        self._ping_launchpad()
         self._update_state()
 
     def _update_state(self):
         if self.gateway.serial.is_ready:
-            if self.gateway.sensors.status.data['IS_FILLING']:
-                self.motor_state_txt.set('Filling')
-                self.motor_state.config(bg="orange")
-            elif self.gateway.sensors.status.data['IS_VENTING']:
-                self.motor_state_txt.set('Venting')
-                self.motor_state.config(bg="orange")
-            elif self.gateway.sensors.status.data['IS_FIRING']:
-                self.motor_state_txt.set('Ignition')
-                self.motor_state.config(bg="green")
-            elif self.gateway.sensors.status.data['IS_ARMED']:
-                self.motor_state_txt.set('Armed')
-                self.motor_state.config(bg="red")
-            elif self.gateway.sensors.status.data['IS_SAFE_MODE']:
-                self.motor_state_txt.set('safe')
-                self.motor_state.config(bg='yellow green')
-            else:
-                self.motor_state_txt.set('Default')
-                self.motor_state.config(bg=self.default_bg)
-            if self.gateway.sensors.status.data['IS_TM_ENABLED']:
-                self.tm_state_txt.set('Enabled')
-                self.tm_state.config(bg='green')
-            else:
-                self.tm_state_txt.set('Disabled')
-                self.tm_state.config(bg='red')
+            remote_rssi = self.gateway.sensors.rssi.data['REMOTE_RSSI']
+            self.remote_rssi_value_txt.set(str(remote_rssi))
+            local_rssi = self.gateway.sensors.rssi.data['LOCAL_RSSI']
+            self.local_rssi_value_txt.set(str(local_rssi))
 
-            rssi = self.gateway.sensors.rssi.data['REMOTE_RSSI']
-            self.rssi_value_txt.set(str(rssi))
+            battery1 = self.gateway.sensors.battery.data['BAT1_VOLTAGE']
+            self.battery1_value_txt.set("Battery 1: {:0.2f}V".format(battery1))
+
+            battery2 = self.gateway.sensors.battery.data['BAT2_VOLTAGE']
+            self.battery2_value_txt.set("Battery 2: {:0.2f}V".format(battery2))
+
         else:
-            self.motor_state_txt.set('')
-            self.motor_state.config(bg=self.default_bg)
-            self.tm_state_txt.set('')
-            self.tm_state.config(bg=self.default_bg)
-            self.rssi_value_txt.set('')
+            self.remote_rssi_value_txt.set('-')
+            self.local_rssi_value_txt.set('-')
+            self.battery1_value_txt.set("Battery 1:     - V")
+            self.battery2_value_txt.set("Battery 2:     - V")
 
         self.parent.after(100, self._update_state)
 
-    def _ping_lps(self):
-        # Unused command, just to get an answer
-        self.gateway.send_command(bytes([0xFF]))
+    def _ping_launchpad(self):
+        # Unused command, just to get a reply from the controller
+        self.gateway.send_command(bytes([0x26, 0x63, 0xFF, 0xFF]))
 
-        self.parent.after(5000, self._ping_lps)
+        self.parent.after(5000, self._ping_launchpad)
 
-
-class LPSWidget(tk.Frame):
+class Servos(tk.Frame):
     def __init__(self, parent, gateway, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.gateway = gateway
 
-        self.gateway_controls = LPSCommandButtons(self, self.gateway, bd=BD, relief="solid")
-        self.lps_status = GatewayStatus(self, self.gateway, 'LPS')
-        self.state = LPSState(self, self.gateway)
+        self._do_not_update = False
 
-        self.lps_status.grid(
+        self.servo_txt = tk.Label(self, text="SERVO")
+
+        self.servo1_txt = tk.Label(self, text="Servo 1")
+        self.servo1_angle = tk.IntVar()
+        self.servo1_scale = tk.Scale(self, from_=0, to=180, length=200, orient=tk.HORIZONTAL,
+                                     variable=self.servo1_angle)
+        self.servo1_scale.bind("<ButtonRelease-1>", self._update_servo1)
+        self.servo1_scale.bind("<Button-1>", self._block_servo_update)
+        self.servo2_txt = tk.Label(self, text="Servo 2")
+        self.servo2_angle = tk.IntVar()
+        self.servo2_scale = tk.Scale(self, from_=0, to=180, length=200, orient=tk.HORIZONTAL,
+                                     variable=self.servo2_angle)
+        self.servo2_scale.bind("<ButtonRelease-1>", self._update_servo2)
+        self.servo2_scale.bind("<Button-1>", self._block_servo_update)
+        self.servo3_txt = tk.Label(self, text="Servo 3")
+        self.servo3_angle = tk.IntVar()
+        self.servo3_scale = tk.Scale(self, from_=0, to=180, length=200, orient=tk.HORIZONTAL,
+                                     variable=self.servo3_angle)
+        self.servo3_scale.bind("<ButtonRelease-1>", self._update_servo3)
+        self.servo3_scale.bind("<Button-1>", self._block_servo_update)
+
+        self.servo_txt.grid(row=0, column=0, columnspan=2, sticky=W+E)
+        self.servo1_txt.grid(row=1, column=0, sticky=W+E+S)
+        self.servo1_scale.grid(row=1, column=1, sticky=W+E)
+        self.servo2_txt.grid(row=2, column=0, sticky=W+E+S)
+        self.servo2_scale.grid(row=2, column=1, sticky=W+E)
+        self.servo3_txt.grid(row=3, column=0, sticky=W+E+S)
+        self.servo3_scale.grid(row=3, column=1, sticky=W+E)
+
+        self._read_servo_values()
+
+    def _read_servo_values(self):
+        if not self._do_not_update:
+            self.servo1_angle.set(self.gateway.sensors.status.data['SERVO1_ANGLE'])
+            self.servo2_angle.set(self.gateway.sensors.status.data['SERVO2_ANGLE'])
+            self.servo3_angle.set(self.gateway.sensors.status.data['SERVO3_ANGLE'])
+
+        self.parent.after(200, self._read_servo_values)
+
+    def _block_servo_update(self, env=None):
+        self._do_not_update = True
+    
+    def _allow_servo_update(self):
+        self._do_not_update = False
+
+    def _update_servo1(self, env=None):
+        angle = self.servo1_angle.get()
+        self.gateway.send_command(bytes([0x26, 0x63, 0x6A, angle]))
+        self.parent.after(200, self._allow_servo_update)
+
+    def _update_servo2(self, env=None):
+        angle = self.servo2_angle.get()
+        self.gateway.send_command(bytes([0x26, 0x63, 0x6B, angle]))
+        self.parent.after(200, self._allow_servo_update)
+
+    def _update_servo3(self, env=None):
+        angle = self.servo3_angle.get()
+        self.gateway.send_command(bytes([0x26, 0x63, 0x6C, angle]))
+        self.parent.after(200, self._allow_servo_update)
+
+class LaunchpadWidget(tk.Frame):
+    def __init__(self, parent, gateway, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.gateway = gateway
+
+        self.state = LaunchpadState(self, self.gateway)
+        self.launchpad_status = GatewayStatus(self, self.gateway, 'Launchpad')
+        self.main_outputs = Outputs(self, self.gateway, bd=2, relief="groove")
+        self.servos = Servos(self, self.gateway, bd=2, relief="groove")
+
+        self.launchpad_status.grid(
             row=0, column=0, padx=10, pady=(8, 0), sticky=W)
         self.state.grid(
-            row=1, column=0, padx=10, pady=(5, 0))
-        self.gateway_controls.grid(
-            row=2, column=0, padx=10, pady=(5, 8))
+            row=1, column=0, padx=10, pady=(5, 0), sticky=W)
+        self.main_outputs.grid(
+            row=2, column=0, padx=10, pady=(5, 8), sticky=W+E)
+        self.servos.grid(
+            row=3, column=0, padx=10, pady=(5, 8), sticky=W+E)

@@ -204,6 +204,7 @@ class SerialWrapper:
                 print("Testing : {}...".format(self.ser.port))
 
                 if self.__open_serial_port():  # If the connection cannot be oppened, no need to read from it
+                    self.write('&gB0', encode=True)
                     line = self.readline(decode=True)
 
                     if line == self.bonjour:
