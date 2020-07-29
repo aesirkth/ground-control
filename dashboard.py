@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
     telemetry = Gateway(serial_telemetry, rocket_sensors, "./data")
 
-    serial_lps = SerialWrapper(115200, "LPS", bonjour="LAUNCHPADSTATION")
+    serial_lps = SerialWrapper(115200, "LPS", bonjour="LAUNCHPADCONTROLLER")
     lps_sensors = LaunchpadControl()
     lps = Gateway(serial_lps, lps_sensors, "./data")
 

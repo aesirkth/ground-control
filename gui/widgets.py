@@ -13,6 +13,8 @@ from matplotlib.figure import Figure
 # ########################### #
 
 
+BD=0
+
 class GatewayStatus(tk.Frame):
     """ TKinter frame to monitor the status of the Serial link
 
