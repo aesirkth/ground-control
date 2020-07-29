@@ -2,7 +2,9 @@
 
 The software on this repository is used to control and monitor the Launchpad for the Mjollnir project.
 
-The code here is based on the code used for the Sigmundr project (2019) that was released as [v1.0](https://github.com/aesirkth/ground-control/tree/v1.0). v1.0 included a Dashboard to display the live Telemetry from the rocket. The codebase for this Dashboard is still present in this repository and will remain until the decision is made to use a new Dashboard technlogy
+The code for the GUI is based on the code developed for the Sigmundr project (2019). The code for Sigmundr came with the ability to receive, process, and display live Telemetry from the rocket. This feature may not be use for Mjollnir but the sources will stay available in this repository until (if?) the decision is made to use another Dashboard technology to display the Telemetry
+
+Check the code for Sigmundr in release [v1.0](https://github.com/aesirkth/ground-control/tree/v1.0)
 
 # Table of contents <!-- omit in toc -->
 - [Requirements](#requirements)
@@ -42,7 +44,7 @@ Get the *Launchpad Controller* up and running (see [aesirkth/launchpad-controlle
 
 **Run the GUI**
 
-Make sure the *Launch Pad Station Board* is connected to your computer
+Make sure the *Launchpad Controller* is connected to your computer
 
 Run `lps_control.py`
 
