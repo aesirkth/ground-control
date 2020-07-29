@@ -1050,17 +1050,62 @@ class RSSI(GenericSensor):
             self.data[field] = self.raw_data[field][-1]
 
 
+class Battery(GenericSensor):
+    fields = {
+        'BAT1_RAW': {
+            'start': 0,
+            'size': 2,  # Byte
+            'type': 'int',
+            'conversion_function': lambda x: x,
+            'byte_order': 'big',
+            'signed': True,
+        },
+        'BAT2_RAW': {
+            'start': 2,
+            'size': 2,  # Byte
+            'type': 'int',
+            'conversion_function': lambda x: x,
+            'byte_order': 'big',
+            'signed': True,
+        },
+    }
+    sample_size = 4
+
+    def __init__(self, start_position, **kwargs):
+        super().__init__(start_position, self.fields, self.sample_size, **kwargs)
+
+        self.reset()
+    
+    def reset(self):
+        self.data = {field: 0 for field in self.fields.keys()}
+        self.data['BAT1_VOLTAGE'] = 0
+        self.data['BAT2_VOLTAGE'] = 0
+        self.set_default_values()
+
+    def update_data(self, frame, frame_time=None):
+        self.update_raw_data(frame, frame_time)
+        for field in self.fields.keys():
+            self.data[field] = self.raw_data[field][-1]
+        bat1_raw = self.data['BAT1_RAW']
+        self.data['BAT1_VOLTAGE'] = 77.1 - 0.080 * bat1_raw + 2.50e-5 * bat1_raw ** 2 # Hardcoded calibration
+        bat2_raw = self.data['BAT2_RAW']
+        self.data['BAT2_VOLTAGE'] = 40.9 - 0.037 * bat2_raw + 1.01e-5 * bat2_raw ** 2 # Hardcoded calibration
+
+
 class LaunchpadControl:
     def __init__(self):
         self.status = LaunchpadStatus(0)
-        self.rssi = RSSI(4)
+        self.battery = Battery(4)
+        self.rssi = RSSI(8)
     
     def update_sensors(self, frame):
-        if len(frame) == 6:
+        if len(frame) == 10:
             time = datetime.datetime.now().time()
             self.status.update_data(frame, frame_time=time)
+            self.battery.update_data(frame, frame_time=time)
             self.rssi.update_data(frame, frame_time=time)
     
     def reset(self):
         self.status.reset()
+        self.battery.reset()
         self.rssi.reset()

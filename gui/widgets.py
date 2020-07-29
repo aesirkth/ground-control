@@ -1417,6 +1417,22 @@ class LaunchpadState(tk.Frame):
         self.remote_rssi_value.grid(row=0, column=1)
         self.remote_rssi_dbm.grid(row=0, column=2)
 
+        BATTERY1 = tk.Frame(self)
+        BATTERY1.grid(row=2, column=0, sticky=W, padx=(0, 2))
+
+        self.battery1_value_txt = tk.StringVar()
+        self.battery1_value = tk.Label(BATTERY1, textvar=self.battery1_value_txt)
+
+        self.battery1_value.grid(row=0, column=0)
+
+        BATTERY2 = tk.Frame(self)
+        BATTERY2.grid(row=3, column=0, sticky=W, padx=(0, 2))
+
+        self.battery2_value_txt = tk.StringVar()
+        self.battery2_value = tk.Label(BATTERY2, textvar=self.battery2_value_txt)
+
+        self.battery2_value.grid(row=0, column=0)
+
         self._ping_launchpad()
         self._update_state()
 
@@ -1427,9 +1443,17 @@ class LaunchpadState(tk.Frame):
             local_rssi = self.gateway.sensors.rssi.data['LOCAL_RSSI']
             self.local_rssi_value_txt.set(str(local_rssi))
 
+            battery1 = self.gateway.sensors.battery.data['BAT1_VOLTAGE']
+            self.battery1_value_txt.set("Battery 1: {:0.2f}V".format(battery1))
+
+            battery2 = self.gateway.sensors.battery.data['BAT2_VOLTAGE']
+            self.battery2_value_txt.set("Battery 2: {:0.2f}V".format(battery2))
+
         else:
             self.remote_rssi_value_txt.set('-')
             self.local_rssi_value_txt.set('-')
+            self.battery1_value_txt.set("Battery 1:     - V")
+            self.battery2_value_txt.set("Battery 2:     - V")
 
         self.parent.after(100, self._update_state)
 
