@@ -1087,9 +1087,9 @@ class Battery(GenericSensor):
         for field in self.fields.keys():
             self.data[field] = self.raw_data[field][-1]
         bat1_raw = self.data['BAT1_RAW']
-        self.data['BAT1_VOLTAGE'] = 77.1 - 0.080 * bat1_raw + 2.50e-5 * bat1_raw ** 2 # Hardcoded calibration
+        self.data['BAT1_VOLTAGE'] = 2.555e-5 * bat1_raw ** 2 - 0.0835 * bat1_raw + 81.83 # Hardcoded calibration Updated: 20/9-2020
         bat2_raw = self.data['BAT2_RAW']
-        self.data['BAT2_VOLTAGE'] = 40.9 - 0.037 * bat2_raw + 1.01e-5 * bat2_raw ** 2 # Hardcoded calibration
+        self.data['BAT2_VOLTAGE'] = 8.885e-6 * bat2_raw ** 2 - 0.0316 * bat2_raw + 34.780# Hardcoded calibration Updated: 20/9-2020
 
 
 class LaunchpadControl:
