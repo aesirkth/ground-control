@@ -1,8 +1,8 @@
 #data_functions.py
 #contains eveything related to data
 
-
-data_functions = {}
+telemetry_functions = {}
+gateway_functions = {}
 
 
 #############
@@ -28,7 +28,11 @@ class TimeSeries:
         self.x = []
         self.y = []
 
-def handle_data(dataList, time, database):
+
+#telemetry
+#############################################################
+
+def handle_telemetry_data(dataList, time, database):
     for data in dataList:
         if data.source not in database:
             database[data.source] = {}
@@ -41,25 +45,25 @@ def handle_data(dataList, time, database):
 def f0x10(ser):
     value = ser.read_bytes(4)
     return [Data("engine", "ms_since_boot", value)]
-data_functions[0x10] = f0x10
+telemetry_functions[0x10] = f0x10
 
 #μs since boot engine controller
 def f0x11(ser):
     value = ser.read_bytes(8)
     return [Data("engine", "us_since_boot", value)]
-data_functions[0x11] = f0x11
+telemetry_functions[0x11] = f0x11
 
 #ms since boot flight controller
 def f0x90(ser):
     value = ser.read_bytes(4)
     return [Data("flight", "ms_since_boot", value)]
-data_functions[0x90] = f0x90
+telemetry_functions[0x90] = f0x90
 
 #µs since boot flight controller
 def f0x91(ser):
     value = ser.read_bytes(8)
     return [Data("flight", "us_since_boot", value)]
-data_functions[0x91] = f0x91
+telemetry_functions[0x91] = f0x91
 
 
 ####################### made up functions
@@ -67,25 +71,25 @@ data_functions[0x91] = f0x91
 def f0x00(ser):
     value = ser.read_bytes(2)
     return [Data("flight", "altitude", value)]
-data_functions[0x00] = f0x00
+telemetry_functions[0x00] = f0x00
 
 #acceleration
 def f0x01(ser):
     value = ser.read_bytes(1)
     return [Data("flight", "acceleration", value)]
-data_functions[0x01] = f0x01
+telemetry_functions[0x01] = f0x01
 
 #pressure
 def f0x02(ser):
     value = ser.read_bytes(2)
     return [Data("flight", "pressure", value)]
-data_functions[0x02] = f0x02
+telemetry_functions[0x02] = f0x02
 
 #catastrophe
 def f0x03(ser):
     value = ser.read_bytes(1)
     return [Data("engine", "catastrophe", value)]
-data_functions[0x03] = f0x03
+telemetry_functions[0x03] = f0x03
 
 #gyroscope
 def f0x04(ser):
@@ -97,4 +101,13 @@ def f0x04(ser):
         Data("flight", "gyroy", y),
         Data("flight", "gyroz", z)
     ]
-data_functions[0x04] = f0x04
+telemetry_functions[0x04] = f0x04
+
+
+#gateway
+####################################################
+
+def handle_gateway_data(data, database):
+    for v in data:
+        data[v.source][v.measurement] = v.value
+

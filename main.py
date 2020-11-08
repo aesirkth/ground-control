@@ -8,71 +8,27 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkinter as tk
 
-from utils.serial_wrapper import SerialWrapper
-from utils.data_functions import data_functions, handle_data, TimeSeries
+from utils.serial_wrapper import SerialWrapper, GatewayWrapper
+from utils.data_functions import TimeSeries
+from utils.threads import gateway_thread, telemetry_thread
 import utils.widgets as widgets
-
-def serial_thread(database):
-    SEPARATOR = [0x0A, 0x0D]
-    ser = SerialWrapper()
-
-    error= 1 #error variable for ser.openSerial()
-    while error:
-        #wait for user to start serial
-        while not database["misc"]["read_telemetry"]:
-            time.sleep(1)
-            if database["misc"]["exit"]:
-                return
-
-        #init serial wrapper
-        error = ser.open_serial('dummy')
-        if error:
-            print("could not open serial connection")
-            print("The microcontroller needs to be reset after every run. Try unplugging it.")
-            database["misc"]["read_telemetry"] = False
-
-    #to keep track of the current time gathered from telemetry
-    source_time = {}
-    source_time_updated = {}
-    frameId = 0
-    while not database["misc"]["exit"]:
-        if not database["misc"]["read_telemetry"]:
-            time.sleep(1)
-            continue
-        
-        #test for frame separator, read one byte at a time so it aligns itself
-        if not (ser.read_bytes(1) == SEPARATOR[0] and
-                ser.read_bytes(1) == SEPARATOR[1]):
-            print("Invalid separator. last ID: " + str(frameId))
-            continue
-
-        frameId = ser.read_bytes(1)
-        data = data_functions[frameId](ser)
-        source = data[0].source
-        if data[0].measurement == "ms_since_boot":
-            source_time.setdefault(source, 0)
-            source_time_updated.setdefault(source, 0)
-            source_time[source] = data[0].value / 1000 #to seconds
-            source_time_updated[source] = time.time()
-            #update the dashboards time if it comes from the flight controller
-            if source == "flight":
-                database["misc"]["relative_time"] = data[0].value / 1000 #to seconds
-                database["misc"]["relative_time_updated"] = time.time()
-                
-        relative_time = source_time[source] + time.time() - source_time_updated[source]
-        handle_data(data, relative_time, database)
 
 def main():
     #init database, 
     database = {}
     database["misc"] = {
-        "xlimit": 60, #How far back in time the graphs go
-        "start_time": time.time(), #when the dashboard was started
-        "read_telemetry": False, #if the serial thread should be reading
+        "read_telemetry": False, #if the telemetry thread should be open and reading
+        "last_telemetry_packet": 0, #when the last telemetry packet was reveived
+        "read_gateway": False, #if the gateway thread should be open and reading
+        "last_gateway_packet": 0, 
+
         "exit": False, #if the program should exit
         "relative_time": 0, #interpolated from the flight engine's time
         #when the relative was last updated, for the interpolation
-        "relative_time_updated": time.time() 
+        "relative_time_updated": time.time(),
+        "xlimit": 60, #How far back in time the graphs go
+        "start_time": time.time(), #when the dashboard was started
+        
     }
     #There must be a better way to initialize everything...
     database["flight"] = {
@@ -87,10 +43,17 @@ def main():
     database["engine"] = {
         "catastrophe": TimeSeries()
     }
-    
-    #init serial thread
-    t = Thread(target = serial_thread, args = (database, ))
-    t.start()
+    database["gateway"] = {
+        
+    }
+    #init threads
+    tm_serial = SerialWrapper()
+    tm = Thread(target = telemetry_thread, args = (database, tm_serial))
+    tm.start()
+
+    gw_serial = GatewayWrapper()
+    gw = Thread(target = gateway_thread, args = (database, gw_serial))
+    gw.start()
 
     #init tk
     root = tk.Tk()

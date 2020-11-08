@@ -7,6 +7,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from time import time
 from tkinter import *
 import math
+from tk_tools import Gauge
 
 from utils.data_functions import TimeSeries
 
@@ -77,7 +78,6 @@ class TextLastValue():
         if len(self.value.y) == 0:
             return
         self.stringVar.set(self.text + str(self.value.y[-1]))
-
 
 ########################################
 #Specific Classes

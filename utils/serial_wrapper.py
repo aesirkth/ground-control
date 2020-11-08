@@ -10,9 +10,9 @@ import os
 
 class SerialWrapper:
     def __init__(self):
-        self.ser = serial.Serial()
+        self.ser = serial.Serial(timeout = 2)
         self.write = self.ser.write #copy pyserial's write function
-
+        self.initialized = False
         #get file name
         now = datetime.now()
         time = now.strftime("%Y-%m-%d-%H:%M:%S")
@@ -54,16 +54,13 @@ class SerialWrapper:
                 return 1
             print("nay")
             return 0
-        elif device == "RFD":
-            pass #todo
         elif device == "gateway":
             pass #todo
 
     #tries to find and initialize the correct port
     def open_serial(self, device):
         baudrates = {
-            "RFD": 0, #todo
-            "gateway": 0,
+            "gateway": 11520, #unsure about this one 
             "dummy": 11520 
         }
         ser = self.ser
@@ -74,6 +71,7 @@ class SerialWrapper:
             ser.open()
             print("Testing" + str(v))
             if self.init_device(ser, device):
+                self.initialized = True
                 print("Succesfully connected")
                 return 0
             ser.close()
@@ -100,3 +98,43 @@ class SerialWrapper:
                 safe_devices.append(d)
 
         return safe_devices
+
+class GatewayWrapper(SerialWrapper):
+    def __init__(self, database):
+        super().__init__()
+        self.database = database
+
+    #sends the start, target and id byte to the gateway
+    #or start, target, separator, id to the launchpad controller
+    #target = "c" for controller
+    #target = "g" for gateway
+    def send_header(self, target, id):
+        if not self.initialized:
+            return -1
+
+        if target == "c":
+            self.write(target)
+            self.write(separator)
+            self.write(id)
+        elif target == "g":
+            self.write(target)
+            self.write(id)
+
+    def wait_for_data():
+        pass
+
+    def time_sync(self,):
+        if not self.initialized:
+            return -1
+
+    def set_power_mode(self, TBD):
+        if not self.initialized:
+            return -1
+
+    def set_radio_emitters(self, fpv, tm):
+        if not self.initialized:
+            return -1
+
+    def set_parachute(self, armed, enable_1, enable_2):
+        if not self.initialized:
+            return -1
