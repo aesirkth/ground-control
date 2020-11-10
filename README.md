@@ -18,7 +18,7 @@ utils/
 ├─ gateway.py - all the code for the gateway
 ├─ telemetry.py - all the code for the telemetry downlink
 ├─ data_functions.py - functions and datatypes to handle the raw serial data
-├─ data_functionsp.py - W.I.P implementaion of the real protocol
+├─ data_functionsp.py - W.I.P implementation of the real protocol
 ├─ data/ - backups of the raw serial communication
 ```
 things to do:
