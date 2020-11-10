@@ -12,13 +12,10 @@ from utils.telemetry import Telemetry
 def main():
     #init threads
     tm = Telemetry()
-    tm.read = True
-    
     
     #init tk
     root = tk.Tk()
 
-    #todo: a better way to organize this
     altitude = widgets.AltitudeGraph(root, tm)
     pressure = widgets.PressureGraph(root, tm)
     acceleration = widgets.AccelerationGraph(root, tm)
@@ -32,6 +29,7 @@ def main():
     gyro.widget.grid(padx = 10, pady = 10, column=0, row=1)
     serial_button.place(x = 1500, y = 130)
     timeText.widget.place(x = 1500, y = 200)
+
     def on_close():
         tm.exit = True
         root.destroy()

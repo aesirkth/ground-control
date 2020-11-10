@@ -6,7 +6,6 @@ import time
 telemetry_functions = {}
 gateway_functions = {}
 
-
 #class to store Data
 #############
 #source - the source of the data e.g. "flight" for flight controller
@@ -32,6 +31,7 @@ class TimeSeries:
 
 #class to store and interpolate time
 #############
+#
 class RelativeTime():
     def __init__(self):
         self.updated = time.time()
@@ -39,6 +39,10 @@ class RelativeTime():
 
     def get_current_time(self):
         return time.time() - self.updated + self.time
+    
+    def update_time(self, new_time):
+        self.time = new_time
+        self.updated = time.time()
 
 #telemetry
 #############################################################

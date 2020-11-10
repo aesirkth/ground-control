@@ -11,12 +11,12 @@ Tkinter is included with Python since Python 3.1
 
 ## file structure
 ```
-main.py - spawns the GUI and the thread that handles serial
+main.py - starts everything
 utils/
 ├─ widgets.py - GUI widgets
 ├─ serial_wrapper.py - wrapper around pyserial
 ├─ gateway.py - all the code for the gateway
-├─ telemetry.py - all the code for the telemetry
+├─ telemetry.py - all the code for the telemetry downlink
 ├─ data_functions.py - functions and datatypes to handle the raw serial data
 ├─ data_functionsp.py - W.I.P implementaion of the real protocol
 ├─ data/ - backups of the raw serial communication

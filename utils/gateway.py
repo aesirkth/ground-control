@@ -1,3 +1,4 @@
+#todo
 class Gateway():
     def __init__(self):
         self.data = {}

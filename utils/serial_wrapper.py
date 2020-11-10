@@ -9,6 +9,13 @@ from datetime import datetime
 import os
 
 #Class to read and backup serial communication
+#
+#read_bytes(x) -    read x bytes as an integer, little endian
+#read_string(x) -   read x bytes as a string
+#init_device() -    tries to initialize the current port
+#get_safe_devices() finds devices that are safe to communicate with
+#open_serial() -    tests and opens all ports to find a device. returns -1 if it failed
+
 class SerialWrapper:
     def __init__(self, device):
         self.ser = serial.Serial(timeout = 2)

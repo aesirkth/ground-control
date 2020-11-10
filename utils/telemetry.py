@@ -5,6 +5,16 @@ from utils.data_functions import (telemetry_functions, Data,
 import time
 from threading import Thread
 
+####
+#class to handle all telemetry things
+####
+#self.data[*source*] - contains all the decoded data in TimeSeries
+#                       the source can be  either "flight" or "engine"
+#self.clocks[*source*] - contains the ms_since_boot converted to seconds in a RelativeTime class
+#
+#stop() - stops the thread completely
+#start() - opens or resumes and starts reading serial
+#pause() - stops the thread from reading
 class Telemetry():
     def __init__(self):
         self.read = False
@@ -78,8 +88,8 @@ def telemetry_thread(tm):
         data = telemetry_functions[frameId](ser)
         source = data[0].source
         if data[0].measurement == "ms_since_boot":
-            tm.clocks[source].time = data[0].value / 1000 # convert to seconds    
-            tm.clocks[source].updated = time.time()
+            tm.clocks[source].update_time(data[0].value / 1000) # convert to seconds    
+            
         else:
             for v in data:
                 series = tm.data[v.source][v.measurement]

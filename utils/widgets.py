@@ -9,7 +9,7 @@ import math
 
 from utils.data_functions import TimeSeries
 
-REFRESH = 66 #delay in ms
+REFRESH = 16 #delay in ms
 
 
 ########################################
@@ -22,8 +22,8 @@ REFRESH = 66 #delay in ms
 #
 #__init__(root, database, datalists)
 #root - TKinter root window
-#database - the database used for serial communication
-#dataLists - a list with datalists to display
+#clock - the clock that will be used
+#time_serise - a list with TimeSeries to display
 
 class GenericGraph():
     def __init__(self, root, clock, time_series, width = 6, height = 4):
@@ -57,7 +57,7 @@ class GenericGraph():
 #__init__(self, root, text, value)
 #root - tkinter root
 #text - displayed before the value
-#value - the datalist that the value will be taken from
+#value - the TimeSeries that the value will be taken from
 
 class TextLastValue():
     def __init__(self, root, text, value):
