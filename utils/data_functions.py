@@ -1,11 +1,12 @@
 #data_functions.py
 #contains eveything related to data
 
+import time
+
 telemetry_functions = {}
 gateway_functions = {}
 
 
-#############
 #class to store Data
 #############
 #source - the source of the data e.g. "flight" for flight controller
@@ -18,29 +19,29 @@ class Data:
         self.measurement = measurement #name of data
         self.value = value
 
-###############
+
 #class to store time series
 ###############
 #x - list with time values
-#y - list with actual values 
+#y - list with physical values 
 class TimeSeries:
     def __init__(self):
         self.x = []
         self.y = []
 
 
+#class to store and interpolate time
+#############
+class RelativeTime():
+    def __init__(self):
+        self.updated = time.time()
+        self.time = 0
+
+    def get_current_time(self):
+        return time.time() - self.updated + self.time
+
 #telemetry
 #############################################################
-
-def handle_telemetry_data(dataList, time, database):
-    for data in dataList:
-        if data.source not in database:
-            database[data.source] = {}
-        if data.measurement not in database[data.source]:
-            database[data.source][data.measurement] = TimeSeries()
-        database[data.source][data.measurement].x.append(time)
-        database[data.source][data.measurement].y.append(data.value)
-
 #ms since boot engine controller
 def f0x10(ser):
     value = ser.read_bytes(4)
@@ -106,8 +107,3 @@ telemetry_functions[0x04] = f0x04
 
 #gateway
 ####################################################
-
-def handle_gateway_data(data, database):
-    for v in data:
-        data[v.source][v.measurement] = v.value
-
