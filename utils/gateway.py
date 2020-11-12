@@ -11,7 +11,7 @@ class Gateway():
 
     def __wait_for_data(self, id):
         pass
-    
+
     #stops the thread
     def stop(self):
         self.exit = True
@@ -24,7 +24,6 @@ class Gateway():
     def start(self):
         self.read = True
 
-    
     def time_sync(self,):
         if not self.read:
             return -1

@@ -7,7 +7,7 @@ from time import time
 from tkinter import *
 import math
 
-from utils.data_functions import TimeSeries
+from utils.data_handling import TimeSeries
 
 REFRESH = 16 #delay in ms
 

@@ -31,7 +31,7 @@ def main():
     timeText.widget.place(x = 1500, y = 200)
 
     def on_close():
-        tm.exit = True
+        tm.stop()
         root.destroy()
 
     root.protocol("WM_DELETE_WINDOW", on_close)

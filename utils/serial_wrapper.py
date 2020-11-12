@@ -50,10 +50,12 @@ class SerialWrapper:
 
     #read x amount of bytes as a string
     def read_string(self, amount):
-        val = str(self.ser.read(amount))
-        return val
+        val = self.ser.read(amount)
+        self.backup.write(val)
+        return str(val)
     
     #tries to initialize a device
+    #user self.ser to read and write since it does not need to be saved
     def init_device(self):
         if self.device == "dummy":
             self.ser.write(b'aaa')
@@ -63,7 +65,7 @@ class SerialWrapper:
             print("nay")
             return 0
         elif self.device == "gateway":
-            pass #todo
+            pass
 
     #finds devices that are safe to communicate with
     def get_safe_devices(self):
@@ -86,7 +88,7 @@ class SerialWrapper:
 
         return safe_devices
 
-    #returns if it fails
+    #returns -1 if it fails
     def open_serial(self):
         baudrates ={
             "dummy": 11520,
