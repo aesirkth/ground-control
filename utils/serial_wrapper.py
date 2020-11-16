@@ -23,7 +23,7 @@ class SerialWrapper:
         self.device = device
         #get file name
         now = datetime.now()
-        time = now.strftime("%Y-%m-%d-%H:%M:%S")
+        time = now.strftime("%Y-%m-%d-%H-%M-%S")
         file_name = device + "-" + time
         #create file and directory
         try:
