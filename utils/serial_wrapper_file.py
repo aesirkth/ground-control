@@ -6,7 +6,7 @@ class SerialWrapper:
 
     #read x bytes as an integer, little endian
     def read_bytes(self, amount):
-        time.sleep(0.005)
+        time.sleep(0.002)
         bytes = self.ser.read(amount)
         total = 0
         count = 0
