@@ -1,4 +1,4 @@
-from utils.serial_wrapper import SerialWrapper
+from utils.serial_wrapper_file import SerialWrapper
 from utils.data_handling import (Data, TimeSeries, RelativeTime)
 
 import time
@@ -11,6 +11,8 @@ decoding_functions = {}
 ####
 #class to handle all telemetry things
 ####
+#source can be "flight" or "engine"
+#
 #self.data[*source*] - contains all the decoded data in TimeSeries
 #                       the source can be  either "flight" or "engine"
 #self.clocks[*source*] - contains the ms_since_boot converted to seconds in a RelativeTime class
@@ -23,6 +25,7 @@ class Telemetry():
         self.read = False
         self.exit = False
         self.last_packet = 0
+        self.ser = SerialWrapper("dummy")
 
         self.data = {}
         self.data["flight"] = {
@@ -65,7 +68,7 @@ class Telemetry():
 
 def telemetry_thread(tm):
     SEPARATOR = [0x0A, 0x0D]
-    ser = SerialWrapper("dummy")
+    ser = tm.ser
     error= 1 #error variable for ser.openSerial()
     while error:
         #wait for user to start serial
@@ -77,8 +80,6 @@ def telemetry_thread(tm):
         #init serial wrapper
         error = ser.open_serial()
         if error:
-            print("could not open serial connection")
-            print("The microcontroller needs to be reset after every run. Try unplugging it.")
             tm.read = False
 
     frameId = 0 #define before the loop so it remains in scope
