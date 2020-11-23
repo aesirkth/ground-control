@@ -1,5 +1,4 @@
 # main.py
-import tkinter as tk
 import sys  # We need sys so that we can pass argv to QApplication
 
 from utils.widgets_qt import MainWindow
