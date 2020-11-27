@@ -2,7 +2,7 @@
 #contains eveything related to data
 
 import time
-
+import struct
 telemetry_functions = {}
 gateway_functions = {}
 
@@ -44,3 +44,75 @@ class RelativeTime():
     def update_time(self, new_time):
         self.time = new_time
         self.updated = time.time()
+
+
+######
+#class to decode integers
+##
+#init(source, packaging, measurement, min = 0, max = 0)
+#source - source of the data
+#packaging - the python struct field
+#measurement - the measurement that is encoded
+#min - optional, the min value
+#max - optional, the max value
+#
+#decode(ser) - reads and decodes the data. returns an array with Data classess
+
+class Decoder():
+    def __init__(self, source, packaging, measurement, min = 0, max = 0):
+        self.source = source
+        self.packaging = packaging
+        self.source = source
+        self.measurement = measurement
+        self.min = min
+        self.max = max
+        
+    def decode(self, ser):
+        size = struct.calcsize(self.packaging)
+        buff = ser.read_bytes(size)
+        val = struct.unpack(self.packaging, buff)[0]
+        if self.max or self.min:
+            intmax = 2 << (size * 8) - 1
+            if(val <= 0):
+                return self.min - 1.0
+
+            if(val >= intmax):
+                return self.max + 1.0
+
+            ratio = (val - self.min) / (self.max - self.min)
+            val =  1 + ((intmax - 2)) * ratio
+
+        return [Data(self.source, self.measurement, val)]
+
+##
+#class to decode boolean values
+##
+#init(source, bits)
+#source - source of the data
+#bits - the measurements in order
+#
+#decode() - returns an array with Data classes
+class BitDecoder():
+    def __init__(self, source, bits):
+        self.source = source
+        self.bits = bits
+
+    def decode(self, ser):
+        buff = ser.read_int(1)
+        out = []
+        for i in range(0, len(self.bits)):
+            val = (buff & (2 ** i)) > 0
+            out.append(Data(self.source, self.bits[i], val))
+        return out
+
+##
+#class to decode anything
+##
+#init(func)
+#func - the function that is used for decoding
+#func should return an array with Data classes
+#
+#decode() - copy of func
+class CustomDecoder():
+    def __init__(self, func):
+        self.decode = func

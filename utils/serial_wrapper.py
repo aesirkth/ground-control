@@ -7,20 +7,24 @@ import serial.tools.list_ports
 import sys
 from datetime import datetime
 import os
-
+import time
 #Class to read and backup serial communication
 #
-#read_bytes(x) -    read x bytes as an integer, little endian
+#read_int(x) -    read x bytes as an integer, little endian
 #read_string(x) -   read x bytes as a string
+#read_bytes(x) -   read x bytes as a bytes
 #init_device() -    tries to initialize the current port
 #get_safe_devices() finds devices that are safe to communicate with
 #open_serial() -    tests and opens all ports to find a device. returns -1 if it failed
 
 class SerialWrapper:
     def __init__(self, device):
-        self.ser = serial.Serial(timeout = 2)
-        self.write = self.ser.write #copy pyserial's write function
+        self.ser = serial.Serial(timeout = 1)
         self.device = device
+        self.initialized = False
+
+        self.write = self.ser.write #copy pyserial's write function
+
         #get file name
         now = datetime.now()
         time = now.strftime("%Y-%m-%d-%H-%M-%S")
@@ -32,15 +36,15 @@ class SerialWrapper:
         except:
             pass
         try:
-            self.backup = open(dir_name + file_name, "w")
+            self.backup = open(dir_name + file_name, "w+b")
         except:
             print("could not create the file: " + dir_name + file_name)
             sys.exit()
 
     #read x bytes as an integer, little endian
-    def read_bytes(self, amount):
+    def read_int(self, amount):
         bytes = self.ser.read(amount)
-        self.backup.write(str(bytes))
+        self.backup.write(bytes)
         total = 0
         count = 0
         for v in bytes:
@@ -53,6 +57,12 @@ class SerialWrapper:
         val = self.ser.read(amount)
         self.backup.write(val)
         return str(val)
+
+    #read x amount of bytes as bytes
+    def read_bytes(self, amount):
+        val = self.ser.read(amount)
+        return val
+
     
     #tries to initialize a device
     #user self.ser to read and write since it does not need to be saved
@@ -60,12 +70,40 @@ class SerialWrapper:
         if self.device == "dummy":
             self.ser.write(b'aaa')
             if (self.ser.read(3) == b'bbb'):
-                print("yay")
                 return 1
-            print("nay")
-            return 0
+            else:
+                return 0
+
+        elif self.device == "RFD":
+            # RFD needs 1 seconds of inactivity to eneter AT mode
+            time.sleep(1) 
+            self.ser.write(b'+++') #init AT mode
+            time.sleep(1) #wait for data 
+            buff = self.ser.read_all()
+            if b'ok' in buff:
+                return 1
+            else:
+                return 0
+
         elif self.device == "gateway":
-            pass
+            bonjour = b"LAUNCHPADCONTROLLER" 
+            self.ser.write(b'&gB0')
+            time.sleep(1)
+            buff = self.ser.read_all()
+            if bonjour in buff:
+                return 1
+            else:
+                return 0
+
+        elif self.device == "telecommand_link":
+            bonjour = b"LORALINK" 
+            self.ser.write(b'&gB0')
+            time.sleep(1)
+            buff = self.ser.read_all()
+            if bonjour in buff:
+                return 1
+            else:
+                return 0
 
     #finds devices that are safe to communicate with
     def get_safe_devices(self):
@@ -87,11 +125,21 @@ class SerialWrapper:
                 safe_devices.append(d)
 
         return safe_devices
+    
+    #if the the gateway has been initialized
+    def port_is_open(self):
+        return self.initialized
 
     #returns -1 if it fails
     def open_serial(self):
+        if self.initialized:
+            return 1
+
         baudrates ={
             "dummy": 11520,
+            "gateway": 115200,
+            "RFD": 0,
+            "telecommand_link": 115200
         }
         self.ser.baudrate = baudrates[self.device]
 
@@ -99,11 +147,13 @@ class SerialWrapper:
         for v in ports:
             self.ser.port = v.device
             self.ser.open()
-            print("Testing" + str(v))
+            print(self.device + ": Testing " + str(v))
             if self.init_device():
                 self.initialized = True
-                print("Succesfully connected")
+                print(self.device + ": Succesfully connected")
                 return 0
+            print(self.device + ": Did not respond")
             self.ser.close()
         else:
+            print(self.device + ": opening serial failed")
             return -1
