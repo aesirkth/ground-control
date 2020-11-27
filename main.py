@@ -11,12 +11,12 @@ import struct
 import utils.widgets as widgets
 from utils.telemetry import Telemetry
 from utils.gateway import Gateway
-from utils.telecommand_link import TelecommandLink
+from utils.telecommand import Telecommand
 def main():
     #init threads
     tm = Telemetry()
     gw = Gateway()
-    tcl = TelecommandLink()
+    tcl = Telecommand()
     
     tm.start()
     gw.start()

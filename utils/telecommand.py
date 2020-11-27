@@ -36,7 +36,7 @@ decoding_definitions = {}
 #set_radio_emitters(self, fpv, tm)
 #set_parachute(self, armed, enable_1, enable_2)
 
-class TelecommandLink():
+class Telecommand():
     def __init__(self):
         self.data = {}
         self.read = True
