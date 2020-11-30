@@ -8,6 +8,9 @@ import sys
 from datetime import datetime
 import os
 import time
+
+from utils.definitions import *
+
 #Class to read and backup serial communication
 #
 #read_int(x) -    read x bytes as an integer, little endian
@@ -16,14 +19,11 @@ import time
 #init_device() -    tries to initialize the current port
 #get_safe_devices() finds devices that are safe to communicate with
 #open_serial() -    tests and opens all ports to find a device. returns -1 if it failed
-
 class SerialWrapper:
     def __init__(self, device):
         self.ser = serial.Serial(timeout = 1)
         self.device = device
         self.initialized = False
-
-        self.write = self.ser.write #copy pyserial's write function
 
         #get file name
         now = datetime.now()
@@ -41,10 +41,14 @@ class SerialWrapper:
             print("could not create the file: " + dir_name + file_name)
             sys.exit()
 
+    #basically a copy of pyserials write function
+    def write(self, bytes, *args):
+        self.backup.write(bytes)
+        self.ser.write(bytes, *args)
+
     #read x bytes as an integer, little endian
     def read_int(self, amount):
-        bytes = self.ser.read(amount)
-        self.backup.write(bytes)
+        bytes = self.read_bytes(amount)
         total = 0
         count = 0
         for v in bytes:
@@ -54,13 +58,13 @@ class SerialWrapper:
 
     #read x amount of bytes as a string
     def read_string(self, amount):
-        val = self.ser.read(amount)
-        self.backup.write(val)
+        val = self.read_bytes(amount)
         return str(val)
 
     #read x amount of bytes as bytes
     def read_bytes(self, amount):
         val = self.ser.read(amount)
+        self.backup.write(val)
         return val
 
     
@@ -95,7 +99,7 @@ class SerialWrapper:
             else:
                 return 0
 
-        elif self.device == "telecommand_link":
+        elif self.device == "telecommand":
             bonjour = b"LORALINK" 
             self.ser.write(b'&gB0')
             time.sleep(1)
@@ -139,7 +143,7 @@ class SerialWrapper:
             "dummy": 11520,
             "gateway": 115200,
             "RFD": 0,
-            "telecommand_link": 115200
+            "telecommand": 115200
         }
         self.ser.baudrate = baudrates[self.device]
 
@@ -157,3 +161,7 @@ class SerialWrapper:
         else:
             print(self.device + ": opening serial failed")
             return -1
+        
+        #timestamp the backupfile
+        def timestamp(self, time):
+            pass

@@ -38,7 +38,6 @@ class Gateway():
     def __read_state(self):
         while not self.ser.ser.in_waiting >= 12:
             time.sleep(0.1)
-
         state = self.ser.read_int(1)
         self.rfm_success = state & 1 > 0
         self.output1 = state & 2 > 0
@@ -83,7 +82,6 @@ class Gateway():
             4: 0x64  # d
         }
         self.__send_header("c")
-
         self.ser.write([outputs[output], state])
         self.__read_state()
 

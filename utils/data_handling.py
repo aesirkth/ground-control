@@ -3,8 +3,6 @@
 
 import time
 import struct
-telemetry_functions = {}
-gateway_functions = {}
 
 #class to store Data
 #############
@@ -14,7 +12,7 @@ gateway_functions = {}
 #value - the value of the measurement e.g. 10 or 3
 class Data:
     def __init__(self, source, measurement, value):
-        self.source = source #flight or engine
+        self.source = source #usually flight or engine
         self.measurement = measurement #name of data
         self.value = value
 
@@ -22,7 +20,7 @@ class Data:
 #class to store time series
 ###############
 #x - list with time values
-#y - list with physical values 
+#y - list with physical vaslues 
 class TimeSeries:
     def __init__(self):
         self.x = []
@@ -57,20 +55,20 @@ class RelativeTime():
 #max - optional, the max value
 #
 #decode(ser) - reads and decodes the data. returns an array with Data classess
-
 class Decoder():
-    def __init__(self, source, packaging, measurement, min = 0, max = 0):
+    def __init__(self, source, packaging, measurement, scale = 1, min = 0, max = 0):
         self.source = source
         self.packaging = packaging
         self.source = source
         self.measurement = measurement
+        self.scale = scale
         self.min = min
         self.max = max
         
     def decode(self, ser):
         size = struct.calcsize(self.packaging)
         buff = ser.read_bytes(size)
-        val = struct.unpack(self.packaging, buff)[0]
+        val = struct.unpack(self.packaging, buff)[0] * self.scale
         if self.max or self.min:
             intmax = 2 << (size * 8) - 1
             if(val <= 0):
@@ -83,6 +81,7 @@ class Decoder():
             val =  1 + ((intmax - 2)) * ratio
 
         return [Data(self.source, self.measurement, val)]
+
 
 ##
 #class to decode boolean values
@@ -105,6 +104,13 @@ class BitDecoder():
             out.append(Data(self.source, self.bits[i], val))
         return out
 
+    def init(self):
+        out = []
+        for i in self.bits:
+            out.append(Data(self.source, i, 0))
+        return out
+
+
 ##
 #class to decode anything
 ##
@@ -116,3 +122,23 @@ class BitDecoder():
 class CustomDecoder():
     def __init__(self, func):
         self.decode = func
+
+
+#
+# returns an array with Decoders with their names concatenated with numbers 
+# from start up to and including end 
+def MultiDecoder(source, packaging, name, start, end, *args):
+    out = []
+    for i in range(start, end+1):
+        d = Decoder(source, packaging, name + str(i), *args)
+        out.append(d)
+    return out
+
+
+#returns 3 decoders with their names concatenaded with x y and z
+def xyzDecoder(source, packaging, name, *args):
+    out = []
+    out.append(Decoder(source, packaging, name + "x", *args))
+    out.append(Decoder(source, packaging, name + "y", *args))
+    out.append(Decoder(source, packaging, name + "z", *args))
+    return out
