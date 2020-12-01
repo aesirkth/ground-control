@@ -6,6 +6,9 @@ from time import time
 from random import randint
 import threading
 
+INTERVAL = 30 # delay in ms - increase it if the dashboard is freezing, decrease to speed up the update rate
+
+COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255), (0, 255, 255)]
 
 class TitleWidget(QtWidgets.QLabel):
     """Widget use to write columns' title"""
@@ -29,33 +32,69 @@ class TitleWidget(QtWidgets.QLabel):
         self.setFixedHeight(35)
         
 
+def random_update_plot_data(x, y):
+    if len(x) == 100:
+        x.pop(0) # Remove the first y element.
+        x.append(x[-1] + 1)  # Add a new value 1 higher than the last.
+
+        y.pop(0) # Remove the first y element.
+        y.append( randint(0,100))  # Add a new random value.
+    else:
+        x = list(range(100))
+        y = [randint(0, 100) for _ in range(100)]
+
+    return x, y
+
+
 class GraphWidget(pg.PlotWidget):
 
-    def __init__(self, parent, timer):
+    def __init__(self, parent, timer, updateFunctions=[random_update_plot_data]*3, dataNames=["test", "ok", "peut-être"], updateTime=None):
+        """
+            updateFunctions is a list of updateFunction
+            updateFunction takes the list of x and y and return the new x and y lists
+        """
         super(GraphWidget, self).__init__(parent)
         self.setAttribute(Qt.WA_DeleteOnClose, True)
         self.setMinimumWidth(260)
 
-        self.x = list(range(100))  # 100 time points
-        self.y = [randint(0,100) for _ in range(100)]  # 100 data points
-
         self.setBackground('w')
         self.setMouseEnabled(x=False, y=False)
 
-        pen = pg.mkPen(color=(255, 0, 0))
-        self.data_line =  self.plot(self.x, self.y, pen=pen)
+        # Labels
+        self.setLabel('bottom', 'Time (s)')
+        self.addLegend(offset=(1, 1))
+
+        self.nbPlots = len(updateFunctions)
+        self.updateFunctions = updateFunctions
+        self.updateTime = updateTime
+
+        # Init x and y data
+        self.x = [[] for _ in range(self.nbPlots)]
+        self.y = [[] for _ in range(self.nbPlots)]
+
+        # Init lines
+        self.data_lines = [None]*self.nbPlots
+        for k in range(self.nbPlots):
+            if dataNames is None:
+                name = None
+            else:
+                name = dataNames[k]
+            pen = pg.mkPen(color=COLORS[k])
+            self.data_lines[k] = self.plot(self.x[k], self.y[k], name=name, pen=pen)
         
-        timer.timeout.connect(self.update_plot_data)
+        # Update functions
+        self.functions = [lambda : self.update_plot_data(k) for k in range(self.nbPlots)]
+        for k in range(self.nbPlots):
+            # f = lambda : self.update_plot_data(k)
+            # print(k, ":", f)
+            timer.timeout.connect(self.functions[k])
+        # timer.timeout.connect(self.update_plot_data)
 
-    def update_plot_data(self):
-
-        self.x = self.x[1:]  # Remove the first y element.
-        self.x.append(self.x[-1] + 1)  # Add a new value 1 higher than the last.
-
-        self.y = self.y[1:]  # Remove the first 
-        self.y.append( randint(0,100))  # Add a new random value.
-
-        self.data_line.setData(self.x, self.y)  # Update the data.
+    def update_plot_data(self, k):
+        for k in range(self.nbPlots):
+        # print(k)
+            self.x[k], self.y[k] = self.updateFunctions[k](self.x[k], self.y[k])
+            self.data_lines[k].setData(self.x[k], self.y[k])  # Update the data.
 
 
 # Temperature
@@ -64,7 +103,7 @@ class TempOxidizerGraph(GraphWidget):
     def __init__(self, parent, timer):
         super().__init__(parent, timer)
         self.setYRange(-30, 30, padding=0)
-        self.setTitle("Oxidizer tank + Passive vent line")
+        self.setTitle("Oxidizer tank + Passive vent line", color=(0, 0, 0))
 
 
 class TempPipeworkGraph(GraphWidget):
@@ -72,7 +111,7 @@ class TempPipeworkGraph(GraphWidget):
     def __init__(self, parent, timer):
         super().__init__(parent, timer)
         self.setYRange(-30, 30, padding=0)
-        self.setTitle("Pipework")
+        self.setTitle("Pipework", color=(0, 0, 0))
 
 
 class TempInjectorGraph(GraphWidget):
@@ -80,7 +119,7 @@ class TempInjectorGraph(GraphWidget):
     def __init__(self, parent, timer):
         super().__init__(parent, timer)
         self.setYRange(-30, 500, padding=0)
-        self.setTitle("Injector")
+        self.setTitle("Injector", color=(0, 0, 0))
 
 
 class TempCombustionGraph(GraphWidget):
@@ -88,14 +127,14 @@ class TempCombustionGraph(GraphWidget):
     def __init__(self, parent, timer):
         super().__init__(parent, timer)
         self.setYRange(0, 200, padding=0)
-        self.setTitle("Combustion chamber")
+        self.setTitle("Combustion chamber", color=(0, 0, 0))
 
 
 class TempNozzleGraph(GraphWidget):
 
     def __init__(self, parent, timer):
         super().__init__(parent, timer)
-        self.setTitle("Nozzle")
+        self.setTitle("Nozzle", color=(0, 0, 0))
 
 
 # Pression
@@ -104,7 +143,7 @@ class PreOxidizerGraph(GraphWidget):
     def __init__(self, parent, timer):
         super().__init__(parent, timer)
         self.setYRange(0, 60, padding=0)
-        self.setTitle("Oxidizer tank readings")
+        self.setTitle("Oxidizer tank readings", color=(0, 0, 0))
 
 
 class PreInjectorGraph(GraphWidget):
@@ -112,7 +151,7 @@ class PreInjectorGraph(GraphWidget):
     def __init__(self, parent, timer):
         super().__init__(parent, timer)
         self.setYRange(0, 60, padding=0)
-        self.setTitle("Injector")
+        self.setTitle("Injector", color=(0, 0, 0))
 
 
 class PreCombustionGraph(GraphWidget):
@@ -120,7 +159,7 @@ class PreCombustionGraph(GraphWidget):
     def __init__(self, parent, timer):
         super().__init__(parent, timer)
         self.setYRange(0, 40, padding=0)
-        self.setTitle("Combustion chamber")
+        self.setTitle("Combustion chamber", color=(0, 0, 0))
 
 
 class PreAmbientGraph(GraphWidget):
@@ -128,7 +167,7 @@ class PreAmbientGraph(GraphWidget):
     def __init__(self, parent, timer):
         super().__init__(parent, timer)
         self.setYRange(0, 1.5, padding=0)
-        self.setTitle("Ambient pressure")
+        self.setTitle("Ambient pressure", color=(0, 0, 0))
 
 
 # Electrical
@@ -243,15 +282,15 @@ class Electrical(QtWidgets.QWidget):
         tab.addWidget(HorizontalTextWidget(self, "Vent line solenoid"), 0, 2)
         tab.addWidget(HorizontalTextWidget(self, "Ignition system"), 0, 3)
 
-        tab.addWidget(DataWidget(str(randint(0,100)), timer, random_value, 25), 1, 1)
-        tab.addWidget(DataWidget(str(randint(0,100)), timer, random_value, 25), 1, 2)
-        tab.addWidget(DataWidget(str(randint(0,100)), timer, random_value, 25), 1, 3)
-        tab.addWidget(DataWidget(str(randint(0,100)), timer, random_value, 25), 2, 1)
-        tab.addWidget(DataWidget(str(randint(0,100)), timer, random_value, 25), 2, 2)
-        tab.addWidget(DataWidget(str(randint(0,100)), timer, random_value, 25), 2, 3)
-        tab.addWidget(DataWidget(str(randint(0,100)), timer, random_value, 25), 3, 1)
-        tab.addWidget(DataWidget(str(randint(0,100)), timer, random_value, 25), 3, 2)
-        tab.addWidget(DataWidget(str(randint(0,100)), timer, random_value, 25), 3, 3)
+        tab.addWidget(DataWidget("-", timer, random_value, 25), 1, 1)
+        tab.addWidget(DataWidget("-", timer, random_value, 25), 1, 2)
+        tab.addWidget(DataWidget("-", timer, random_value, 25), 1, 3)
+        tab.addWidget(DataWidget("-", timer, random_value, 25), 2, 1)
+        tab.addWidget(DataWidget("-", timer, random_value, 25), 2, 2)
+        tab.addWidget(DataWidget("-", timer, random_value, 25), 2, 3)
+        tab.addWidget(DataWidget("-", timer, random_value, 25), 3, 1)
+        tab.addWidget(DataWidget("-", timer, random_value, 25), 3, 2)
+        tab.addWidget(DataWidget("-", timer, random_value, 25), 3, 3)
 
         layout.addWidget(title)
         layout.addLayout(tab)
@@ -396,10 +435,10 @@ class BoardVoltageIndicator(QtWidgets.QWidget):
         # Indicators
         indicLayout = QtWidgets.QGridLayout()
 
-        indicLayout.addWidget(DataWidget("0", timer, random_value, 14), 0, 0)
-        indicLayout.addWidget(DataWidget("0", timer, random_value, 14), 1, 0)
-        indicLayout.addWidget(DataWidget("0", timer, random_value, 14), 0, 1)
-        indicLayout.addWidget(DataWidget("0", timer, random_value, 14), 1, 1)
+        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 0)
+        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 1, 0)
+        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 1)
+        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 1, 1)
         
 
         layout.addWidget(title)
@@ -434,14 +473,14 @@ class RMCTemperatureIndicator(QtWidgets.QWidget):
         # Indicators
         indicLayout = QtWidgets.QGridLayout()
 
-        indicLayout.addWidget(DataWidget("0", timer, random_value, 14), 0, 0)
-        indicLayout.addWidget(DataWidget("0", timer, random_value, 14), 1, 0)
-        indicLayout.addWidget(DataWidget("0", timer, random_value, 14), 0, 1)
-        indicLayout.addWidget(DataWidget("0", timer, random_value, 14), 1, 1)
-        indicLayout.addWidget(DataWidget("0", timer, random_value, 14), 0, 2)
-        indicLayout.addWidget(DataWidget("0", timer, random_value, 14), 1, 2)
-        indicLayout.addWidget(DataWidget("0", timer, random_value, 14), 0, 3)
-        indicLayout.addWidget(DataWidget("0", timer, random_value, 14), 1, 3)
+        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 0)
+        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 1, 0)
+        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 1)
+        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 1, 1)
+        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 2)
+        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 1, 2)
+        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 3)
+        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 1, 3)
         
 
         layout.addWidget(title)
@@ -454,7 +493,7 @@ class ErrorGraph(GraphWidget):
 
     def __init__(self, timer, parent=None):
         super().__init__(parent, timer)
-        self.setTitle("Error")
+        self.setTitle("Error", color=(0, 0, 0))
         # self.setMaximumWidth(300)
 
 
@@ -489,9 +528,9 @@ class Diagnostic(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(0,0,0,0)
 
-        horiLayout = QtWidgets.QHBoxLayout(self)
-        vertLayoutLeft = QtWidgets.QVBoxLayout(self)
-        vertLayoutRight = QtWidgets.QVBoxLayout(self)
+        horiLayout = QtWidgets.QHBoxLayout()
+        vertLayoutLeft = QtWidgets.QVBoxLayout()
+        vertLayoutRight = QtWidgets.QVBoxLayout()
 
         title = TitleWidget("Diagnostic readings")
         boardVoltage = BoardVoltageIndicator("Board input voltage", timer)
@@ -539,7 +578,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Æsir - Engine dashboard")
 
         self.timer = QtCore.QTimer(self)
-        self.timer.setInterval(30)
+        self.timer.setInterval(INTERVAL)
         # self.timer.setInterval(1000)
 
         # Temperature
