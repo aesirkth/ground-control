@@ -1,7 +1,19 @@
 ![image](docs/img.png)
 
-## dummy modem
-It uses the same teensy lc as https://github.com/klownfish/aesir-grafana-dashboard
+## dummy RFD modem
+Use [this](https://github.com/klownfish/serial-dummy) to emulate a basic version of the RFD modem.
+It runs on a teensy LC (might run on anything if you change the target).
+
+The data will stored in the following dicts
+```
+tm.["flight"]["pressure"]
+tm.["flight"]["altitude"]
+tm.["flight"]["gyrox"]
+tm.["flight"]["gyroy"]
+tm.["flight"]["gyroz"]
+tm.["flight"]["acceleration"]
+tm.["engine"]["catastrophe"]
+```
 
 ## dependencies
 Install the python dependencies\
@@ -11,23 +23,17 @@ Tkinter is included with Python since Python 3.1
 
 ## file structure
 ```
-main.py - starts everything
+main.py - starts a basic tkinter GUI Only used for debugging
+main_qt.py - starts the QT GUI
 utils/
-├─ widgets.py - GUI widgets
-├─ serial_wrapper.py - wrapper around pyserial
+├─ widgets.py - GUI widgets for tkinter (only used for debugging)
+├─ serial_wrapper.py - wrapper around pyserial also contains the base for the 
+                       telecommand and telemetry thread
 ├─ gateway.py - all the code for the gateway
 ├─ telemetry.py - all the code for the telemetry downlink
-├─ data_functions.py - functions and datatypes to handle the raw serial data
-├─ data_functionsp.py - W.I.P implementation of the real protocol
-├─ data/ - backups of the raw serial communication
+├─ telecommand.py - all the code for the telecommand downlink
+├─ data_handling.py - functions and datatypes to handle the raw serial data
+├─ widgets_qt - GUI widgets for the dashboard
+├─ data/
+   ├─   backups of the raw serial communication
 ```
-things to do:
-* Make serial wrapper init communication with a RFD modem and the launchpad gateway.
-* Implement gateway transmission protocol
-
-* Work on the UI
-    * Figure out a better way to represent widgets,\
-    * Start grouping widgets together in a frame so you don't have to place everything manually\
-    * implement the map thing from the old dashboard\
-    * A actual map that shows the rocket position would be cool\
-    * create two windows, for engine and flight controller\

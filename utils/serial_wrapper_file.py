@@ -1,7 +1,7 @@
 import time
 
 #reimplementation of Serialwrapper but reading from file instead
-class SerialWrapper:
+class SerialWrapper_file:
     def __init__(self, device):
         self.ser = open("data/test", "rb")
         self.initialized = False

@@ -2,7 +2,6 @@ from utils.serial_wrapper import SerialWrapper
 from utils.data_handling import (Data, TimeSeries, RelativeTime)
 
 import time
-from threading import Thread
 
 
 #####

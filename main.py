@@ -1,10 +1,6 @@
 #main.py
 import sys
 import time
-from matplotlib import pyplot as plt
-from matplotlib import animation
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkinter as tk
 import struct
 

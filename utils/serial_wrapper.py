@@ -8,8 +8,11 @@ import sys
 from datetime import datetime
 import os
 import time
+from threading import Thread
+from collections import defaultdict
 
 from utils.definitions import *
+from utils.data_handling import TimeSeries, RelativeTime
 
 #Class to read and backup serial communication
 #
@@ -71,14 +74,7 @@ class SerialWrapper:
     #tries to initialize a device
     #user self.ser to read and write since it does not need to be saved
     def init_device(self):
-        if self.device == "dummy":
-            self.ser.write(b'aaa')
-            if (self.ser.read(3) == b'bbb'):
-                return 1
-            else:
-                return 0
-
-        elif self.device == "RFD":
+        if self.device == "RFD":
             # RFD needs 1 seconds of inactivity to eneter AT mode
             time.sleep(1) 
             self.ser.write(b'+++') #init AT mode
@@ -140,7 +136,6 @@ class SerialWrapper:
             return 1
 
         baudrates ={
-            "dummy": 11520,
             "gateway": 115200,
             "RFD": 0,
             "telecommand": 115200
@@ -161,7 +156,109 @@ class SerialWrapper:
         else:
             print(self.device + ": opening serial failed")
             return -1
+    
+    #timestamp the backupfile
+    #time is in seconds
+    #it is then stored in milliseconds
+    def timestamp(self, time):
+        millis = int(time * 1000)
+        msg = []
+        msg += SEPARATOR
+        msg += [ID_TIMESTAMP]
+        buf = [None] * 4 
+        buf[0] = millis & 255
+        buf[1] = (millis >> 8)  & 255
+        buf[2] = (millis >> 16) & 255
+        buf[3] = (millis >> 24) & 255
+        msg += buf
+        self.backup.write(bytes(msg))
+
+
+###
+#spawns a thread that reads from serial 
+#it detects headers defined in definiiotns.py and uses decoders to parse the data
+##
+#clocks - contains the clock class to keep track of the current time 
+#data - contains all the data like data[*source*][*measurement*]
+#
+#stop() - stops the thread completely
+#start() - opens and starts reading serial
+#pause() - stops the thread from reading
+#resume() - resumes the thread
+#state() - if the link is open
+class SerialReader():
+    def __init__(self, device, decoders):
+        self.read = True
+        self.exit = False
+        self.ser = SerialWrapper(device)
+        self.device = device
+        self.decoders = decoders
+        #use defaultdict to let the front-end use uninitialized data
+        self.data = defaultdict(lambda: defaultdict(TimeSeries))
+        self.clocks = defaultdict(RelativeTime)
+
+        t = Thread(target = reader_thread, args = (self,))
+        t.start()
+
+    #stops the thread
+    def stop(self):
+        self.exit = True
+
+    #if the gateway is currently reading
+    def state(self):
+        return self.ser.port_is_open()
+    
+    #pause the thread
+    def pause(self):
+        self.read = False
+    
+    def resume(self):
+        self.read = True
+
+    #start and open serial
+    def start(self):
+        self.ser.open_serial()
+
+
+def reader_thread(sr):
+    ser = sr.ser
+    
+    #wait for user to start serial
+    while not sr.state():
+        time.sleep(1)
+        if sr.exit:
+            return
+
+    frameId = 0 #define before the loop so it remains in scope
+    while not sr.exit:
+        if not sr.read:
+            time.sleep(1)
+            continue
         
-        #timestamp the backupfile
-        def timestamp(self, time):
-            pass
+        #test for frame separator, read one byte at a time so it aligns itself
+        if not (ser.read_int(1) == SEPARATOR[0] and
+                ser.read_int(1) == SEPARATOR[1]):
+            print(sr.device + ": Invalid separator or no data. last ID: " + str(frameId))
+            continue
+        frame_id_old = frameId
+        frame_id = ser.read_int(1)
+
+        if frame_id not in sr.decoders.keys():
+            print("telemetry: Invalid ID: " + str(frame_id))
+            print("telemetry: last valid ID: " + str(frame_id_old))
+            continue
+ 
+        decoder = sr.decoders[frame_id]
+        data = []
+        for v in decoder:
+            data += v.decode(ser)
+
+        source = data[0].source
+        ser.timestamp(sr.clocks[source].get_current_time())
+        if data[0].measurement == "ms_since_boot":
+            sr.clocks[source].update_time(data[0].value / 1000) # convert to seconds    
+        else:
+            for v in data:
+                series = sr.data[v.source][v.measurement]
+                series.x.append(sr.clocks[source].get_current_time())
+                series.y.append(v.value)

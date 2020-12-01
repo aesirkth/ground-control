@@ -1,12 +1,10 @@
-import bitstruct as bs
 from datetime import datetime
-import time
 from threading import Thread
 
-from utils.serial_wrapper import SerialWrapper
+from utils.serial_wrapper import SerialReader
 from utils.data_handling import *
 from utils.definitions import *
-
+from collections import defaultdict
 
 #used further down
 decoding_definitions = {}
@@ -19,13 +17,8 @@ decoding_definitions = {}
 #self.data[*source*] - contains all the decoded data in TimeSeries
 #                       the source can be  either "flight" or "engine"
 #self.clocks[*source*] - contains the ms_since_boot converted to seconds in a RelativeTime class
-#
-#stop() - stops the thread completely
-#start() - opens and starts reading serial
-#pause() - stops the thread from reading
-#resume() - resumes the thread
-#state() - if the link is open
-#
+#source can be "engine" or "flight"
+# 
 ##
 #none of the functions below will return a value.
 #Instead they will get an update pushed to the data dictionary
@@ -38,30 +31,9 @@ decoding_definitions = {}
 #set_flight_power_mode(self, TBD)
 #set_radio_emitters(self, fpv, tm)
 #set_parachute(self, armed, enable_1, enable_2)
-class Telecommand():
+class Telecommand(SerialReader):
     def __init__(self):
-        self.data = {}
-        self.read = True
-        self.exit = False
-        self.ser = SerialWrapper("telecommand")
-
-        self.data = {}
-        self.data["flight"] = {
-            "is_parachute_armed": TimeSeries(),
-            "is_parachute1_en": TimeSeries(),
-            "is_parachute2_en": TimeSeries(),
-            "voltage_battery1": TimeSeries(),
-            "voltage_battery2": TimeSeries()
-        }
-        self.data["engine"] = {
-            "catastrophe": TimeSeries()
-        }
-        self.clocks = {
-            "flight": RelativeTime(),
-            "engine": RelativeTime() 
-        }
-        t = Thread(target = telecommand_link_thread, args = (self,))
-        t.start()
+        super().__init__("telecommand", decoding_definitions)
 
     def __send_header(self, id):
         start = SEPARATOR
@@ -155,49 +127,6 @@ class Telecommand():
         data += 2 * (enable_1 > 0)
         data += 4 * (enable_2 > 0)
         self.ser.write(data)
-
-
-def telecommand_link_thread(tcl):
-    ser = tcl.ser
-    
-    #wait for user to start serial
-    while not tcl.state():
-        time.sleep(1)
-        if tcl.exit:
-            return
-
-    frameId = 0 #define before the loop so it remains in scope
-    while not tcl.exit:
-        if not tcl.read:
-            time.sleep(1)
-            continue
-        
-        #test for frame separator, read one byte at a time so it aligns itself
-        if not (ser.read_int(1) == SEPARATOR[0] and
-                ser.read_int(1) == SEPARATOR[1]):
-            print("telecommand_link: Invalid separator or no data. last ID: " + str(frameId))
-            continue
-
-        frameId = ser.read_int(1)
-
-        if frameId not in decoding_definitions.keys():
-            print("telecommand_link: Invalid ID: " + str(frameId))
-            continue
- 
-        decoders = decoding_definitions[frameId]
-        data = []
-        for v in decoders:
-            data += v.decode(ser)
-
-        source = data[0].source
-        if data[0].measurement == "ms_since_boot":
-            tcl.clocks[source].update_time(data[0].value / 1000) # convert to seconds    
-        else:
-            for v in data:
-                series = tcl.data[v.source][v.measurement]
-                series.x.append(tcl.clocks[source].get_current_time())
-                series.y.append(v.value)
-
 
 
 #decoding_definitions[ID_SOFTWARE_STATE_EC] = [Decoder("engine",

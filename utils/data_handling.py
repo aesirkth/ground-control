@@ -124,7 +124,6 @@ class CustomDecoder():
         self.decode = func
 
 
-#
 # returns an array with Decoders with their names concatenated with numbers 
 # from start up to and including end 
 def MultiDecoder(source, packaging, name, start, end, *args):
