@@ -46,9 +46,33 @@ def random_update_plot_data(x, y):
     return x, y
 
 
+class Line(object):
+    def __init__(self, graph, num, updateFunction, timer, name=""):
+        self.graph = graph
+        self.k = num
+        self.updateFunction = updateFunction
+        self.name = name
+        self.x = []
+        self.y = []
+        pen = pg.mkPen(color=COLORS[self.k])
+        self.line = graph.plot(self.x, self.y, name=self.name, pen=pen)
+
+        self.test = 0
+
+        timer.timeout.connect(self.update)
+
+    def update(self):
+        if self.test == 0:
+            self.x, self.y = self.updateFunction(self.x, self.y)
+            self.line.setData(self.x, self.y)
+        else:
+            self.test = (self.test + 1) % 3
+
+
+
 class GraphWidget(pg.PlotWidget):
 
-    def __init__(self, parent, timer, updateFunctions=[random_update_plot_data]*3, dataNames=["test", "ok", "peut-être"], updateTime=None):
+    def __init__(self, parent, timer, updateFunctions=[random_update_plot_data]*3, dataNames=["test", "ok", "peut-être"]):
         """
             updateFunctions is a list of updateFunction
             updateFunction takes the list of x and y and return the new x and y lists
@@ -66,7 +90,6 @@ class GraphWidget(pg.PlotWidget):
 
         self.nbPlots = len(updateFunctions)
         self.updateFunctions = updateFunctions
-        self.updateTime = updateTime
 
         # Init x and y data
         self.x = [[] for _ in range(self.nbPlots)]
@@ -79,22 +102,7 @@ class GraphWidget(pg.PlotWidget):
                 name = None
             else:
                 name = dataNames[k]
-            pen = pg.mkPen(color=COLORS[k])
-            self.data_lines[k] = self.plot(self.x[k], self.y[k], name=name, pen=pen)
-        
-        # Update functions
-        self.functions = [lambda : self.update_plot_data(k) for k in range(self.nbPlots)]
-        for k in range(self.nbPlots):
-            # f = lambda : self.update_plot_data(k)
-            # print(k, ":", f)
-            timer.timeout.connect(self.functions[k])
-        # timer.timeout.connect(self.update_plot_data)
-
-    def update_plot_data(self, k):
-        for k in range(self.nbPlots):
-        # print(k)
-            self.x[k], self.y[k] = self.updateFunctions[k](self.x[k], self.y[k])
-            self.data_lines[k].setData(self.x[k], self.y[k])  # Update the data.
+            self.data_lines[k] = Line(self, k, self.updateFunctions[k], timer, name=name)
 
 
 # Temperature
