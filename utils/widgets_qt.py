@@ -642,6 +642,8 @@ class MainWindow(QtWidgets.QMainWindow):
         
         # Timer for update
         self.timer.start()
+        QtCore.QCoreApplication.setQuitLockEnabled(True)
+        # Allow the application to end when the window is closed
 
         # Set the central widget of the Window. Widget will expand
         # to take up all the space in the window by default.
