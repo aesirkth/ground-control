@@ -8,7 +8,7 @@ import threading
 
 INTERVAL = 30 # delay in ms - increase it if the dashboard is freezing, decrease to speed up the update rate
 
-COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255), (0, 255, 255)]
+COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 0, 255), (0, 255, 255)]
 
 class TitleWidget(QtWidgets.QLabel):
     """Widget use to write columns' title"""
@@ -32,16 +32,16 @@ class TitleWidget(QtWidgets.QLabel):
         self.setFixedHeight(35)
         
 
-def random_update_plot_data(x, y):
+def random_update_plot_data(x, y, mini=0, maxi=200):
     if len(x) == 100:
         x.pop(0) # Remove the first y element.
         x.append(x[-1] + 1)  # Add a new value 1 higher than the last.
 
         y.pop(0) # Remove the first y element.
-        y.append( randint(0,100))  # Add a new random value.
+        y.append( randint(mini,maxi))  # Add a new random value.
     else:
         x = list(range(100))
-        y = [randint(0, 100) for _ in range(100)]
+        y = [randint(mini, maxi) for _ in range(100)]
 
     return x, y
 
@@ -69,10 +69,9 @@ class Line(object):
             self.test = (self.test + 1) % 3
 
 
-
 class GraphWidget(pg.PlotWidget):
 
-    def __init__(self, parent, timer, updateFunctions=[random_update_plot_data]*3, dataNames=["test", "ok", "peut-être"]):
+    def __init__(self, parent, timer, updateFunctions=[random_update_plot_data]*4, dataNames=["test", "ok", "peut-être", None, None]):
         """
             updateFunctions is a list of updateFunction
             updateFunction takes the list of x and y and return the new x and y lists
@@ -109,7 +108,10 @@ class GraphWidget(pg.PlotWidget):
 class TempOxidizerGraph(GraphWidget):
 
     def __init__(self, parent, timer):
-        super().__init__(parent, timer)
+        updateFunction = lambda x, y : random_update_plot_data(x, y, mini=-30, maxi=30)
+        updateFunctions = [updateFunction]*5
+        dataNames = None
+        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
         self.setYRange(-30, 30, padding=0)
         self.setTitle("Oxidizer tank + Passive vent line", color=(0, 0, 0))
 
@@ -117,7 +119,10 @@ class TempOxidizerGraph(GraphWidget):
 class TempPipeworkGraph(GraphWidget):
 
     def __init__(self, parent, timer):
-        super().__init__(parent, timer)
+        updateFunction = lambda x, y : random_update_plot_data(x, y, mini=-30, maxi=30)
+        updateFunctions = [updateFunction]*4
+        dataNames = None
+        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
         self.setYRange(-30, 30, padding=0)
         self.setTitle("Pipework", color=(0, 0, 0))
 
@@ -125,7 +130,10 @@ class TempPipeworkGraph(GraphWidget):
 class TempInjectorGraph(GraphWidget):
 
     def __init__(self, parent, timer):
-        super().__init__(parent, timer)
+        updateFunction = lambda x, y : random_update_plot_data(x, y, mini=-30, maxi=500)
+        updateFunctions = [updateFunction]
+        dataNames = None
+        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
         self.setYRange(-30, 500, padding=0)
         self.setTitle("Injector", color=(0, 0, 0))
 
@@ -133,7 +141,10 @@ class TempInjectorGraph(GraphWidget):
 class TempCombustionGraph(GraphWidget):
 
     def __init__(self, parent, timer):
-        super().__init__(parent, timer)
+        updateFunction = lambda x, y : random_update_plot_data(x, y, mini=0, maxi=200)
+        updateFunctions = [updateFunction]*3
+        dataNames = ["Wall 1", "Wall 2", "Wall 3"]
+        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
         self.setYRange(0, 200, padding=0)
         self.setTitle("Combustion chamber", color=(0, 0, 0))
 
@@ -141,7 +152,10 @@ class TempCombustionGraph(GraphWidget):
 class TempNozzleGraph(GraphWidget):
 
     def __init__(self, parent, timer):
-        super().__init__(parent, timer)
+        updateFunction = lambda x, y : random_update_plot_data(x, y)
+        updateFunctions = [updateFunction]
+        dataNames = None
+        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
         self.setTitle("Nozzle", color=(0, 0, 0))
 
 
@@ -149,7 +163,10 @@ class TempNozzleGraph(GraphWidget):
 class PreOxidizerGraph(GraphWidget):
 
     def __init__(self, parent, timer):
-        super().__init__(parent, timer)
+        updateFunction = lambda x, y : random_update_plot_data(x, y, mini=0, maxi=60)
+        updateFunctions = [updateFunction]*2
+        dataNames = ["Top", "Bottom"]
+        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
         self.setYRange(0, 60, padding=0)
         self.setTitle("Oxidizer tank readings", color=(0, 0, 0))
 
@@ -157,7 +174,10 @@ class PreOxidizerGraph(GraphWidget):
 class PreInjectorGraph(GraphWidget):
 
     def __init__(self, parent, timer):
-        super().__init__(parent, timer)
+        updateFunction = lambda x, y : random_update_plot_data(x, y, mini=0, maxi=60)
+        updateFunctions = [updateFunction]
+        dataNames = None
+        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
         self.setYRange(0, 60, padding=0)
         self.setTitle("Injector", color=(0, 0, 0))
 
@@ -165,7 +185,10 @@ class PreInjectorGraph(GraphWidget):
 class PreCombustionGraph(GraphWidget):
 
     def __init__(self, parent, timer):
-        super().__init__(parent, timer)
+        updateFunction = lambda x, y : random_update_plot_data(x, y, mini=0, maxi=40)
+        updateFunctions = [updateFunction]
+        dataNames = None
+        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
         self.setYRange(0, 40, padding=0)
         self.setTitle("Combustion chamber", color=(0, 0, 0))
 
@@ -173,7 +196,10 @@ class PreCombustionGraph(GraphWidget):
 class PreAmbientGraph(GraphWidget):
 
     def __init__(self, parent, timer):
-        super().__init__(parent, timer)
+        updateFunction = lambda x, y : random_update_plot_data(x, y, mini=0, maxi=2)
+        updateFunctions = [updateFunction]*2
+        dataNames = None
+        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
         self.setYRange(0, 1.5, padding=0)
         self.setTitle("Ambient pressure", color=(0, 0, 0))
 
@@ -215,14 +241,15 @@ class VerticalTextWidget(QtWidgets.QLabel):
         self.setPalette(palette)
 
         size = self.minimumSizeHint()
+        self.heightOffset = size.width()/2
         self.setMinimumHeight(size.width()+10)
         self.setFixedWidth(size.height()+4)
 
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
-        painter.translate(0, self.height()-5)
+        painter.translate(0, self.height()/2+self.heightOffset)
         painter.rotate(-90)
-        painter.drawText(0, self.width()/2+2, self.text())
+        painter.drawText(0, self.width()/2+4, self.text())
         painter.end()
 
 
@@ -253,22 +280,27 @@ class VerticalTextWidget(QtWidgets.QLabel):
 
 class DataWidget(QtWidgets.QLabel):
     """docstring for DataWidget"""
-    def __init__(self, text, timer, updateFunction, fontSize, parent=None):
+    def __init__(self, text, timer, updateFunction, fontSize, formatting="{:>5.2f}", parent=None):
         super(DataWidget, self).__init__(text, parent)
         self.setAlignment(Qt.AlignCenter)
         font = self.font()
         font.setPointSize(fontSize)
         self.setFont(font)
 
+        self.formatting = formatting
         self.updateFunction = updateFunction
         timer.timeout.connect(self.update_value)
     
     def update_value(self):
-        self.setText(str(self.updateFunction()))
+        value = self.updateFunction()
+        if isinstance(value, str):
+            self.setText(value)
+            return
+        self.setText(self.formatting.format(self.updateFunction()))
 
 
-def random_value():
-    return randint(0,200)
+def random_value(mini=0, maxi=1000):
+    return randint(mini,maxi)/100
 
 class Electrical(QtWidgets.QWidget):
 
@@ -369,7 +401,7 @@ class BoolIndicator(QtWidgets.QWidget):
 
 class ValueIndicator(QtWidgets.QWidget):
     """docstring for ValueIndicator"""
-    def __init__(self, text, timer, updateFunction, sizeTitle=15, sizeData=17, parent=None):
+    def __init__(self, text, timer, updateFunction, sizeTitle=15, sizeData=17, formatting="{}", parent=None):
         super(ValueIndicator, self).__init__(parent)
 
         # Background color
@@ -389,7 +421,7 @@ class ValueIndicator(QtWidgets.QWidget):
         self.title.setFont(font)
 
         # Indicator
-        self.indic = DataWidget("-", timer, updateFunction, sizeData)
+        self.indic = DataWidget("-", timer, updateFunction, sizeData, formatting=formatting)
         self.indic.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
 
         layout.addWidget(self.title)
@@ -408,7 +440,7 @@ class Status(QtWidgets.QWidget):
         title = TitleWidget("Status signals")
         relief = BoolIndicator("Relief valve trigger", timer)
         valve = BoolIndicator("Abort valve trigger", timer)
-        actuation = ValueIndicator("Main valve actuation", timer, random_value)
+        actuation = ValueIndicator("Main valve actuation", timer, lambda: random_value(maxi=10000), formatting="{:.0f} mm")
 
         layout.addWidget(title)
         layout.addWidget(relief)
@@ -431,28 +463,30 @@ class BoardVoltageIndicator(QtWidgets.QWidget):
         self.setPalette(palette)
 
         # Layout
-        layout = QtWidgets.QHBoxLayout()
-        layout.setAlignment(Qt.AlignVCenter)
+        layout = QtWidgets.QVBoxLayout()
+
         # Title
         title = QtWidgets.QLabel(text)
-        title.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        title.setAlignment(Qt.AlignCenter)
         font = title.font()
         font.setPointSize(15)
         title.setFont(font)
+
+        title.setMaximumHeight(30)
 
         # Indicators
         indicLayout = QtWidgets.QGridLayout()
 
         indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 0)
-        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 1, 0)
         indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 1)
-        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 1, 1)
+        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 2)
+        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 3)
         
 
         layout.addWidget(title)
         layout.addLayout(indicLayout)
 
-        self.setMinimumWidth(265) # Évite le redimensionnement du widget
+        # self.setMinimumWidth(265) # Évite le redimensionnement du widget
 
         self.setLayout(layout)
 
@@ -470,25 +504,27 @@ class RMCTemperatureIndicator(QtWidgets.QWidget):
 
         # Layout
         layout = QtWidgets.QVBoxLayout()
-        layout.setAlignment(Qt.AlignVCenter)
+        # layout.setAlignment(Qt.AlignVCenter)
         # Title
         title = QtWidgets.QLabel(text)
-        title.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        title.setAlignment(Qt.AlignCenter)
         font = title.font()
         font.setPointSize(15)
         title.setFont(font)
+
+        title.setMaximumHeight(30)
 
         # Indicators
         indicLayout = QtWidgets.QGridLayout()
 
         indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 0)
-        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 1, 0)
         indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 1)
+        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 1, 0)
         indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 1, 1)
-        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 2)
-        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 1, 2)
-        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 3)
-        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 1, 3)
+        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 2, 0)
+        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 2, 1)
+        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 3, 0)
+        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 3, 1)
         
 
         layout.addWidget(title)
@@ -500,16 +536,18 @@ class RMCTemperatureIndicator(QtWidgets.QWidget):
 class ErrorGraph(GraphWidget):
 
     def __init__(self, timer, parent=None):
-        super().__init__(parent, timer)
+        updateFunctions = [random_update_plot_data]
+        dataNames = None
+        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
         self.setTitle("Error", color=(0, 0, 0))
-        # self.setMaximumWidth(300)
+        self.setMaximumHeight(200)
 
 
 class FPSIndicator(ValueIndicator):
     """docstring for FPSIndicator"""
     def __init__(self, timer, parent=None):
         super(FPSIndicator, self).__init__("FPS :", timer, self.updateFPS,
-            sizeTitle=10, sizeData=10,  parent=parent)
+            sizeTitle=10, sizeData=10,  formatting="{}", parent=parent)
         self.count_frame = 0
         self.interval = 30
         self.time = time()
@@ -572,8 +610,8 @@ class Diagnostic(QtWidgets.QWidget):
 
         self.setLayout(layout)
 
-    def print_size(self):
-        print(self.aafficher.frameGeometry().width())
+    # def print_size(self):
+    #     print(self.aafficher.frameGeometry().width())
 
 
 # Main window
@@ -627,10 +665,21 @@ class MainWindow(QtWidgets.QMainWindow):
         status = Status(self.timer)
         diagnostic = Diagnostic(self.timer)
 
+        sizePolicy = electrical.sizePolicy()
+        sizePolicy.setVerticalPolicy(QtWidgets.QSizePolicy.Expanding)
+        electrical.setSizePolicy(sizePolicy)
+
+        # maxWidth = diagnostic.minimumSizeHint().width()
+        maxWidth = 500
+
+        electrical.setMaximumWidth(maxWidth)
+        status.setMaximumWidth(maxWidth)
+        diagnostic.setMaximumWidth(maxWidth)
+
         others.addWidget(electrical)
         others.addWidget(status)
         others.addWidget(diagnostic)
-       
+
         # Global layout
         layout = QtWidgets.QHBoxLayout()
         layout.addLayout(temperature)
