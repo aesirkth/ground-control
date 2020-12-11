@@ -99,3 +99,4 @@ class Gateway():
         self.ser.write([servos[servo], angle])
 
         self.__read_state()
+        

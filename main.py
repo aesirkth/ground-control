@@ -8,9 +8,14 @@ import utils.widgets as widgets
 from utils.telemetry import Telemetry
 from utils.gateway import Gateway
 from utils.telecommand import Telecommand
+from utils.data_handling import init_db, reset_db
+
 def main():
+    #init infnlux
+    client = init_db(True)
+    
     #init threads
-    tm = Telemetry()
+    tm = Telemetry(client)
     gw = Gateway()
     tcl = Telecommand()
     

@@ -12,7 +12,7 @@ from threading import Thread
 from collections import defaultdict
 
 from utils.definitions import *
-from utils.data_handling import TimeSeries, RelativeTime
+from utils.data_handling import TimeSeries, RelativeTime, write_data_db
 
 #Class to read and backup serial communication
 #
@@ -24,7 +24,7 @@ from utils.data_handling import TimeSeries, RelativeTime
 #open_serial() -    tests and opens all ports to find a device. returns -1 if it failed
 class SerialWrapper:
     def __init__(self, device):
-        self.ser = serial.Serial(timeout = 1)
+        self.ser = serial.Serial(timeout = 0.2)
         self.device = device
         self.initialized = False
 
@@ -187,12 +187,13 @@ class SerialWrapper:
 #resume() - resumes the thread
 #state() - if the link is open
 class SerialReader():
-    def __init__(self, device, decoders):
+    def __init__(self, device, decoders, influx = None):
         self.read = True
         self.exit = False
         self.ser = SerialWrapper(device)
         self.device = device
         self.decoders = decoders
+        self.client = influx
         #use defaultdict to let the front-end use uninitialized data
         self.data = defaultdict(lambda: defaultdict(TimeSeries))
         self.clocks = defaultdict(RelativeTime)
@@ -222,7 +223,6 @@ class SerialReader():
 
 def reader_thread(sr):
     ser = sr.ser
-    
     #wait for user to start serial
     while not sr.state():
         time.sleep(1)
@@ -258,6 +258,10 @@ def reader_thread(sr):
         if data[0].measurement == "ms_since_boot":
             sr.clocks[source].update_time(data[0].value / 1000) # convert to seconds    
         else:
+            #write data to database
+            if sr.client:
+                write_data_db(data, sr.client)
+            #push data to local dict
             for v in data:
                 series = sr.data[v.source][v.measurement]
                 series.x.append(sr.clocks[source].get_current_time())
