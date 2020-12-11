@@ -625,7 +625,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.timer = QtCore.QTimer(self)
         self.timer.setInterval(INTERVAL)
-        # self.timer.setInterval(1000)
 
         # Temperature
         # Left Column

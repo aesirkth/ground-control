@@ -1,13 +1,11 @@
 # main.py
 import sys  # We need sys so that we can pass argv to QApplication
 
-from utils.widgets_lpc import MainWindow
+from utils.widgets_mcd import MainWindow
 from PyQt5 import QtWidgets, QtCore, QtGui
 
 
 def main():
-    #init threads
-    tm = Telemetry()
 
     # Init Qt
     app = QtWidgets.QApplication(sys.argv)
