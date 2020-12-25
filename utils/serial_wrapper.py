@@ -23,10 +23,13 @@ from utils.data_handling import TimeSeries, RelativeTime, write_data_db
 #get_safe_devices() finds devices that are safe to communicate with
 #open_serial() -    tests and opens all ports to find a device. returns -1 if it failed
 class SerialWrapper:
-    def __init__(self, device):
+    def __init__(self, device, **kwargs):
         self.ser = serial.Serial(timeout = 0.2)
         self.device = device
         self.initialized = False
+        if "path" in kwargs:
+            self.ser = open(kwargs["path"], "rb")
+            self.initialized = True
 
         #get file name
         now = datetime.now()
@@ -187,13 +190,16 @@ class SerialWrapper:
 #resume() - resumes the thread
 #state() - if the link is open
 class SerialReader():
-    def __init__(self, device, decoders, influx = None):
+    def __init__(self, device, decoders, **kwargs):
         self.read = True
         self.exit = False
-        self.ser = SerialWrapper(device)
+        self.ser = SerialWrapper(device, **kwargs)
         self.device = device
         self.decoders = decoders
-        self.client = influx
+        self.client = False
+        if "influx" in kwargs: 
+            self.client = kwargs["influx"]
+
         #use defaultdict to let the front-end use uninitialized data
         self.data = defaultdict(lambda: defaultdict(TimeSeries))
         self.clocks = defaultdict(RelativeTime)

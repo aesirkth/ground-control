@@ -15,7 +15,7 @@ def main():
     client = init_db(True)
     
     #init threads
-    tm = Telemetry(client)
+    tm = Telemetry(path = "data/test")
     gw = Gateway()
     tcl = Telecommand()
     
@@ -26,7 +26,6 @@ def main():
     #init tk
     root = tk.Tk()
 
-    
     altitude = widgets.AltitudeGraph(root, tm)
     pressure = widgets.PressureGraph(root, tm)
     acceleration = widgets.AccelerationGraph(root, tm)

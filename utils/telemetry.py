@@ -13,8 +13,8 @@ decoding_definitions = {}
 # self.clocks[*source*] - contains the ms_since_boot converted to seconds in a RelativeTime class
 # source can be "flight" or "engine"
 class Telemetry(SerialReader):
-    def __init__(self, client = 0):
-        super().__init__("RFD", decoding_definitions, client)
+    def __init__(self, **kwargs):
+        super().__init__("RFD", decoding_definitions, **kwargs)
 
 
 #all names are taken from the data protocol other than the following

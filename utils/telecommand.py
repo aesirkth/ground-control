@@ -32,8 +32,8 @@ decoding_definitions = {}
 #set_radio_emitters(self, fpv, tm)
 #set_parachute(self, armed, enable_1, enable_2)
 class Telecommand(SerialReader):
-    def __init__(self):
-        super().__init__("telecommand", decoding_definitions)
+    def __init__(self, **kwargs):
+        super().__init__("telecommand", decoding_definitions, **kwargs)
 
     def __send_header(self, id):
         start = SEPARATOR
