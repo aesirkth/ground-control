@@ -9,8 +9,10 @@ def main():
 
     # Init Qt
     app = QtWidgets.QApplication(sys.argv)
+    # print(QtWidgets.QStyleFactory.keys()) # Available styles
+    app.setStyle('Fusion') # Selection of the style
 
-    # set app icon    
+    # set app icon
     app_icon = QtGui.QIcon()
     app_icon.addFile('gui/logo/16x16.png', QtCore.QSize(16,16))
     app_icon.addFile('gui/logo/24x24.png', QtCore.QSize(24,24))
