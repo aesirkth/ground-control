@@ -10,6 +10,8 @@ INTERVAL = 30 # delay in ms - increase it if the dashboard is freezing, decrease
 
 COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 0, 255), (0, 255, 255)]
 
+X_AXIS_LENGTH = 60
+
 class TitleWidget(QtWidgets.QLabel):
     """Widget use to write columns' title"""
     def __init__(self, text, parent=None):
@@ -65,6 +67,8 @@ class Line(object):
         if self.test == 0:
             self.x, self.y = self.updateFunction(self.x, self.y)
             self.line.setData(self.x, self.y)
+            if len(self.x) != 0:
+                self.graph.setXRange(self.x[-1] - X_AXIS_LENGTH, self.x[-1])
         else:
             self.test = (self.test + 1) % 3
 
@@ -107,8 +111,8 @@ class GraphWidget(pg.PlotWidget):
 # Temperature
 class TempOxidizerGraph(GraphWidget):
 
-    def __init__(self, parent, timer):
-        updateFunction = lambda x, y : random_update_plot_data(x, y, mini=-30, maxi=30)
+    def __init__(self, parent, timer, tm):
+        updateFunction = tm.data["flight"]["gyrox"].pack
         updateFunctions = [updateFunction]*5
         dataNames = None
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
@@ -118,8 +122,8 @@ class TempOxidizerGraph(GraphWidget):
 
 class TempPipeworkGraph(GraphWidget):
 
-    def __init__(self, parent, timer):
-        updateFunction = lambda x, y : random_update_plot_data(x, y, mini=-30, maxi=30)
+    def __init__(self, parent, timer, tm):
+        updateFunction = tm.data["flight"]["gyrox"].pack
         updateFunctions = [updateFunction]*4
         dataNames = None
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
@@ -129,8 +133,8 @@ class TempPipeworkGraph(GraphWidget):
 
 class TempInjectorGraph(GraphWidget):
 
-    def __init__(self, parent, timer):
-        updateFunction = lambda x, y : random_update_plot_data(x, y, mini=-30, maxi=500)
+    def __init__(self, parent, timer, tm):
+        updateFunction = tm.data["flight"]["gyrox"].pack
         updateFunctions = [updateFunction]
         dataNames = None
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
@@ -140,8 +144,8 @@ class TempInjectorGraph(GraphWidget):
 
 class TempCombustionGraph(GraphWidget):
 
-    def __init__(self, parent, timer):
-        updateFunction = lambda x, y : random_update_plot_data(x, y, mini=0, maxi=200)
+    def __init__(self, parent, timer, tm):
+        updateFunction = tm.data["flight"]["gyrox"].pack
         updateFunctions = [updateFunction]*3
         dataNames = ["Wall 1", "Wall 2", "Wall 3"]
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
@@ -151,8 +155,8 @@ class TempCombustionGraph(GraphWidget):
 
 class TempNozzleGraph(GraphWidget):
 
-    def __init__(self, parent, timer):
-        updateFunction = lambda x, y : random_update_plot_data(x, y)
+    def __init__(self, parent, timer, tm):
+        updateFunction = tm.data["flight"]["gyrox"].pack
         updateFunctions = [updateFunction]
         dataNames = None
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
@@ -162,8 +166,8 @@ class TempNozzleGraph(GraphWidget):
 # Pression
 class PreOxidizerGraph(GraphWidget):
 
-    def __init__(self, parent, timer):
-        updateFunction = lambda x, y : random_update_plot_data(x, y, mini=0, maxi=60)
+    def __init__(self, parent, timer, tm):
+        updateFunction = tm.data["flight"]["gyrox"].pack
         updateFunctions = [updateFunction]*2
         dataNames = ["Top", "Bottom"]
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
@@ -173,8 +177,8 @@ class PreOxidizerGraph(GraphWidget):
 
 class PreInjectorGraph(GraphWidget):
 
-    def __init__(self, parent, timer):
-        updateFunction = lambda x, y : random_update_plot_data(x, y, mini=0, maxi=60)
+    def __init__(self, parent, timer, tm):
+        updateFunction = tm.data["flight"]["gyrox"].pack
         updateFunctions = [updateFunction]
         dataNames = None
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
@@ -184,8 +188,8 @@ class PreInjectorGraph(GraphWidget):
 
 class PreCombustionGraph(GraphWidget):
 
-    def __init__(self, parent, timer):
-        updateFunction = lambda x, y : random_update_plot_data(x, y, mini=0, maxi=40)
+    def __init__(self, parent, timer, tm):
+        updateFunction = tm.data["flight"]["gyrox"].pack
         updateFunctions = [updateFunction]
         dataNames = None
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
@@ -195,8 +199,8 @@ class PreCombustionGraph(GraphWidget):
 
 class PreAmbientGraph(GraphWidget):
 
-    def __init__(self, parent, timer):
-        updateFunction = lambda x, y : random_update_plot_data(x, y, mini=0, maxi=2)
+    def __init__(self, parent, timer, tm):
+        updateFunction = tm.data["flight"]["gyrox"].pack
         updateFunctions = [updateFunction]*2
         dataNames = None
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
@@ -304,7 +308,7 @@ def random_value(mini=0, maxi=1000):
 
 class Electrical(QtWidgets.QWidget):
 
-    def __init__(self, timer, parent=None):
+    def __init__(self, timer, tm, parent=None):
         super().__init__(parent)
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(0,0,0,0)
@@ -322,15 +326,15 @@ class Electrical(QtWidgets.QWidget):
         tab.addWidget(HorizontalTextWidget(self, "Vent line solenoid"), 0, 2)
         tab.addWidget(HorizontalTextWidget(self, "Ignition system"), 0, 3)
 
-        tab.addWidget(DataWidget("-", timer, random_value, 25), 1, 1)
-        tab.addWidget(DataWidget("-", timer, random_value, 25), 1, 2)
-        tab.addWidget(DataWidget("-", timer, random_value, 25), 1, 3)
-        tab.addWidget(DataWidget("-", timer, random_value, 25), 2, 1)
-        tab.addWidget(DataWidget("-", timer, random_value, 25), 2, 2)
-        tab.addWidget(DataWidget("-", timer, random_value, 25), 2, 3)
-        tab.addWidget(DataWidget("-", timer, random_value, 25), 3, 1)
-        tab.addWidget(DataWidget("-", timer, random_value, 25), 3, 2)
-        tab.addWidget(DataWidget("-", timer, random_value, 25), 3, 3)
+        tab.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 25), 1, 1)
+        tab.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 25), 1, 2)
+        tab.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 25), 1, 3)
+        tab.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 25), 2, 1)
+        tab.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 25), 2, 2)
+        tab.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 25), 2, 3)
+        tab.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 25), 3, 1)
+        tab.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 25), 3, 2)
+        tab.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 25), 3, 3)
 
         layout.addWidget(title)
         layout.addLayout(tab)
@@ -432,7 +436,7 @@ class ValueIndicator(QtWidgets.QWidget):
 
 class Status(QtWidgets.QWidget):
 
-    def __init__(self, timer, parent=None):
+    def __init__(self, timer, tm, parent=None):
         super().__init__(parent)
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(0,0,0,0)
@@ -440,7 +444,7 @@ class Status(QtWidgets.QWidget):
         title = TitleWidget("Status signals")
         relief = BoolIndicator("Relief valve trigger", timer)
         valve = BoolIndicator("Abort valve trigger", timer)
-        actuation = ValueIndicator("Main valve actuation", timer, lambda: random_value(maxi=10000), formatting="{:.0f} mm")
+        actuation = ValueIndicator("Main valve actuation", timer, tm.data["flight"]["gyrox"].get_last, formatting="{:.0f} mm")
 
         layout.addWidget(title)
         layout.addWidget(relief)
@@ -453,7 +457,7 @@ class Status(QtWidgets.QWidget):
 # Diagnostic readings
 class BoardVoltageIndicator(QtWidgets.QWidget):
     """docstring for BoardVoltageIndicator"""
-    def __init__(self, text, timer, parent=None):
+    def __init__(self, text, timer, tm, parent=None):
         super(BoardVoltageIndicator, self).__init__(parent)
 
         # Background color
@@ -477,10 +481,10 @@ class BoardVoltageIndicator(QtWidgets.QWidget):
         # Indicators
         indicLayout = QtWidgets.QGridLayout()
 
-        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 0)
-        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 1)
-        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 2)
-        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 3)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 0, 0)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 0, 1)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 0, 2)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 0, 3)
         
 
         layout.addWidget(title)
@@ -493,7 +497,7 @@ class BoardVoltageIndicator(QtWidgets.QWidget):
 
 class RMCTemperatureIndicator(QtWidgets.QWidget):
     """docstring for RMCTemperatureIndicator"""
-    def __init__(self, text, timer, parent=None):
+    def __init__(self, text, timer, tm, parent=None):
         super(RMCTemperatureIndicator, self).__init__(parent)
 
         # Background color
@@ -517,14 +521,14 @@ class RMCTemperatureIndicator(QtWidgets.QWidget):
         # Indicators
         indicLayout = QtWidgets.QGridLayout()
 
-        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 0)
-        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 0, 1)
-        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 1, 0)
-        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 1, 1)
-        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 2, 0)
-        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 2, 1)
-        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 3, 0)
-        indicLayout.addWidget(DataWidget("-", timer, random_value, 14), 3, 1)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 0, 0)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 0, 1)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 1, 0)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 1, 1)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 2, 0)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 2, 1)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 3, 0)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 3, 1)
         
 
         layout.addWidget(title)
@@ -535,7 +539,7 @@ class RMCTemperatureIndicator(QtWidgets.QWidget):
 
 class ErrorGraph(GraphWidget):
 
-    def __init__(self, timer, parent=None):
+    def __init__(self, timer, tm, parent=None):
         updateFunctions = [random_update_plot_data]
         dataNames = None
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
@@ -568,7 +572,7 @@ class FPSIndicator(ValueIndicator):
 
 class Diagnostic(QtWidgets.QWidget):
 
-    def __init__(self, timer, parent=None):
+    def __init__(self, timer, tm, parent=None):
         super().__init__(parent)
         self.setMaximumWidth(570)
         layout = QtWidgets.QVBoxLayout(self)
@@ -579,9 +583,9 @@ class Diagnostic(QtWidgets.QWidget):
         vertLayoutRight = QtWidgets.QVBoxLayout()
 
         title = TitleWidget("Diagnostic readings")
-        boardVoltage = BoardVoltageIndicator("Board input voltage", timer)
-        error = ErrorGraph(timer)
-        rmc = RMCTemperatureIndicator("R&MC Temperature", timer)
+        boardVoltage = BoardVoltageIndicator("Board input voltage", timer, tm)
+        error = ErrorGraph(timer, tm)
+        rmc = RMCTemperatureIndicator("R&MC Temperature", timer, tm)
         fps = FPSIndicator(timer)
 
         layout.addWidget(title)
@@ -617,7 +621,7 @@ class Diagnostic(QtWidgets.QWidget):
 # Main window
 class MainWindow(QtWidgets.QMainWindow):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, tm, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setAttribute(Qt.WA_DeleteOnClose, True)
 
@@ -629,11 +633,11 @@ class MainWindow(QtWidgets.QMainWindow):
         # Temperature
         # Left Column
         temperatureTitle = TitleWidget("Temperature")
-        tempOxidizer = TempOxidizerGraph(self, self.timer)
-        tempPipework = TempPipeworkGraph(self, self.timer)
-        tempInjector = TempInjectorGraph(self, self.timer)
-        tempCombustion = TempCombustionGraph(self, self.timer)
-        tempNozzle = TempNozzleGraph(self, self.timer)
+        tempOxidizer = TempOxidizerGraph(self, self.timer, tm)
+        tempPipework = TempPipeworkGraph(self, self.timer, tm)
+        tempInjector = TempInjectorGraph(self, self.timer, tm)
+        tempCombustion = TempCombustionGraph(self, self.timer, tm)
+        tempNozzle = TempNozzleGraph(self, self.timer, tm)
 
 
         temperature = QtWidgets.QVBoxLayout()
@@ -645,10 +649,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # Pressure
         # Middle Column
         pressureTitle = TitleWidget("Pressure")
-        preOxidizer = PreOxidizerGraph(self, self.timer)
-        preInjector = PreInjectorGraph(self, self.timer)
-        preCombustion = PreCombustionGraph(self, self.timer)
-        preAmbient = PreAmbientGraph(self, self.timer)
+        preOxidizer = PreOxidizerGraph(self, self.timer, tm)
+        preInjector = PreInjectorGraph(self, self.timer, tm)
+        preCombustion = PreCombustionGraph(self, self.timer, tm)
+        preAmbient = PreAmbientGraph(self, self.timer, tm)
 
         pressure = QtWidgets.QVBoxLayout()
         widgets = [pressureTitle, preOxidizer, preInjector, preCombustion, preAmbient]
@@ -660,9 +664,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # Right Column
         others = QtWidgets.QVBoxLayout()
 
-        electrical = Electrical(self.timer)
-        status = Status(self.timer)
-        diagnostic = Diagnostic(self.timer)
+        electrical = Electrical(self.timer, tm)
+        status = Status(self.timer, tm)
+        diagnostic = Diagnostic(self.timer, tm)
 
         sizePolicy = electrical.sizePolicy()
         sizePolicy.setVerticalPolicy(QtWidgets.QSizePolicy.Expanding)
@@ -696,3 +700,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # Set the central widget of the Window. Widget will expand
         # to take up all the space in the window by default.
         self.setCentralWidget(widget)
+
+        # properly stop all threads
+        def closeEvent(event):
+            tm.stop()
+            event.accept()
+        self.closeEvent = closeEvent

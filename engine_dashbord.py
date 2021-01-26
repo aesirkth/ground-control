@@ -9,7 +9,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 def main():
     #init threads
     tm = Telemetry()
-
+    tm.open_file("data/test")
     # Init Qt
     app = QtWidgets.QApplication(sys.argv)
 
@@ -22,7 +22,7 @@ def main():
     app_icon.addFile('gui/logo/256x256.png', QtCore.QSize(256,256))
     app.setWindowIcon(app_icon)
 
-    w = MainWindow()
+    w = MainWindow(tm)
     w.show()
     sys.exit(app.exec_())
     
