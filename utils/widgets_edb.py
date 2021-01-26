@@ -339,7 +339,7 @@ class Electrical(QtWidgets.QWidget):
 
 # Status signals
 class ColoredCircle(QtWidgets.QWidget):
-    """docstring for ColoredCircle"""
+    """A circle of color!!"""
     def __init__(self, timer, parent=None):
         super(ColoredCircle, self).__init__(parent)
         self.status = False

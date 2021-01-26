@@ -162,7 +162,44 @@ class EngineController(QtWidgets.QWidget):
         for w in widgets:
             layout.addWidget(w)
 
+        self.timer = QtCore.QTimer(self)
+        self.timer.setInterval(30)
+        layout.addWidget(ColoredSquare(self.timer))
+
         self.setLayout(layout)
+        self.timer.start()
+
+
+class ColoredSquare(QtWidgets.QWidget):
+    """A square of color!!"""
+    def __init__(self, timer, parent=None):
+        super().__init__(parent)
+        self.status = False
+        self.diameter = 25
+        self.color = Qt.red
+
+        self.setFixedSize(self.diameter, self.diameter)
+
+        self.variable_for_demo = 0
+        timer.timeout.connect(self.update_color)
+
+    def paintEvent(self, event):
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(painter.Antialiasing)
+        painter.setBrush(QtGui.QBrush(self.color, Qt.SolidPattern))
+        # painter.setPen(Qt.NoPen)
+        painter.setPen(QtGui.QPen(Qt.black,  2, Qt.SolidLine))
+        painter.drawRect(0, 0, self.diameter, self.diameter)
+
+    def update_color(self):
+        self.variable_for_demo = (self.variable_for_demo + 1) % 100
+        if self.variable_for_demo == 0:
+            self.status = not self.status
+            if self.status:
+                self.color = Qt.green
+            else:
+                self.color = Qt.red
+            self.update()
 
 
 # class ToolButton(QtWidgets.QWidget):
