@@ -16,7 +16,6 @@ class Telemetry(SerialReader):
     def __init__(self, **kwargs):
         super().__init__("RFD", decoding_definitions, **kwargs)
 
-
 #all names are taken from the data protocol other than the following
 #gyro_x --> IMU1_gyro_x and IMU2_gyro_x e.t.c
 #temperature_1 --> temp_inside_1 and temp_outside_1 e.t.c.
@@ -76,7 +75,6 @@ decoding_definitions[ID_FLIGHT_CONTROLLER_STATUS_TM_FC] = [
         #todo. mission state
     ]),
 ]
-
 
 ####################### dummy functions
 decoding_definitions[0x00] = [Decoder("flight", "<H", "altitude")]

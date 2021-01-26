@@ -1,7 +1,6 @@
 #serialWrapper.py
 #
 #contains the SerialWrapper which handles serial communication
-
 import serial
 import serial.tools.list_ports
 import sys
@@ -12,12 +11,11 @@ from threading import Thread
 from collections import defaultdict
 
 from utils.definitions import *
-from utils.data_handling import TimeSeries, RelativeTime, write_data_db
+from utils.data_handling import TimeSeries, RelativeTime, write_data_db, Decoder
 
 #Class to read and backup serial communication
 #
 #read_int(x) -    read x bytes as an integer, little endian
-#read_string(x) -   read x bytes as a string
 #read_bytes(x) -   read x bytes as a bytes
 #init_device() -    tries to initialize the current port
 #get_safe_devices() finds devices that are safe to communicate with
@@ -27,9 +25,6 @@ class SerialWrapper:
         self.ser = serial.Serial(timeout = 0.2)
         self.device = device
         self.initialized = False
-        if "path" in kwargs:
-            self.ser = open(kwargs["path"], "rb")
-            self.initialized = True
 
         #get file name
         now = datetime.now()
@@ -52,27 +47,23 @@ class SerialWrapper:
         self.backup.write(bytes)
         self.ser.write(bytes, *args)
 
+    #read x amount of bytes as bytes
+    def read_bytes(self, amount):
+        val = self.ser.read(amount)
+        self.backup.write(val)
+        return val
+        
     #read x bytes as an integer, little endian
     def read_int(self, amount):
         bytes = self.read_bytes(amount)
+        if bytes == b"":
+            return None
         total = 0
         count = 0
         for v in bytes:
             total += v << (count * 8)
             count += 1
         return total
-
-    #read x amount of bytes as a string
-    def read_string(self, amount):
-        val = self.read_bytes(amount)
-        return str(val)
-
-    #read x amount of bytes as bytes
-    def read_bytes(self, amount):
-        val = self.ser.read(amount)
-        self.backup.write(val)
-        return val
-
     
     #tries to initialize a device
     #user self.ser to read and write since it does not need to be saved
@@ -140,7 +131,7 @@ class SerialWrapper:
 
         baudrates ={
             "gateway": 115200,
-            "RFD": 0,
+            "RFD": 115200,
             "telecommand": 115200
         }
         self.ser.baudrate = baudrates[self.device]
@@ -159,6 +150,11 @@ class SerialWrapper:
         else:
             print(self.device + ": opening serial failed")
             return -1
+        
+    def open_file(self, path):
+        self.ser = open(path, "rb")
+        self.initialized = True
+        return True
     
     #timestamp the backupfile
     #time is in seconds
@@ -168,7 +164,7 @@ class SerialWrapper:
         msg = []
         msg += SEPARATOR
         msg += [ID_TIMESTAMP]
-        buf = [None] * 4 
+        buf = [0 for x in range(4)]
         buf[0] = millis & 255
         buf[1] = (millis >> 8)  & 255
         buf[2] = (millis >> 16) & 255
@@ -196,6 +192,7 @@ class SerialReader():
         self.ser = SerialWrapper(device, **kwargs)
         self.device = device
         self.decoders = decoders
+        self.decoders[ID_TIMESTAMP] = [Decoder("flight", "<I", "timestamp")]
         self.client = False
         if "influx" in kwargs: 
             self.client = kwargs["influx"]
@@ -223,35 +220,40 @@ class SerialReader():
         self.read = True
 
     #start and open serial
-    def start(self):
-        self.ser.open_serial()
-
+    def open_serial(self):
+        return self.ser.open_serial()
+    
+    def open_file(self, path):
+        return self.ser.open_file(path)
 
 def reader_thread(sr):
     ser = sr.ser
     #wait for user to start serial
     while not sr.state():
-        time.sleep(1)
+        time.sleep(0.1)
         if sr.exit:
             return
 
     frameId = 0 #define before the loop so it remains in scope
     while not sr.exit:
         if not sr.read:
-            time.sleep(1)
+            time.sleep(0.1)
             continue
         
         #test for frame separator, read one byte at a time so it aligns itself
-        if not (ser.read_int(1) == SEPARATOR[0] and
-                ser.read_int(1) == SEPARATOR[1]):
-            print(sr.device + ": Invalid separator or no data. last ID: " + str(frameId))
+        separator = ser.read_int(1)
+        if separator == None:
             continue
+        if separator != SEPARATOR[0] or ser.read_int(1) != SEPARATOR[1]:
+            print(sr.device + ": Invalid Separator")
+            continue
+
         frame_id_old = frameId
         frame_id = ser.read_int(1)
 
         if frame_id not in sr.decoders.keys():
-            print("telemetry: Invalid ID: " + str(frame_id))
-            print("telemetry: last valid ID: " + str(frame_id_old))
+            print(sr.device + ": Invalid ID: " + str(frame_id))
+            print(sr.device + ": last valid ID: " + str(frame_id_old))
             continue
  
         decoder = sr.decoders[frame_id]
@@ -260,9 +262,11 @@ def reader_thread(sr):
             data += v.decode(ser)
 
         source = data[0].source
-        ser.timestamp(sr.clocks[source].get_current_time())
         if data[0].measurement == "ms_since_boot":
-            sr.clocks[source].update_time(data[0].value / 1000) # convert to seconds    
+            sr.clocks[source].update_time(data[0].value / 1000) # convert to seconds   
+        elif data[0].measurement == "timestamp":
+            sr.clocks[source].update_time(data[0].value / 1000)
+            time.sleep(0.010)
         else:
             #write data to database
             if sr.client:
