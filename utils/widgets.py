@@ -112,7 +112,7 @@ class AccelerationGraph(GenericGraph):
 
 class OpenSerialButton(Button):
     def __init__(self, root, tm):
-        super().__init__(root, text="Open serial", command = self.open_serial)
+        super().__init__(root, text="Open serial", command = tm.open_serial)
         self.tm = tm
 
     def open_serial(self):

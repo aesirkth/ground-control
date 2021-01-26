@@ -7,12 +7,12 @@ import struct
 from utils.definitions import *
 from influxdb import InfluxDBClient
 
-#class to store Data
+# class to store Data
 #############
-#source - the source of the data e.g. "flight" for flight controller
+# source - the source of the data e.g. "flight" for flight controller
 #         or "engine" for the engine controller
-#measurement - What the value means e.g. "pressure" or "altitude"
-#value - the value of the measurement e.g. 10 or 3
+# measurement - What the value means e.g. "pressure" or "altitude"
+# value - the value of the measurement e.g. 10 or 3
 class Data:
     def __init__(self, source, measurement, value):
         self.source = source #usually flight or engine
@@ -20,20 +20,57 @@ class Data:
         self.value = value
 
 
+# class to return data asynchronously
+#####################
+# resolve(data) - call to "return" data
+# then(func) - set the callback function
+# wait() - waits and returns the result
+class Promise():
+    def __init__(self):
+        self.funtion = None
+        self.result = None
+    
+    def resolve(self, result):
+        self.result = result
+        if self.function:
+            self.function(result)
+
+    #blocks while waiting for the promise to return
+    def wait(self):
+        while self.result != None:
+            pass
+        return self.result
+
+    #set the callback function
+    #the callback funtion will take the result as its argument
+    def then(self, func):
+        self.function = func
+
+
 #class to store time series
 ###############
-#x - list with time values
-#y - list with physical vaslues 
+# x - list with time values
+# y - list with measurements 
+# pack() - returns x and y in a tuple
+# get_last() - gets the last y value
 class TimeSeries:
     def __init__(self):
         self.x = []
         self.y = []
 
+    def pack(self, *args):
+        return (self.x, self.y)
+
+    def get_last(self):
+        if len(self.y) == 0:
+            return None
+        else: 
+            return self.y[-1] 
 
 #class to store and interpolate time
 #############
-#get_current_time() - interpolates and gets the current time (in seconds)
-#update_time() - update the current time (in seconds)
+# get_current_time() - interpolates and gets the current time (in seconds)
+# update_time() - update the current time (in seconds)
 class RelativeTime():
     def __init__(self):
         self.updated = time.time()
@@ -50,14 +87,14 @@ class RelativeTime():
 ######
 #class to decode integers
 ##
-#init(source, packaging, measurement, min = 0, max = 0)
-#source - source of the data
-#packaging - the python struct field
-#measurement - the measurement that is encoded
-#min - optional, the min value
-#max - optional, the max value
+# init(source, packaging, measurement, min = 0, max = 0)
+# source - source of the data
+# packaging - the python struct field
+# measurement - the measurement that is encoded
+# min - optional, the min value
+# max - optional, the max value
 #
-#decode(ser) - reads and decodes the data. returns an array with Data classess
+# decode(ser) - reads and decodes the data. returns an array with Data classess
 class Decoder():
     def __init__(self, source, packaging, measurement, scale = 1, min = 0, max = 0):
         self.source = source
@@ -87,13 +124,13 @@ class Decoder():
 
 
 ##
-#class to decode boolean values
+# class to decode boolean values
 ##
-#init(source, bits)
-#source - source of the data
-#bits - the measurements in order
+# init(source, bits)
+# source - source of the data
+# bits - the measurements in order
 #
-#decode() - returns an array with Data classes
+# decode() - returns an array with Data classes
 class BitDecoder():
     def __init__(self, source, bits):
         self.source = source
@@ -115,13 +152,13 @@ class BitDecoder():
 
 
 ##
-#class to decode anything
+# class to decode anything
 ##
-#init(func)
-#func - the function that is used for decoding
-#func should return an array with Data classes
+# init(func)
+# func - the function that is used for decoding
+# func should return an array with Data classes
 #
-#decode() - copy of func
+# decode() - copy of func
 class CustomDecoder():
     def __init__(self, func):
         self.decode = func
@@ -137,7 +174,7 @@ def MultiDecoder(source, packaging, name, start, end, *args):
     return out
 
 
-#returns 3 decoders with their names concatenaded with x y and z
+# returns 3 decoders with their names concatenaded with x y and z
 def xyzDecoder(source, packaging, name, *args):
     out = []
     out.append(Decoder(source, packaging, name + "x", *args))

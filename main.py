@@ -15,14 +15,12 @@ def main():
     client = init_db(True)
     
     #init threads
-    tm = Telemetry(path = "data/test")
+    tm = Telemetry()
     gw = Gateway()
     tcl = Telecommand()
     
-    tm.start()
-    gw.start()
-    tcl.start()
-    
+    tm.open_file("data/test")
+        
     #init tk
     root = tk.Tk()
 
@@ -39,7 +37,7 @@ def main():
     gyro.widget.grid(padx = 10, pady = 10, column=0, row=1)
     serial_button.place(x = 1500, y = 130)
     timeText.widget.place(x = 1500, y = 200)
-    
+
 
     def on_close():
         tm.stop()

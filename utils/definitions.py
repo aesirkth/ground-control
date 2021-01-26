@@ -40,5 +40,5 @@ ID_AIR_SPEED_FC = 0x4A
 ID_ONBOARD_BATTERY_VOLTAGE_TM_FC = 0x4B
 ID_FLIGHT_CONTROLLER_STATUS_TM_FC = 0x4C
 
-ID_TIMESTAMP = 0x00 # timestamp for the backup file
+ID_TIMESTAMP = 0xFF # timestamp for the backup file
 INFLUX_NAME = "mjollnir"
