@@ -27,7 +27,7 @@ class TitleWidget(QtWidgets.QLabel):
 
 
 class PowerMode(QtWidgets.QPushButton):
-    def __init__(self, engineState):
+    def __init__(self, tc, engineState):
         text = "Turn on"
         shortcut = "Ctrl+P"
         tooltip = "{} ({})".format(text, shortcut)
@@ -40,16 +40,21 @@ class PowerMode(QtWidgets.QPushButton):
         self.engineState = engineState
         self.engineState.power = self
 
+        self.tc = tc
+
 
     def onClick(self):
-        self.engineState.activate()
-        print("Turn on the engine...")
+        error = self.tc.set_engine_power_mode(None) # TBD
+        # if error == -1:
+        #     print("Serial closed")
+        #     return
         self.setEnabled(False)
-
+        self.engineState.activate()
+        print("Engine on")
 
 
 class EngineState(QtWidgets.QWidget):
-    def __init__(self, fire, parent=None): 
+    def __init__(self, tc, fire, parent=None): 
         super(EngineState, self).__init__(parent=parent)
         self.fire = fire
 
@@ -91,13 +96,23 @@ class EngineState(QtWidgets.QWidget):
 
         self.setLayout(layout)
 
+        self.tc = tc
+
 
     def _functionAbort(self):
+        error = self.tc.set_engine_state(True, False, False)
+        # if error == -1:
+        #     print("Serial closed")
+        #     return
         print("Abort the mission !")
         self.disableAll()
 
 
     def _functionArming(self):
+        error = self.tc.set_engine_state(False, True, False)
+        # if error == -1:
+        #     print("Serial closed")
+        #     return
         self.arming.setEnabled(False)
         print("Arming the engine...")
         self.enable.setEnabled(True)
@@ -105,6 +120,10 @@ class EngineState(QtWidgets.QWidget):
 
 
     def _functionEnable(self):
+        error = self.tc.set_engine_state(False, True, True)
+        # if error == -1:
+        #     print("Serial closed")
+        #     return
         self.enable.setEnabled(False)
         print("This is the greatest plan !")
         self.fire.setEnabled(True)
@@ -127,11 +146,12 @@ class EngineState(QtWidgets.QWidget):
         
 
 class FireRocket(QtWidgets.QPushButton):
-    def __init__(self):
+    def __init__(self, tc):
         text = "Fire the rocket"
-        fonction = lambda : print("Boum")
+        fonction = tc.fire_rocket
         shortcut = "Ctrl+F"
         tooltip = "{} ({})".format(text, shortcut)
+        debug = "Fire Rocket"
 
         super(FireRocket, self).__init__(text)
         self.setShortcut(shortcut)  #shortcut key
@@ -142,13 +162,13 @@ class FireRocket(QtWidgets.QPushButton):
 
 class EngineController(QtWidgets.QWidget):
 
-   def __init__(self, parent=None):
+   def __init__(self, tc, parent=None):
         super(EngineController, self).__init__(parent=parent)
 
         title = TitleWidget("Engine Controller")
-        fire = FireRocket()
-        engineState = EngineState(fire)
-        power = PowerMode(engineState)
+        fire = FireRocket(tc)
+        engineState = EngineState(tc, fire)
+        power = PowerMode(tc, engineState)
 
 
         title.setMinimumSize(250, 0)
@@ -236,11 +256,11 @@ class ColoredSquare(QtWidgets.QWidget):
 # Main window
 class MainWindow(QtWidgets.QMainWindow):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, tc, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setWindowTitle("Æsir - Mission Control Dashboard")
 
         QtCore.QCoreApplication.setQuitLockEnabled(True)
         # Set the central widget of the Window. Widget will expand
         # to take up all the space in the window by default.
-        self.setCentralWidget(EngineController(self))
+        self.setCentralWidget(EngineController(tc, self))
