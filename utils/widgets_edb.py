@@ -59,18 +59,13 @@ class Line(object):
         pen = pg.mkPen(color=COLORS[self.k])
         self.line = graph.plot(self.x, self.y, name=self.name, pen=pen)
 
-        self.test = 0
-
         timer.timeout.connect(self.update)
 
     def update(self):
-        if self.test == 0:
-            self.x, self.y = self.updateFunction(self.x, self.y)
-            self.line.setData(self.x, self.y)
-            if len(self.x) != 0:
-                self.graph.setXRange(self.x[-1] - X_AXIS_LENGTH, self.x[-1])
-        else:
-            self.test = (self.test + 1) % 3
+        self.x, self.y = self.updateFunction(self.x, self.y)
+        self.line.setData(self.x, self.y)
+        if len(self.x) != 0:
+            self.graph.setXRange(self.x[-1] - X_AXIS_LENGTH, self.x[-1])
 
 
 class GraphWidget(pg.PlotWidget):
