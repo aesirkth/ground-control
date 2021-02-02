@@ -33,9 +33,9 @@ class PowerMode(QtWidgets.QPushButton):
         tooltip = "{} ({})".format(text, shortcut)
 
         super(PowerMode, self).__init__(text)
-        self.setShortcut(shortcut)  #shortcut key
+        self.setShortcut(shortcut)  # Shortcut key
         self.clicked.connect(self.onClick)
-        self.setToolTip(tooltip) #Tool tip
+        self.setToolTip(tooltip) # Tool tip
 
         self.engineState = engineState
         self.engineState.power = self
@@ -48,14 +48,15 @@ class PowerMode(QtWidgets.QPushButton):
         # if error == -1:
         #     print("Serial closed")
         #     return
-        self.setEnabled(False)
         self.engineState.activate()
+        self.setEnabled(False)
         print("Engine on")
 
 
 class EngineState(QtWidgets.QWidget):
     def __init__(self, tc, fire, parent=None): 
         super(EngineState, self).__init__(parent=parent)
+        self.tc = tc
         self.fire = fire
 
         shortcutAbort = "Ctrl+C"
@@ -68,9 +69,9 @@ class EngineState(QtWidgets.QWidget):
         layout.setContentsMargins(0,0,0,0)
 
         self.abort = QtWidgets.QPushButton("Abort")
-        self.abort.setShortcut(shortcutAbort)  #shortcut key
+        self.abort.setShortcut(shortcutAbort)  # Shortcut key
         self.abort.clicked.connect(self._functionAbort)
-        self.abort.setToolTip(tooltipAbort) #Tool tip
+        self.abort.setToolTip(tooltipAbort) # Tool tip
         self.abort.setEnabled(False)
 
         sizePolicy = self.abort.sizePolicy()
@@ -80,13 +81,13 @@ class EngineState(QtWidgets.QWidget):
 
         self.arming = QtWidgets.QPushButton("Arming")
         self.arming.clicked.connect(self._functionArming)
-        self.arming.setToolTip(tooltipArming) #Tool tip
+        self.arming.setToolTip(tooltipArming) # Tool tip
         self.arming.setEnabled(False)
         layout.addWidget(self.arming, 1, 1, 1, 2)
 
         self.enable = QtWidgets.QPushButton("Enable")
         self.enable.clicked.connect(self._functionEnable)
-        self.enable.setToolTip(tooltipEnable) #Tool tip
+        self.enable.setToolTip(tooltipEnable) # Tool tip
         self.enable.setEnabled(False)
         layout.addWidget(self.enable, 2, 1, 1, 2)
 
@@ -95,8 +96,6 @@ class EngineState(QtWidgets.QWidget):
         layout.addWidget(self.status, 0, 1, 1, 2)
 
         self.setLayout(layout)
-
-        self.tc = tc
 
 
     def _functionAbort(self):
@@ -113,9 +112,9 @@ class EngineState(QtWidgets.QWidget):
         # if error == -1:
         #     print("Serial closed")
         #     return
-        self.arming.setEnabled(False)
         print("Arming the engine...")
         self.enable.setEnabled(True)
+        self.arming.setEnabled(False)
         self.status.setText("Engine armed")
 
 
@@ -124,9 +123,9 @@ class EngineState(QtWidgets.QWidget):
         # if error == -1:
         #     print("Serial closed")
         #     return
-        self.enable.setEnabled(False)
         print("This is the greatest plan !")
         self.fire.setEnabled(True)
+        self.enable.setEnabled(False)
         self.status.setText("Engine enabled")
 
 
@@ -182,12 +181,12 @@ class EngineController(QtWidgets.QWidget):
         for w in widgets:
             layout.addWidget(w)
 
-        self.timer = QtCore.QTimer(self)
-        self.timer.setInterval(30)
-        layout.addWidget(ColoredSquare(self.timer))
+        # self.timer = QtCore.QTimer(self)
+        # self.timer.setInterval(30)
+        # layout.addWidget(ColoredSquare(self.timer))
 
         self.setLayout(layout)
-        self.timer.start()
+        # self.timer.start()
 
 
 class ColoredSquare(QtWidgets.QWidget):
@@ -258,7 +257,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self, tc, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
-        self.setWindowTitle("Æsir - Mission Control Dashboard")
+        self.setWindowTitle("Æsir - Engine Control Dashboard")
 
         QtCore.QCoreApplication.setQuitLockEnabled(True)
         # Set the central widget of the Window. Widget will expand

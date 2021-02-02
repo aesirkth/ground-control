@@ -1,8 +1,8 @@
-# engine_controller.py
+# flight_controller.py
 import sys  # We need sys so that we can pass argv to QApplication
 
 from utils.telecommand import Telecommand
-from utils.widgets_ec import MainWindow
+from utils.widgets_fc import MainWindow
 from PyQt5 import QtWidgets, QtCore, QtGui
 
 
