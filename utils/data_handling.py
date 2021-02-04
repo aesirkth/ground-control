@@ -63,26 +63,9 @@ class TimeSeries:
 
     def get_last(self):
         if len(self.y) == 0:
-            return None
+            return 0
         else: 
             return self.y[-1] 
-
-#class to store and interpolate time
-#############
-# get_current_time() - interpolates and gets the current time (in seconds)
-# update_time() - update the current time (in seconds)
-class RelativeTime():
-    def __init__(self):
-        self.updated = time.time()
-        self.time = 0
-
-    def get_current_time(self):
-        return time.time() - self.updated + self.time
-    
-    def update_time(self, new_time):
-        self.time = new_time
-        self.updated = time.time()
-
 
 ######
 #class to decode integers
@@ -163,6 +146,21 @@ class CustomDecoder():
     def __init__(self, func):
         self.decode = func
 
+def get_current_time(time):
+    time = now.strftime("%H%M%S%f")[:9]
+    return int(time)
+
+def formatted_time_to_sec(time):
+    seconds = 0
+    formatted = str(time)
+    print(formatted)
+    formatted = '0' * (9 - len(formatted)) + formatted
+    print(formatted)
+    seconds += int(formatted[-3:]) / 1000
+    seconds += int(formatted[-5:-3])
+    seconds += int(formatted[-7:-5]) * 60
+    seconds += int(formatted[-9:-7]) * 60 * 60
+    return seconds
 
 # returns an array with Decoders with their names concatenated with numbers 
 # from start up to and including end 
@@ -198,7 +196,7 @@ def reset_db(client):
     client.drop_database(INFLUX_NAME)
     client.create_database(INFLUX_NAME)
 
-def write_data_db(data, client):
+def write_data_db(data, client, time):
     points = []
     for v in data:
         point = {
@@ -206,7 +204,7 @@ def write_data_db(data, client):
             "tags": {
                 #none
             },
-            #"time": time,
+            "time": time,
             "fields": {
                 v.measurement: v.value,
             }
