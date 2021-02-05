@@ -17,10 +17,10 @@ class TitleWidget(QtWidgets.QLabel):
         self.setMinimumSize(160, 0)
 
         # Background color
-        self.setAutoFillBackground(True)
-        palette = self.palette()
-        palette.setColor(QPalette.Window, QColor("white"))
-        self.setPalette(palette)
+        # self.setAutoFillBackground(True)
+        # palette = self.palette()
+        # palette.setColor(QPalette.Window, QColor("white"))
+        # self.setPalette(palette)
 
         self.setFixedHeight(35)
 
@@ -33,7 +33,7 @@ class PowerMode(QtWidgets.QPushButton):
 
         super(PowerMode, self).__init__(text)
         self.setShortcut(shortcut)  # Shortcut key
-        self.clicked.connect(self.onClick)
+        self.clicked.connect(self._powerOn)
         self.setToolTip(tooltip) # Tool tip
 
         self.radioEmitters = radioEmitters
@@ -42,19 +42,30 @@ class PowerMode(QtWidgets.QPushButton):
         self.tc = tc
 
 
-    def onClick(self):
-        error = self.tc.set_flight_power_mode(None) # TBD
-        # if error == -1:
-        #     print("Serial closed")
+    def _powerOn(self):
+        self.tc.set_flight_power_mode(None).then(self._timeSync) # TBD
+
+    def _timeSync(self, result):
+        # if not result:
+        #     print("Flight power: Got no response")
         #     return
-        error = self.tc.time_sync()
-        # if error == -1:
-        #     print("Serial closed")
+
+        # PUT HERE SOME VERIFICATION OF THE POWER STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
+
+        print("Power on")
+        error = self.tc.time_sync().then(self._update)
+
+    def _update(self, result):
+        # if not result:
+        #     print("Time Sync: Got no response")
         #     return
+
+        # PUT HERE SOME VERIFICATION OF THE POWER STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
+
         self.radioEmitters.activate()
         self.parachute.activate()
         self.setEnabled(False)
-        print("Power on and time synchronised")
+        print("Time synchronised")
 
 
 class RadioEquipment(QtWidgets.QWidget):
@@ -188,10 +199,10 @@ class Parachute(QtWidgets.QWidget):
         self.en2.setEnabled(True)
 
 
-class EngineController(QtWidgets.QWidget):
+class FlightController(QtWidgets.QWidget):
 
    def __init__(self, tc, parent=None):
-        super(EngineController, self).__init__(parent=parent)
+        super(FlightController, self).__init__(parent=parent)
 
         title = TitleWidget("Flight Controller")
         radioEquipment = RadioEquipment(tc)
@@ -222,4 +233,4 @@ class MainWindow(QtWidgets.QMainWindow):
         QtCore.QCoreApplication.setQuitLockEnabled(True)
         # Set the central widget of the Window. Widget will expand
         # to take up all the space in the window by default.
-        self.setCentralWidget(EngineController(tc, self))
+        self.setCentralWidget(FlightController(tc, self))

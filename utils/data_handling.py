@@ -68,6 +68,24 @@ class TimeSeries:
         else: 
             return self.y[-1] 
 
+
+#class to store and interpolate time
+#############
+# get_current_time() - interpolates and gets the current time (in seconds)
+# update_time() - update the current time (in seconds)
+class RelativeTime():
+    def __init__(self):
+        self.updated = time.time()
+        self.time = 0
+
+    def get_current_time(self):
+        return time.time() - self.updated + self.time
+    
+    def update_time(self, new_time):
+        self.time = new_time
+        self.updated = time.time()
+
+
 ######
 #class to decode integers
 ##

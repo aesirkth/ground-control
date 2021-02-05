@@ -15,3 +15,5 @@ utils/animation_perso.py
 utils/dummyserialwrapper.py
 utils/sensors.py
 utils/serialwrapper.py
+engine_controller.py
+flight_controller.py
