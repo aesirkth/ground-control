@@ -3,6 +3,7 @@
 #also contains the functions for inluxdb 
 
 import time
+import datetime
 import struct
 from utils.definitions import *
 from influxdb import InfluxDBClient
@@ -27,7 +28,7 @@ class Data:
 # wait() - waits and returns the result
 class Promise():
     def __init__(self):
-        self.funtion = None
+        self.function = lambda x: None
         self.result = None
     
     def resolve(self, result):
@@ -146,7 +147,8 @@ class CustomDecoder():
     def __init__(self, func):
         self.decode = func
 
-def get_current_time(time):
+def get_current_time():
+    now = datetime.datetime.now()
     time = now.strftime("%H%M%S%f")[:9]
     return int(time)
 

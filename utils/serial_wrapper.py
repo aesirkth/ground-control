@@ -11,7 +11,7 @@ from threading import Thread
 from collections import defaultdict
 
 from utils.definitions import *
-from utils.data_handling import TimeSeries, RelativeTime, write_data_db, Decoder
+from utils.data_handling import TimeSeries, write_data_db, Decoder, formatted_time_to_sec, get_current_time
 
 #Class to read and backup serial communication
 #
@@ -71,10 +71,12 @@ class SerialWrapper:
         if self.device == "RFD":
             # RFD needs 1 seconds of inactivity to eneter AT mode
             time.sleep(1) 
-            self.ser.write(b'+++') #init AT mode
-            time.sleep(1) #wait for data 
+            self.ser.write(b'+++') # enter AT mode
+            time.sleep(1) # wait for data 
             buff = self.ser.read_all()
-            if b'ok' in buff:
+            self.write(b'ATO\r') # exit AT mode
+            print(buff)
+            if b'OK' in buff:
                 return 1
             else:
                 return 0
@@ -124,14 +126,13 @@ class SerialWrapper:
     def port_is_open(self):
         return self.initialized
 
-    #returns -1 if it fails
     def open_serial(self):
         if self.initialized:
             return 1
 
         baudrates ={
             "gateway": 115200,
-            "RFD": 115200,
+            "RFD": 57600,
             "telecommand": 115200
         }
         self.ser.baudrate = baudrates[self.device]
@@ -144,12 +145,12 @@ class SerialWrapper:
             if self.init_device():
                 self.initialized = True
                 print(self.device + ": Succesfully connected")
-                return 0
+                return True
             print(self.device + ": Did not respond")
             self.ser.close()
         else:
             print(self.device + ": opening serial failed")
-            return -1
+            return False
         
     def open_file(self, path):
         self.ser = open(path, "rb")
@@ -157,19 +158,17 @@ class SerialWrapper:
         return True
     
     #timestamp the backupfile
-    #time is in seconds
-    #it is then stored in milliseconds
-    def timestamp(self, time):
-        millis = int(time * 1000)
+    def timestamp(self):
         msg = []
-        msg += SEPARATOR
         msg += [ID_TIMESTAMP]
         buf = [0 for x in range(4)]
-        buf[0] = millis & 255
-        buf[1] = (millis >> 8)  & 255
-        buf[2] = (millis >> 16) & 255
-        buf[3] = (millis >> 24) & 255
+        time = get_current_time()
+        buf[0] = time & 255
+        buf[1] = (time >> 8)  & 255
+        buf[2] = (time >> 16) & 255
+        buf[3] = (time >> 24) & 255
         msg += buf
+        msg += SEPARATOR
         self.backup.write(bytes(msg))
 
 
@@ -192,14 +191,14 @@ class SerialReader():
         self.ser = SerialWrapper(device, **kwargs)
         self.device = device
         self.decoders = decoders
-        self.decoders[ID_TIMESTAMP] = [Decoder("flight", "<I", "timestamp")]
+        self.decoders[ID_LOCAL_TIMESTAMP] = [Decoder("flight", "<I", "timestamp")]
         self.client = False
+        self.current_time = None
         if "influx" in kwargs: 
             self.client = kwargs["influx"]
 
         #use defaultdict to let the front-end use uninitialized data
         self.data = defaultdict(lambda: defaultdict(TimeSeries))
-        self.clocks = defaultdict(RelativeTime)
 
         t = Thread(target = reader_thread, args = (self,))
         t.start()
@@ -248,9 +247,10 @@ def reader_thread(sr):
             print(sr.device + ": Invalid Separator")
             continue
 
+        ser.timestamp()
+
         frame_id_old = frameId
         frame_id = ser.read_int(1)
-
         if frame_id not in sr.decoders.keys():
             print(sr.device + ": Invalid ID: " + str(frame_id))
             print(sr.device + ": last valid ID: " + str(frame_id_old))
@@ -262,17 +262,15 @@ def reader_thread(sr):
             data += v.decode(ser)
 
         source = data[0].source
-        if data[0].measurement == "ms_since_boot":
-            sr.clocks[source].update_time(data[0].value / 1000) # convert to seconds   
-        elif data[0].measurement == "timestamp":
-            sr.clocks[source].update_time(data[0].value / 1000)
-            time.sleep(0.010)
+        if data[0].measurement == "timestamp":
+            sr.current_time = int(data[0].value)
         else:
             #write data to database
             if sr.client:
-                write_data_db(data, sr.client)
+                write_data_db(data, sr.client, sr.current_time)
             #push data to local dict
             for v in data:
                 series = sr.data[v.source][v.measurement]
-                series.x.append(sr.clocks[source].get_current_time())
+                seconds = get_current_time()
+                series.x.append(seconds)
                 series.y.append(v.value)
