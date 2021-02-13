@@ -29,7 +29,7 @@ class TitleWidget(QtWidgets.QLabel):
 class PowerMode(QtWidgets.QPushButton):
     def __init__(self, tc, engineState):
         text = "Turn on"
-        shortcut = "Ctrl+P"
+        shortcut = "Ctrl+M"
         tooltip = "{} ({})".format(text, shortcut)
 
         super(PowerMode, self).__init__(text)
@@ -54,7 +54,7 @@ class PowerMode(QtWidgets.QPushButton):
 
         # PUT HERE SOME VERIFICATION OF THE POWER STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
 
-        self.engineState.activate()
+        self.engineState.setEnabled(True)
         self.setEnabled(False)
         print("Engine on")
 
@@ -106,49 +106,60 @@ class EngineState(QtWidgets.QWidget):
 
 
     def _functionAbort(self):
+        self.setEnabled(False)
         error = self.tc.set_engine_state(True, False, False).wait()
+        print(error)
         # if error == -1:
         #     print("Serial closed")
         #     return
         print("Abort the mission !")
-        self.disableAll()
-
+        self.power.setEnabled(True)
 
     def _functionArming(self):
-        error = self.tc.set_engine_state(False, True, False)
-        # if error == -1:
-        #     print("Serial closed")
+        self.arming.setEnabled(False)
+        self.tc.set_engine_state(False, True, False).then(self._updateArming)
+
+    def _updateArming(self, result):
+        # if not result:
+        #     print("Engine power: Got no response")
         #     return
+
+        # PUT HERE SOME VERIFICATION OF THE ARMING STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
+        # DON'T FORGET TO ENABLE THE BUTTON
+
         print("Arming the engine...")
         self.enable.setEnabled(True)
-        self.arming.setEnabled(False)
         self.status.setText("Engine armed")
 
 
     def _functionEnable(self):
-        error = self.tc.set_engine_state(False, True, True)
-        # if error == -1:
-        #     print("Serial closed")
+        self.enable.setEnabled(False)
+        self.tc.set_engine_state(False, True, True).then(self._updateEnable)
+
+
+    def _updateEnable(self, result):
+        # if not result:
+        #     print("Engine power: Got no response")
         #     return
+
+        # PUT HERE SOME VERIFICATION OF THE ARMING STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
+        # DON'T FORGET TO ENABLE THE BUTTON
+
         print("This is the greatest plan !")
         self.fire.setEnabled(True)
-        self.enable.setEnabled(False)
         self.status.setText("Engine enabled")
 
 
-    def activate(self):
-        self.abort.setEnabled(True)
-        self.arming.setEnabled(True)
-        self.status.setText("Engine on")
-
-
-    def disableAll(self):
-        self.abort.setEnabled(False)
-        self.arming.setEnabled(False)
+    def setEnabled(self, b):
+        self.abort.setEnabled(b)
+        self.arming.setEnabled(b)
         self.enable.setEnabled(False)
         self.fire.setEnabled(False)
-        self.power.setEnabled(True)
-        self.status.setText("Engine off")
+        if b:
+            self.status.setText("Engine on")
+        else:
+            self.status.setText("Engine off")
+
         
 
 class FireRocket(QtWidgets.QPushButton):

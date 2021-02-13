@@ -40,9 +40,9 @@ class MainWindow(QtWidgets.QMainWindow):
         window = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0,0,0,0)
-        layout.addWidget(EngineController(tc))
-        layout.addWidget(QHSeperationLine())
         layout.addWidget(FlightController(tc))
+        layout.addWidget(QHSeperationLine())
+        layout.addWidget(EngineController(tc))
         window.setLayout(layout)
 
         QtCore.QCoreApplication.setQuitLockEnabled(True)
