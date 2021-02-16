@@ -2,10 +2,12 @@
 import sys  # We need sys so that we can pass argv to QApplication
 
 from utils.telecommand import Telecommand
-from utils.widgets_ec import EngineController
-from utils.widgets_fc import FlightController
+from utils.widgets_ec import EngineController, EngineStatus
+from utils.widgets_fc import FlightController, FlightStatus
 from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5.QtGui import QPalette, QColor
 
+INTERVAL = 30
 
 class QHSeperationLine(QtWidgets.QFrame):
   """A horizontal seperation line"""
@@ -13,7 +15,8 @@ class QHSeperationLine(QtWidgets.QFrame):
   def __init__(self):
     super().__init__()
     self.setMinimumWidth(1)
-    self.setFixedHeight(20)
+    self.setFixedHeight(5)
+    self.setContentsMargins(5, 0, 0, 0)
     self.setFrameShape(QtWidgets.QFrame.HLine)
     self.setFrameShadow(QtWidgets.QFrame.Sunken)
     self.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
@@ -25,6 +28,7 @@ class QVSeperationLine(QtWidgets.QFrame):
     super().__init__()
     self.setFixedWidth(20)
     self.setMinimumHeight(1)
+    self.setContentsMargins(0, 5, 0, 5)
     self.setFrameShape(QtWidgets.QFrame.VLine)
     self.setFrameShadow(QtWidgets.QFrame.Sunken)
     self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
@@ -37,14 +41,24 @@ class MainWindow(QtWidgets.QMainWindow):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setWindowTitle("Æsir - Control Dashboard")
 
+        self.timer = QtCore.QTimer(self)
+        self.timer.setInterval(INTERVAL)
+
         window = QtWidgets.QWidget()
-        layout = QtWidgets.QVBoxLayout()
+        layout = QtWidgets.QGridLayout()
+
         layout.setContentsMargins(0,0,0,0)
-        layout.addWidget(FlightController(tc))
-        layout.addWidget(QHSeperationLine())
-        layout.addWidget(EngineController(tc))
+        layout.addWidget(FlightController(tc), 0, 0)
+        layout.addWidget(QVSeperationLine(), 0, 1)
+        layout.addWidget(FlightStatus(tc, self.timer), 0, 2)
+        layout.addWidget(QHSeperationLine(), 1, 0, 1, 3)
+        layout.addWidget(EngineController(tc), 2, 0)
+        layout.addWidget(QVSeperationLine(), 2, 1)
+        layout.addWidget(EngineStatus(tc, self.timer), 2, 2)
+        layout.addWidget(QVSeperationLine(), 0, 3, 3, 1)
         window.setLayout(layout)
 
+        self.timer.start()
         QtCore.QCoreApplication.setQuitLockEnabled(True)
         # Set the central widget of the Window. Widget will expand
         # to take up all the space in the window by default.

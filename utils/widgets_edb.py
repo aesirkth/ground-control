@@ -205,7 +205,7 @@ class PreAmbientGraph(GraphWidget):
 
 # Electrical
 class HorizontalTextWidget(QtWidgets.QLabel):
-    """docstring for TextWidget"""
+    """TextWidget"""
     def __init__(self, parent, text):
         super(HorizontalTextWidget, self).__init__(text, parent)
         self.setAlignment(Qt.AlignCenter)
@@ -225,7 +225,7 @@ class HorizontalTextWidget(QtWidgets.QLabel):
 
 
 class VerticalTextWidget(QtWidgets.QLabel):
-    """docstring for TextWidget"""
+    """TextWidget"""
     def __init__(self, parent, text):
         super(VerticalTextWidget, self).__init__(text, parent)
         self.setAlignment(Qt.AlignCenter)
@@ -278,7 +278,7 @@ class VerticalTextWidget(QtWidgets.QLabel):
 
 
 class DataWidget(QtWidgets.QLabel):
-    """docstring for DataWidget"""
+    """DataWidget"""
     def __init__(self, text, timer, updateFunction, fontSize, formatting="{:>5.2f}", parent=None):
         super(DataWidget, self).__init__(text, parent)
         self.setAlignment(Qt.AlignCenter)
@@ -369,7 +369,7 @@ class ColoredCircle(QtWidgets.QWidget):
 
 
 class BoolIndicator(QtWidgets.QWidget):
-    """docstring for BoolIndicator"""
+    """BoolIndicator"""
     def __init__(self, text, timer, parent=None):
         super(BoolIndicator, self).__init__(parent)
 
@@ -399,7 +399,7 @@ class BoolIndicator(QtWidgets.QWidget):
         
 
 class ValueIndicator(QtWidgets.QWidget):
-    """docstring for ValueIndicator"""
+    """ValueIndicator"""
     def __init__(self, text, timer, updateFunction, sizeTitle=15, sizeData=17, formatting="{}", parent=None):
         super(ValueIndicator, self).__init__(parent)
 
@@ -451,7 +451,7 @@ class Status(QtWidgets.QWidget):
 
 # Diagnostic readings
 class BoardVoltageIndicator(QtWidgets.QWidget):
-    """docstring for BoardVoltageIndicator"""
+    """BoardVoltageIndicator"""
     def __init__(self, text, timer, tm, parent=None):
         super(BoardVoltageIndicator, self).__init__(parent)
 
@@ -491,7 +491,7 @@ class BoardVoltageIndicator(QtWidgets.QWidget):
 
 
 class RMCTemperatureIndicator(QtWidgets.QWidget):
-    """docstring for RMCTemperatureIndicator"""
+    """RMCTemperatureIndicator"""
     def __init__(self, text, timer, tm, parent=None):
         super(RMCTemperatureIndicator, self).__init__(parent)
 
@@ -543,7 +543,7 @@ class ErrorGraph(GraphWidget):
 
 
 class FPSIndicator(ValueIndicator):
-    """docstring for FPSIndicator"""
+    """FPSIndicator"""
     def __init__(self, timer, parent=None):
         super(FPSIndicator, self).__init__("FPS :", timer, self.updateFPS,
             sizeTitle=10, sizeData=10,  formatting="{}", parent=parent)
