@@ -3,7 +3,7 @@ import sys  # We need sys so that we can pass argv to QApplication
 
 from utils.telecommand import Telecommand
 from utils.widgets_ec import EngineController, EngineStatus
-from utils.widgets_fc import FlightController, FlightStatus
+from utils.widgets_fc import FlightController, FlightStatus, FlightStatus2, DebugStatus
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtGui import QPalette, QColor
 
@@ -16,7 +16,7 @@ class QHSeperationLine(QtWidgets.QFrame):
     super().__init__()
     self.setMinimumWidth(1)
     self.setFixedHeight(5)
-    self.setContentsMargins(5, 0, 0, 0)
+    # self.setContentsMargins(5, 0, 0, 0)
     self.setFrameShape(QtWidgets.QFrame.HLine)
     self.setFrameShadow(QtWidgets.QFrame.Sunken)
     self.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
@@ -48,14 +48,22 @@ class MainWindow(QtWidgets.QMainWindow):
         layout = QtWidgets.QGridLayout()
 
         layout.setContentsMargins(0,0,0,0)
-        layout.addWidget(FlightController(tc), 0, 0)
+        flightController = FlightController(tc)
+        layout.addWidget(flightController, 0, 0)
         layout.addWidget(QVSeperationLine(), 0, 1)
         layout.addWidget(FlightStatus(tc, self.timer), 0, 2)
-        layout.addWidget(QHSeperationLine(), 1, 0, 1, 3)
+        hline1 = QHSeperationLine()
+        hline1.setContentsMargins(5, 0, 0, 0)
+        layout.addWidget(hline1, 1, 0, 1, 3)
         layout.addWidget(EngineController(tc), 2, 0)
         layout.addWidget(QVSeperationLine(), 2, 1)
         layout.addWidget(EngineStatus(tc, self.timer), 2, 2)
         layout.addWidget(QVSeperationLine(), 0, 3, 3, 1)
+        layout.addWidget(FlightStatus2(tc, self.timer), 0, 4)
+        hline2 = QHSeperationLine()
+        hline2.setContentsMargins(0, 0, 5, 0)
+        layout.addWidget(hline2, 1, 4)
+        layout.addWidget(DebugStatus(tc, self.timer, flightController), 2, 4)
         window.setLayout(layout)
 
         self.timer.start()

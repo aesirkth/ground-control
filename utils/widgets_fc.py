@@ -27,7 +27,7 @@ class TitleWidget(QtWidgets.QLabel):
 
 
 class PowerMode(QtWidgets.QPushButton):
-	def __init__(self, tc, radioEquipment, parachute):
+	def __init__(self, tc, radioEquipment, parachute, backup):
 		text = "Turn on"
 		self.shortcut = "Ctrl+P"
 		tooltip = "{} ({})".format("Turn the power on and synchronise the clock", self.shortcut)
@@ -39,6 +39,7 @@ class PowerMode(QtWidgets.QPushButton):
 
 		self.radioEquipment = radioEquipment
 		self.parachute = parachute
+		self.backup = backup
 
 		self.tc = tc
 
@@ -59,6 +60,7 @@ class PowerMode(QtWidgets.QPushButton):
 		self.setEnabled(False)
 		self.radioEquipment.setEnabled(False)
 		self.parachute.setEnabled(False)
+		self.backup.setEnabled(False)
 		self.tc.set_flight_power_mode(None).then(self._powerIsOff) # TBD
 
 	def _timeSync(self, result):
@@ -80,6 +82,7 @@ class PowerMode(QtWidgets.QPushButton):
 
 		self.radioEquipment.setEnabled(True)
 		self.parachute.setEnabled(True)
+		self.backup.setEnabled(True)
 		print("Time synchronised")
 		self.setText("Power off")
 		self.setShortcut(self.shortcut) # Refresh the shortcut
@@ -269,6 +272,107 @@ class Parachute(QtWidgets.QWidget):
 		self.en2.setEnabled(False)
 
 
+class Backup(QtWidgets.QWidget):
+	def __init__(self, tc, parent=None): 
+		super(Backup, self).__init__(parent=parent)
+		self.tc = tc
+
+		tooltipEnable = "Enable backup"
+		tooltipDisable = "Disable backup"
+		tooltipSave = "Save backup to ???"
+
+		layout = QtWidgets.QVBoxLayout()
+		layout.setContentsMargins(0,0,0,0)
+
+		self.title = QtWidgets.QLabel("Backup")
+		# Alignment / Font size of the title
+		self.title.setAlignment(Qt.AlignHCenter | Qt.AlignBottom)
+		font = self.title.font()
+		font.setPointSize(12)
+		self.title.setFont(font)
+		layout.addWidget(self.title)
+
+		layout1 = QtWidgets.QVBoxLayout()
+		self.enable = QtWidgets.QPushButton("Enable")
+		self.enable.clicked.connect(self._functionEnable)
+		self.enable.setToolTip(tooltipEnable) # Tool tip
+		self.enable.setEnabled(False)
+		layout1.addWidget(self.enable)
+
+		self.disable = QtWidgets.QPushButton("Disable")
+		self.disable.clicked.connect(self._functionDisable)
+		self.disable.setToolTip(tooltipDisable) # Tool tip
+		self.disable.setEnabled(False)
+		layout1.addWidget(self.disable)
+
+		layout2 = QtWidgets.QHBoxLayout()
+		layout2.addLayout(layout1)
+		self.save = QtWidgets.QPushButton("Save")
+		self.save.clicked.connect(self._functionSave)
+		self.save.setToolTip(tooltipSave) # Tool tip
+		self.save.setEnabled(False)
+		layout2.addWidget(self.save)
+
+		layout.addLayout(layout2)
+		self.setLayout(layout)
+
+	def _functionEnable(self):
+		self.enable.setEnabled(False)
+		self.disable.setEnabled(False)
+		# something.then(
+		self._updateEnable(None)
+
+	def _updateEnable(self, result):
+		# if not result:
+		#     print("Enable backup: Got no response")
+		#     return
+
+		# PUT HERE SOME VERIFICATION OF THE STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
+
+		print("Backup enable")
+		self.enable.setEnabled(True)
+		self.disable.setEnabled(True)
+
+	def _functionDisable(self):
+		self.enable.setEnabled(False)
+		self.disable.setEnabled(False)
+		# something.then(
+		self._updateDisable(None)
+
+	def _updateDisable(self, result):
+		# if not result:
+		#     print("Disable backup: Got no response")
+		#     return
+
+		# PUT HERE SOME VERIFICATION OF THE STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
+
+		print("Backup disable")
+		self.enable.setEnabled(True)
+		self.disable.setEnabled(True)
+
+	def _functionSave(self):
+		self.save.setEnabled(False)
+		# something.then(
+		self._updateSave(None)
+
+
+	def _updateSave(self, result):
+		# if not result:
+		#     print("Saving backup: Got no response")
+		#     return
+
+		# PUT HERE SOME VERIFICATION OF THE STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
+
+		print("Backup saved")
+		self.save.setEnabled(True)
+
+
+	def setEnabled(self, b):
+		self.enable.setEnabled(b)
+		self.disable.setEnabled(b)
+		self.save.setEnabled(b)
+
+
 class FlightController(QtWidgets.QWidget):
 
 	def __init__(self, tc, parent=None):
@@ -277,7 +381,8 @@ class FlightController(QtWidgets.QWidget):
 		title = TitleWidget("Flight Controller")
 		radioEquipment = RadioEquipment(tc)
 		parachute = Parachute(tc)
-		power = PowerMode(tc, radioEquipment, parachute)
+		self.backup = Backup(tc)
+		power = PowerMode(tc, radioEquipment, parachute, self.backup)
 
 
 		title.setMinimumSize(250, 0)
@@ -291,6 +396,41 @@ class FlightController(QtWidgets.QWidget):
 			layout.addWidget(w)
 
 		self.setLayout(layout)
+
+
+class WareStatus(QtWidgets.QWidget):
+	"""Software and hardware status"""
+	def __init__(self, tc, timer, parent=None):
+		super(WareStatus, self).__init__(parent=parent)
+		self.tc = tc
+
+		# ValueIndicator(text, timer, updateFunction, sizeTitle=15, sizeData=17, formatting="{}", parent=None)
+		soft = ValueIndicator("Software state:", timer, self._updateSoft)
+		hard = ValueIndicator("Hardware state:", timer, self._updateHard)
+
+		# soft.title.setFixedHeight(12)
+		# soft.indic.setFixedHeight(12)
+		# hard.title.setFixedHeight(12)
+		# hard.indic.setFixedHeight(12)
+		# print(soft.sizeHint())
+		# print(soft.title.sizeHint())
+		# print(soft.indic.sizeHint())
+
+		# soft.setAutoFillBackground(False)
+		# hard.setAutoFillBackground(False)
+
+		layout = QtWidgets.QVBoxLayout()
+		layout.setContentsMargins(0,0,0,0)
+		layout.setSpacing(0)
+		layout.addWidget(soft)
+		layout.addWidget(hard)
+		self.setLayout(layout)
+
+	def _updateSoft(self):
+		return "TBD"
+
+	def _updateHard(self):
+		return "TBD"
 
 
 class TimeSyncStatus(QtWidgets.QLabel):
@@ -398,20 +538,173 @@ class FlightStatus(QtWidgets.QWidget):
 		self.setMinimumSize(230, 0)
 
 		# title = TitleWidget("Flight Status")
+		wareStatus = WareStatus(tc, timer)
 		timeSyncStatus = TimeSyncStatus(tc, timer)
 		powerModeStatus = PowerModeStatus(tc, timer)
 		radioEquipmentStatus = RadioEquipmentStatus(tc, timer)
 		parachuteStatus = ParachuteStatus(tc, timer)
 
 		layout = QtWidgets.QVBoxLayout()
-		layout.setContentsMargins(0,0,10,0)
+		layout.setContentsMargins(0,5,10,0)
 		layout.setSpacing(10)
-		widgets = [timeSyncStatus, powerModeStatus, radioEquipmentStatus, parachuteStatus]
+		widgets = [wareStatus, timeSyncStatus, powerModeStatus, radioEquipmentStatus, parachuteStatus]
 		
 		for w in widgets:
 			layout.addWidget(w)
 
 		self.setLayout(layout)
+
+
+class BatteryStatus(QtWidgets.QWidget):
+	def __init__(self, tc, timer, parent=None):
+		super(BatteryStatus, self).__init__(parent=parent)
+		self.tc = tc
+
+		bat1 = ValueIndicator("Battery 1:", timer, self._updateBat1)
+		bat2 = ValueIndicator("Battery 2:", timer, self._updateBat2)
+
+		# fpv.title.setFixedHeight(12)
+		# fpv.indic.setFixedHeight(12)
+		# tm.title.setFixedHeight(12)
+		# tm.indic.setFixedHeight(12)
+
+		# soft.setAutoFillBackground(False)
+		# hard.setAutoFillBackground(False)
+
+		layout = QtWidgets.QVBoxLayout()
+		layout.setContentsMargins(0,0,0,0)
+		layout.setSpacing(0)
+		layout.addWidget(bat1)
+		layout.addWidget(bat2)
+		self.setLayout(layout)
+
+
+	def _updateBat1(self):
+		return "{:>5.2f} V".format(3.141592653589793)
+
+
+	def _updateBat2(self):
+		return "{:>5.2f} V".format(2.718281828459045)
+
+
+class GNSSStatus(QtWidgets.QWidget):
+	def __init__(self, tc, timer, parent=None):
+		super(GNSSStatus, self).__init__(parent=parent)
+		self.tc = tc
+
+		time = ValueIndicator("GNSS time:", timer, self._updateTime)
+		lat = ValueIndicator("Latitude:", timer, self._updateLat)
+		lon = ValueIndicator("Longitude:", timer, self._updateLon)
+		hdop = ValueIndicator("Horizontal dilution\nof precision:", timer, self._updateHDOP)
+
+		# abort.title.setFixedHeight(12)
+		# abort.indic.setFixedHeight(12)
+		# armed.title.setFixedHeight(12)
+		# armed.indic.setFixedHeight(12)
+		# enable.title.setFixedHeight(12)
+		# enable.indic.setFixedHeight(12)
+
+		# soft.setAutoFillBackground(False)
+		# hard.setAutoFillBackground(False)
+
+		layout = QtWidgets.QVBoxLayout()
+		layout.setContentsMargins(0,0,0,0)
+		layout.setSpacing(0)
+		layout.addWidget(time)
+		layout.addWidget(lat)
+		layout.addWidget(lon)
+		layout.addWidget(hdop)
+		self.setLayout(layout)
+
+	def _updateTime(self):
+		return "-"
+
+	def _updateLat(self):
+		return "-"
+
+	def _updateLon(self):
+		return "-"
+
+	def _updateHDOP(self):
+		return "-"
+
+
+class FlightStatus2(QtWidgets.QWidget):
+	def __init__(self, tc, timer, parent=None):
+		super(FlightStatus2, self).__init__(parent=parent)
+
+		self.setMinimumSize(230, 0)
+
+		# title = TitleWidget("Flight Status")
+		batteryStatus = BatteryStatus(tc, timer)
+		gnssStatus = GNSSStatus(tc, timer)
+
+		layout = QtWidgets.QVBoxLayout()
+		layout.setContentsMargins(0,0,10,0)
+		layout.setSpacing(10)
+		widgets = [batteryStatus, gnssStatus]
+		
+		for w in widgets:
+			layout.addWidget(w)
+
+		self.setLayout(layout)
+
+
+class SerialStatus(QtWidgets.QLabel):
+	"""SerialStatus"""
+	def __init__(self, tc, timer, parent=None):
+		super(SerialStatus, self).__init__("Serial close", parent)
+
+		# Alignment / Font size
+		font = self.font()
+		font.setPointSize(10)
+		self.setFont(font)
+
+		self.tc = tc
+		self.timer = timer
+		timer.timeout.connect(self._update)
+
+
+	def _update(self):
+		pass
+
+
+class BackupStatus(ValueIndicator):
+	def __init__(self, tc, timer, parent=None):
+		super(BackupStatus, self).__init__("Backup enabled:", timer, self._updateFunction, sizeTitle=10, sizeData=11)
+		self.tc = tc
+
+	def _updateFunction(self):
+		return "No"
+
+
+class DebugStatus(QtWidgets.QWidget):
+	def __init__(self, tc, timer, flightController, parent=None):
+		super(DebugStatus, self).__init__(parent=parent)
+
+		self.setMinimumSize(230, 0)
+
+		backupStatus = BackupStatus(tc, timer)
+		serialStatus = SerialStatus(tc, timer)
+		time = ValueIndicator("Time since\nlast message:", timer, self._updateTime, sizeData=10)
+		
+		layout = QtWidgets.QVBoxLayout()
+		layout.setContentsMargins(0,0,10,5)
+
+		layout1 = QtWidgets.QVBoxLayout()
+		layout1.setAlignment(Qt.AlignBottom)
+		widgets = [backupStatus, serialStatus, time]
+		
+		for w in widgets:
+			layout1.addWidget(w)
+
+		layout.addWidget(flightController.backup)
+		layout.addLayout(layout1)
+
+		self.setLayout(layout)
+
+	def _updateTime(self):
+		return "{:>5.3f} s".format(1.23456)
 
 
 # Main window
