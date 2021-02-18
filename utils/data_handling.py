@@ -64,7 +64,7 @@ class TimeSeries:
 
     def get_last(self):
         if len(self.y) == 0:
-            return 0
+            return None
         else: 
             return self.y[-1] 
 

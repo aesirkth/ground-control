@@ -100,7 +100,7 @@ class Telecommand(SerialReader):
         time_int = int(time)
         self.__send_header(ID_TIME_SYNC_FC)
         self.ser.write(time_int)
-        return self.__wait_for_data("engine", "TBD")
+        return self.__wait_for_data("engine", "time_sync")
 
     # set the power mode of the flight computer
     def set_flight_power_mode(self, TBD):
@@ -143,6 +143,21 @@ class Telecommand(SerialReader):
         self.ser.write(data)
         return self.__wait_for_data("flight", "is_parachute_armed")
 
+    def set_data_logging(self, logging_enabled):
+        if not self.state():
+            # return a promise that always fails
+            return self.__wait_for_data("engine", "nothing :(")
+        self.__send_header(ID_SET_DATA_LOGGING)
+        self.ser.write(logging_enabled)
+        return self.__wait_for_data("flight", "is_logging_en")
+    
+    def save_data_to_sd(self):
+        if not self.state():
+            # return a promise that always fails
+            return self.__wait_for_data("engine", "nothing :(")
+        self.__send_header(ID_SET_DUMP_FLASH)
+        self.ser.write(1)
+        return self.__wait_for_data("flight", "dump_sd")
 
 #decoding_definitions[ID_SOFTWARE_STATE_EC] = [Decoder("engine",
 #decoding_definitions[ID_HARDWARE_STATE_EC] = [Decoder("engine",
@@ -151,6 +166,7 @@ class Telecommand(SerialReader):
 decoding_definitions[ID_RETURN_ENGINE_STATE_EC] = [BitDecoder(
     "engine", ["is_launch_aborted","is_engine_armed", "is_engine_en"])]
 
+decoding_definitions[ID_RETURN_TIME_SYNC_FC] = [CustomDecoder(lambda x: Data("flight", "time_sync", 1))]
 #decoding_definitions[ID_FIRE_ROCKET_CONFIRMATION_EC] = [Decoder("engine",
 
 
@@ -177,3 +193,7 @@ decoding_definitions[ID_FLIGHT_CONTROLLER_STATUS_FC] = [
     Decoder("flight", "<c", "SW_state"),
     Decoder("flight", "<c", "mission_state")
 ]
+
+decoding_definitions[ID_RETURN_SET_DATA_LOGGING_FC] = [BitDecoder("flight", ["is_logging_en"])]
+
+decoding_definitions[ID_RETURN_DUMP_FLASH_FC] = [BitDecoder("flight", ["dump_sd", "dump_flash"])]
