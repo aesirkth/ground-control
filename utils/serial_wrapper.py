@@ -44,6 +44,7 @@ class SerialWrapper:
 
     #basically a copy of pyserials write function
     def write(self, bytes, *args):
+        print(bytes)
         self.backup.write(bytes)
         self.ser.write(bytes, *args)
 
@@ -92,11 +93,12 @@ class SerialWrapper:
                 return 0
 
         elif self.device == "telecommand":
-            bonjour = b"LORALINK" 
-            self.ser.write(b'&gB0')
+            handshake = bytes(SEPARATOR + [ID_HANDSHAKE]) 
+            response = bytes(SEPARATOR + [ID_RETURN_HANDSHAKE])
+            self.ser.write(handshake)
             time.sleep(1)
             buff = self.ser.read_all()
-            if bonjour in buff:
+            if response in buff:
                 return 1
             else:
                 return 0
@@ -160,7 +162,7 @@ class SerialWrapper:
     #timestamp the backupfile
     def timestamp(self):
         msg = []
-        msg += [ID_TIMESTAMP]
+        msg += [ID_LOCAL_TIMESTAMP]
         buf = [0 for x in range(4)]
         time = get_current_time()
         buf[0] = time & 255
@@ -194,6 +196,7 @@ class SerialReader():
         self.decoders[ID_LOCAL_TIMESTAMP] = [Decoder("flight", "<I", "timestamp")]
         self.client = False
         self.current_time = None
+        self.last_message_time = 0
         if "influx" in kwargs: 
             self.client = kwargs["influx"]
 
@@ -224,6 +227,9 @@ class SerialReader():
     
     def open_file(self, path):
         return self.ser.open_file(path)
+    
+    def seconds_since_last_message(self):
+        return time.time() - self.last_message_time
 
 def reader_thread(sr):
     ser = sr.ser
@@ -239,8 +245,8 @@ def reader_thread(sr):
             time.sleep(0.1)
             continue
         
-        #test for frame separator, read one byte at a time so it aligns itself
         separator = ser.read_int(1)
+        #test for frame separator, read one byte at a time so it aligns itself
         if separator == None:
             continue
         if separator != SEPARATOR[0] or ser.read_int(1) != SEPARATOR[1]:
@@ -255,7 +261,8 @@ def reader_thread(sr):
             print(sr.device + ": Invalid ID: " + str(frame_id))
             print(sr.device + ": last valid ID: " + str(frame_id_old))
             continue
- 
+        
+        sr.last_message_time = time.time()
         decoder = sr.decoders[frame_id]
         data = []
         for v in decoder:

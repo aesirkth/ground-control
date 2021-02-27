@@ -10,28 +10,28 @@ from PyQt5.QtGui import QPalette, QColor
 INTERVAL = 30
 
 class QHSeperationLine(QtWidgets.QFrame):
-  """A horizontal seperation line"""
+    """A horizontal seperation line"""
 
-  def __init__(self):
-    super().__init__()
-    self.setMinimumWidth(1)
-    self.setFixedHeight(5)
-    # self.setContentsMargins(5, 0, 0, 0)
-    self.setFrameShape(QtWidgets.QFrame.HLine)
-    self.setFrameShadow(QtWidgets.QFrame.Sunken)
-    self.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
+    def __init__(self):
+        super().__init__()
+        self.setMinimumWidth(1)
+        self.setFixedHeight(5)
+        # self.setContentsMargins(5, 0, 0, 0)
+        self.setFrameShape(QtWidgets.QFrame.HLine)
+        self.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
 
 
 class QVSeperationLine(QtWidgets.QFrame):
-  """A vertical seperation line"""
-  def __init__(self):
-    super().__init__()
-    self.setFixedWidth(20)
-    self.setMinimumHeight(1)
-    self.setContentsMargins(0, 5, 0, 5)
-    self.setFrameShape(QtWidgets.QFrame.VLine)
-    self.setFrameShadow(QtWidgets.QFrame.Sunken)
-    self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
+    """A vertical seperation line"""
+    def __init__(self):
+        super().__init__()
+        self.setFixedWidth(20)
+        self.setMinimumHeight(1)
+        self.setContentsMargins(0, 5, 0, 5)
+        self.setFrameShape(QtWidgets.QFrame.VLine)
+        self.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
 
 
 # Main window
@@ -71,13 +71,16 @@ class MainWindow(QtWidgets.QMainWindow):
         # Set the central widget of the Window. Widget will expand
         # to take up all the space in the window by default.
         self.setCentralWidget(window)
-
+        def closeEvent(event):
+            tc.stop()
+            event.accept()
+        self.closeEvent = closeEvent
 
 def main():
 
     # Telecommand
     tc = Telecommand()
-
+    tc.open_serial()
     # Init Qt
     app = QtWidgets.QApplication(sys.argv)
     # print(QtWidgets.QStyleFactory.keys()) # Available styles

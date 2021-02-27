@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 from threading import Thread
 
 from utils.serial_wrapper import SerialReader
@@ -36,8 +36,7 @@ class Telecommand(SerialReader):
         super().__init__("telecommand", decoding_definitions, **kwargs)
 
     def __send_header(self, id):
-        start = SEPARATOR
-        self.ser.write(start.append(id))
+        self.ser.write(bytes(SEPARATOR + [id]))
 
     def __wait_for_data(self, source, name):
         data = self.data[source][name]
@@ -48,9 +47,11 @@ class Telecommand(SerialReader):
             for i in range(20):
                 time.sleep(0.1)
                 if start_len != len(data.y):
+                    print("happy")
                     promise.resolve(True)
                     break
             else:
+                print("sad")
                 promise.resolve(False)
 
         t = Thread(target = thread)
@@ -63,6 +64,7 @@ class Telecommand(SerialReader):
         if not self.state():
             # return a promise that always fails
             return self.__wait_for_data("engine", "nothing :(")
+        return self.__wait_for_data("engine", "nothing :(")
         self.__send_header(ID_SET_POWER_MODE_EC)
         return self.__wait_for_data("engine", "TBD")
 
@@ -74,11 +76,12 @@ class Telecommand(SerialReader):
         if not self.state():
             # return a promise that always fails
             return self.__wait_for_data("engine", "nothing :(")
+        return self.__wait_for_data("engine", "nothing :(")
         out = abort > 0
         out += (armed > 0) * 2
         out += (enabled > 0) * 4
         self.__send_header(ID_SET_ENGINE_STATE_EC)
-        self.ser.write(out)
+        self.ser.write(bytes([out]))
         return self.__wait_for_data("engine", "TBD")
 
     # fire rocket
@@ -86,6 +89,7 @@ class Telecommand(SerialReader):
         if not self.state():
             # return a promise that always fails
             return self.__wait_for_data("engine", "nothing :(") 
+        return self.__wait_for_data("engine", "nothing :(")
         self.__send_header(ID_FIRE_ROCKET_EC)
         self.__wait_for_data("engine", "TBD")
         return self.__wait_for_data("engine", "TBD")
@@ -95,18 +99,26 @@ class Telecommand(SerialReader):
         if not self.state():
             # return a promise that always fails
             return self.__wait_for_data("engine", "nothing :(")
-        now = datetime.now()
+        now = datetime.datetime.now()
         time = now.strftime("%H%M%S%f")[:9]
-        time_int = int(time)
+        time = int(time)
+        buf = [0 for x in range(4)]
+        buf[0] = time & 255
+        buf[1] = (time >> 8)  & 255
+        buf[2] = (time >> 16) & 255
+        buf[3] = (time >> 24) & 255
         self.__send_header(ID_TIME_SYNC_FC)
-        self.ser.write(time_int)
-        return self.__wait_for_data("engine", "time_sync")
+        self.ser.write(bytes(buf))
+        return self.__wait_for_data("flight", "time_sync")
 
+    def handshake(self):
+        self.__send_header(ID_HANDSHAKE)
     # set the power mode of the flight computer
     def set_flight_power_mode(self, TBD):
         if not self.state():
             # return a promise that always fails
             return self.__wait_for_data("engine", "nothing :(")
+        return self.__wait_for_data("engine", "nothing :(")
         self.__send_header(ID_SET_POWER_MODE_FC)
         return self.__wait_for_data("flight", "TBD")
         #TBD
@@ -123,7 +135,7 @@ class Telecommand(SerialReader):
         self.__send_header(ID_SET_RADIO_EQUIPMENT_FC)
         data = fpv
         data += 2 * (tm > 0)
-        self.ser.write(data)
+        self.ser.write(bytes([data]))
         return self.__wait_for_data("flight", "is_fpv_en")
 
     # set the parachutes
@@ -140,7 +152,7 @@ class Telecommand(SerialReader):
         data = armed
         data += 2 * (enable_1 > 0)
         data += 4 * (enable_2 > 0)
-        self.ser.write(data)
+        self.ser.write(bytes([data]))
         return self.__wait_for_data("flight", "is_parachute_armed")
 
     def set_data_logging(self, logging_enabled):
@@ -156,7 +168,7 @@ class Telecommand(SerialReader):
             # return a promise that always fails
             return self.__wait_for_data("engine", "nothing :(")
         self.__send_header(ID_SET_DUMP_FLASH)
-        self.ser.write(1)
+        self.ser.write(bytes([1]))
         return self.__wait_for_data("flight", "dump_sd")
 
 #decoding_definitions[ID_SOFTWARE_STATE_EC] = [Decoder("engine",
@@ -166,7 +178,7 @@ class Telecommand(SerialReader):
 decoding_definitions[ID_RETURN_ENGINE_STATE_EC] = [BitDecoder(
     "engine", ["is_launch_aborted","is_engine_armed", "is_engine_en"])]
 
-decoding_definitions[ID_RETURN_TIME_SYNC_FC] = [CustomDecoder(lambda x: Data("flight", "time_sync", 1))]
+decoding_definitions[ID_RETURN_TIME_SYNC_FC] = [CustomDecoder(lambda x: [Data("flight", "time_sync", 1)])]
 #decoding_definitions[ID_FIRE_ROCKET_CONFIRMATION_EC] = [Decoder("engine",
 
 
@@ -185,7 +197,8 @@ decoding_definitions[ID_GNSS_DATA_FC] = [
     Decoder("flight", "<I", "gnss_time"),
     Decoder("flight", "<I", "latitude"),
     Decoder("flight", "<I", "longitude"),
-    Decoder("flight", "<S", "h_dop", 0.01)
+    Decoder("flight", "<S", "h_dop", 0.01),
+    Decoder("flight", "<B", "n_satellites"),
 ]
 
 decoding_definitions[ID_FLIGHT_CONTROLLER_STATUS_FC] = [
