@@ -1,0 +1,1762 @@
+{
+  "enums": [
+    {
+      "name": "PowerMode",
+      "entries": {
+        "Active": 0,
+        "Hibernate": 1
+      }
+    },
+    {
+      "name": "DebugMessagesMode",
+      "entries": {
+        "None": 0,
+        "Warnings": 1,
+        "Errors": 2
+      }
+    },
+    {
+      "name": "DebugStatusLedsMode",
+      "entries": {
+        "Enabled": 0,
+        "Disabled": 1
+      }
+    },
+    {
+      "name": "RequestShutdownOrRequest",
+      "entries": {
+        "Shutdown": 0,
+        "Restart": 1
+      }
+    },
+    {
+      "name": "PowerControlChannel",
+      "entries": {
+        "MainValveSolenoid": 0,
+        "VentingSolenoid": 1,
+        "IgnitionCircuit": 2
+      }
+    },
+    {
+      "name": "PowerControlChannelStateRequest",
+      "entries": {
+        "RequestToArm": 0,
+        "RequestToDisarm": 1,
+        "RequestToStartPower": 2,
+        "RequestToStopPower": 3
+      }
+    },
+    {
+      "name": "CircumventArmingCheck",
+      "entries": {
+        "SafelyUseArmingChecks": 0,
+        "DangerouslyIgnoreArmingChecks": 1
+      }
+    },
+    {
+      "name": "PowerControlChannelStateRequestResult",
+      "entries": {
+        "Success": 0,
+        "Failure": 1
+      }
+    },
+    {
+      "name": "PowerControlChannelState",
+      "entries": {
+        "Idle": 0,
+        "Arming": 1,
+        "Armed": 2,
+        "Firing": 3
+      }
+    },
+    {
+      "name": "owerControlChannelGateState",
+      "entries": {
+        "Grounded": 0,
+        "ResistanceMeasurement": 1,
+        "High": 2
+      }
+    },
+    {
+      "name": "AccelerationError",
+      "entries": {
+        "CRCMismatch": 0,
+        "I2CUnknownError": 1,
+        "I2CAddressNack": 2,
+        "I2CDataNack": 3
+      }
+    },
+    {
+      "name": "PowerInputMeasurementError",
+      "entries": {
+        "CRCMismatch": 0,
+        "I2CUnknownError": 1,
+        "I2CAddressNack": 2,
+        "I2CDataNack": 3
+      }
+    },
+    {
+      "name": "HumidityError",
+      "entries": {
+        "CRCMismatch": 0,
+        "I2CUnknownError": 1,
+        "I2CAddressNack": 2,
+        "I2CDataNack": 3
+      }
+    },
+    {
+      "name": "PowerControlResistanceSource",
+      "entries": {
+        "Estimate": 0,
+        "HighPrecision": 1
+      }
+    },
+    {
+      "name": "PowerControlLoadMeasurementError",
+      "entries": {
+        "CRCMismatch": 0,
+        "I2CUnknownError": 1,
+        "I2CAddressNack": 2,
+        "I2CDataNack": 3
+      }
+    },
+    {
+      "name": "PowerControlResistanceMeasurementError",
+      "entries": {
+        "CRCMismatch": 0,
+        "I2CUnknownError": 1,
+        "I2CAddressNack": 2,
+        "I2CDataNack": 3
+      }
+    },
+    {
+      "name": "PressureBoardTemperatureSource",
+      "entries": {
+        "AmbientPressureSensor": 0,
+        "Microcontroller": 1,
+        "PowerThermistor": 2
+      }
+    },
+    {
+      "name": "TransducerError",
+      "entries": {
+        "CRCMismatch": 0,
+        "I2CUnknownError": 1,
+        "I2CAddressNack": 2,
+        "I2CDataNack": 3,
+        "Undervoltage": 4,
+        "Overvoltage": 5
+      }
+    },
+    {
+      "name": "AmbientPressureError",
+      "entries": {
+        "CRCMismatch": 0,
+        "I2CUnknownError": 1,
+        "I2CAddressNack": 2,
+        "I2CDataNack": 3
+      }
+    },
+    {
+      "name": "TemperatureMeasurementError",
+      "entries": {
+        "CRCMismatch": 0,
+        "OneWireUnknownError": 1,
+        "SensorShortToVDD": 2,
+        "SensorShortToGND": 3,
+        "SensorOpenCircuit": 4
+      }
+    },
+    {
+      "name": "ValveActuationError",
+      "entries": {
+        "CRCMismatch": 0,
+        "I2CUnknownError": 1,
+        "I2CAddressNack": 2,
+        "I2CDataNack": 3
+      }
+    }
+  ],
+  "dataTypes": [
+    {
+      "name": "CurrentTimePing",
+      "fields": [
+        {
+          "definition": {
+            "type": "integer",
+            "nativeType": "uint32"
+          },
+          "name": "currentMicros"
+        }
+      ]
+    },
+    {
+      "name": "CurrentTimePong",
+      "fields": [
+        {
+          "definition": {
+            "type": "integer",
+            "nativeType": "uint32"
+          },
+          "name": "currentMicros"
+        }
+      ]
+    },
+    {
+      "name": "SayHi",
+      "fields": []
+    },
+    {
+      "name": "Hello",
+      "fields": [
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "DebugMessagesMode",
+            "nativeType": "uint8"
+          },
+          "name": "debugMessagesMode"
+        },
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "DebugStatusLedsMode",
+            "nativeType": "uint8"
+          },
+          "name": "debugStatusLedsMode"
+        },
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerMode",
+            "nativeType": "uint8"
+          },
+          "name": "powerMode"
+        }
+      ]
+    },
+    {
+      "name": "SetDebugModeRequest",
+      "fields": [
+        {
+          "definition": {
+            "type": "id",
+            "nativeType": "uint8"
+          },
+          "name": "node_id"
+        },
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "DebugMessagesMode",
+            "nativeType": "uint8"
+          },
+          "name": "messages"
+        },
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "DebugStatusLedsMode",
+            "nativeType": "uint8"
+          },
+          "name": "statusLeds"
+        }
+      ]
+    },
+    {
+      "name": "SetPowerModeRequest",
+      "fields": [
+        {
+          "definition": {
+            "type": "id",
+            "nativeType": "uint8"
+          },
+          "name": "node_id"
+        },
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerMode",
+            "nativeType": "uint8"
+          },
+          "name": "mode"
+        }
+      ]
+    },
+    {
+      "name": "RequestShutdownOrRequest",
+      "fields": [
+        {
+          "definition": {
+            "type": "id",
+            "nativeType": "uint8"
+          },
+          "name": "node_id"
+        },
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "RequestShutdownOrRequest",
+            "nativeType": "uint8"
+          },
+          "name": "messages"
+        }
+      ]
+    },
+    {
+      "name": "PowerInputMeasurement",
+      "fields": [
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 15,
+            "minimumValue": -15,
+            "packedType": "uint16"
+          },
+          "name": "current_amperes"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 36,
+            "minimumValue": 0,
+            "packedType": "uint16"
+          },
+          "name": "voltage_volts"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 540,
+            "minimumValue": -540,
+            "packedType": "uint16"
+          },
+          "name": "power_watts"
+        }
+      ]
+    },
+    {
+      "name": "PowerInputMeasurementError",
+      "fields": [
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerInputMeasurementError",
+            "nativeType": "uint8"
+          },
+          "name": "error"
+        }
+      ]
+    },
+    {
+      "name": "RawTransducerVoltage",
+      "fields": [
+        {
+          "definition": {
+            "type": "id",
+            "nativeType": "uint8"
+          },
+          "name": "sensor_index"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 5,
+            "minimumValue": 0,
+            "packedType": "uint32"
+          },
+          "name": "voltage_volts"
+        }
+      ]
+    },
+    {
+      "name": "TransducerPressure",
+      "fields": [
+        {
+          "definition": {
+            "type": "id",
+            "nativeType": "uint8"
+          },
+          "name": "sensor_index"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 10000000,
+            "minimumValue": 0,
+            "packedType": "uint32"
+          },
+          "name": "pressure_pascal"
+        }
+      ]
+    },
+    {
+      "name": "AmbientPressure",
+      "fields": [
+        {
+          "definition": {
+            "type": "id",
+            "nativeType": "uint8"
+          },
+          "name": "sensor_index"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 10000,
+            "minimumValue": 0,
+            "packedType": "uint32"
+          },
+          "name": "pressure_millibars"
+        }
+      ]
+    },
+    {
+      "name": "TransducerError",
+      "fields": [
+        {
+          "definition": {
+            "type": "id",
+            "nativeType": "uint8"
+          },
+          "name": "sensor_index"
+        },
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "TransducerError",
+            "nativeType": "uint8"
+          },
+          "name": "error"
+        }
+      ]
+    },
+    {
+      "name": "AmbientPressureError",
+      "fields": [
+        {
+          "definition": {
+            "type": "id",
+            "nativeType": "uint8"
+          },
+          "name": "sensor_index"
+        },
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "AmbientPressureError",
+            "nativeType": "uint8"
+          },
+          "name": "error"
+        }
+      ]
+    },
+    {
+      "name": "ColdSideTemperature",
+      "fields": [
+        {
+          "definition": {
+            "type": "id",
+            "nativeType": "uint8"
+          },
+          "name": "sensor_index"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 125,
+            "minimumValue": -55,
+            "packedType": "uint32"
+          },
+          "name": "temperature_celsius"
+        }
+      ]
+    },
+    {
+      "name": "PlatinumSensorTemperature",
+      "fields": [
+        {
+          "definition": {
+            "type": "id",
+            "nativeType": "uint8"
+          },
+          "name": "sensor_index"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 850,
+            "minimumValue": -200,
+            "packedType": "uint32"
+          },
+          "name": "temperature_celsius"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 5000,
+            "minimumValue": 0,
+            "packedType": "uint16"
+          },
+          "name": "resistance_ohms"
+        }
+      ]
+    },
+    {
+      "name": "ThermocoupleTypeKTemperature",
+      "fields": [
+        {
+          "definition": {
+            "type": "id",
+            "nativeType": "uint8"
+          },
+          "name": "sensor_index"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 1350,
+            "minimumValue": -200,
+            "packedType": "uint32"
+          },
+          "name": "temperature_celsius"
+        }
+      ]
+    },
+    {
+      "name": "TemperatureMeasurementError",
+      "fields": [
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "TemperatureMeasurementError",
+            "nativeType": "uint8"
+          },
+          "name": "error"
+        }
+      ]
+    },
+    {
+      "name": "ValveActuation",
+      "fields": [
+        {
+          "definition": {
+            "type": "id",
+            "nativeType": "uint8"
+          },
+          "name": "sensor_index"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 500,
+            "minimumValue": -500,
+            "packedType": "uint32"
+          },
+          "name": "distance_mm"
+        }
+      ]
+    },
+    {
+      "name": "ValveActuationError",
+      "fields": [
+        {
+          "definition": {
+            "type": "id",
+            "nativeType": "uint8"
+          },
+          "name": "sensor_index"
+        },
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "ValveActuationError",
+            "nativeType": "uint8"
+          },
+          "name": "error"
+        }
+      ]
+    },
+    {
+      "name": "Humidity",
+      "fields": [
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 100,
+            "minimumValue": 0,
+            "packedType": "uint16"
+          },
+          "name": "relative_humidity"
+        }
+      ]
+    },
+    {
+      "name": "HumidityError",
+      "fields": [
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "HumidityError",
+            "nativeType": "uint8"
+          },
+          "name": "error"
+        }
+      ]
+    },
+    {
+      "name": "Acceleration",
+      "fields": [
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 20,
+            "minimumValue": -20,
+            "packedType": "uint16"
+          },
+          "name": "acceleration_x_gforce"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 20,
+            "minimumValue": -20,
+            "packedType": "uint16"
+          },
+          "name": "acceleration_y_gforce"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 20,
+            "minimumValue": -20,
+            "packedType": "uint16"
+          },
+          "name": "acceleration_z_gforce"
+        }
+      ]
+    },
+    {
+      "name": "AccelerationError",
+      "fields": [
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "AccelerationError",
+            "nativeType": "uint8"
+          },
+          "name": "error"
+        }
+      ]
+    },
+    {
+      "name": "PartialDebugMessage",
+      "fields": [
+        {
+          "definition": {
+            "type": "integer",
+            "nativeType": "uint8"
+          },
+          "name": "byte0"
+        },
+        {
+          "definition": {
+            "type": "integer",
+            "nativeType": "uint8"
+          },
+          "name": "byte1"
+        },
+        {
+          "definition": {
+            "type": "integer",
+            "nativeType": "uint8"
+          },
+          "name": "byte2"
+        },
+        {
+          "definition": {
+            "type": "integer",
+            "nativeType": "uint8"
+          },
+          "name": "byte3"
+        },
+        {
+          "definition": {
+            "type": "integer",
+            "nativeType": "uint8"
+          },
+          "name": "byte4"
+        },
+        {
+          "definition": {
+            "type": "integer",
+            "nativeType": "uint8"
+          },
+          "name": "byte5"
+        },
+        {
+          "definition": {
+            "type": "integer",
+            "nativeType": "uint8"
+          },
+          "name": "byte6"
+        },
+        {
+          "definition": {
+            "type": "integer",
+            "nativeType": "uint8"
+          },
+          "name": "byte7"
+        }
+      ]
+    },
+    {
+      "name": "PowerControlNewStateRequest",
+      "fields": [
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerControlChannel",
+            "nativeType": "uint8"
+          },
+          "name": "power_control_channel_id"
+        },
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerControlChannelStateRequest",
+            "nativeType": "uint8"
+          },
+          "name": "requested_state"
+        },
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "CircumventArmingCheck",
+            "nativeType": "uint8"
+          },
+          "name": "circumvent_arming_checks"
+        }
+      ]
+    },
+    {
+      "name": "PowerControlNewStateResponse",
+      "fields": [
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerControlChannel",
+            "nativeType": "uint8"
+          },
+          "name": "power_control_channel_id"
+        },
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerControlChannelStateRequest",
+            "nativeType": "uint8"
+          },
+          "name": "requested_state"
+        },
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "CircumventArmingCheck",
+            "nativeType": "uint8"
+          },
+          "name": "requested_circumvent_arming_checks"
+        },
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerControlChannelStateRequestResult",
+            "nativeType": "uint8"
+          },
+          "name": "result"
+        }
+      ]
+    },
+    {
+      "name": "PowerControlGetState",
+      "fields": [
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerControlChannel",
+            "nativeType": "uint8"
+          },
+          "name": "power_control_channel_id"
+        }
+      ]
+    },
+    {
+      "name": "PowerControlState",
+      "fields": [
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerControlChannel",
+            "nativeType": "uint8"
+          },
+          "name": "power_control_channel_id"
+        },
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerControlChannelState",
+            "nativeType": "uint8"
+          },
+          "name": "channel_state"
+        },
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "owerControlChannelGateState",
+            "nativeType": "uint8"
+          },
+          "name": "gate_state"
+        }
+      ]
+    },
+    {
+      "name": "PowerControlVoltages",
+      "fields": [
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerControlChannel",
+            "nativeType": "uint8"
+          },
+          "name": "power_control_channel_id"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 5,
+            "minimumValue": 0,
+            "packedType": "uint16"
+          },
+          "name": "voltage_3v3_volts"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 30,
+            "minimumValue": 0,
+            "packedType": "uint16"
+          },
+          "name": "voltage_input_volts"
+        }
+      ]
+    },
+    {
+      "name": "PowerControlResistance",
+      "fields": [
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerControlChannel",
+            "nativeType": "uint8"
+          },
+          "name": "power_control_channel_id"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 100000,
+            "minimumValue": 0,
+            "packedType": "uint32"
+          },
+          "name": "resistance_ohms"
+        },
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerControlResistanceSource",
+            "nativeType": "uint8"
+          },
+          "name": "source"
+        }
+      ]
+    },
+    {
+      "name": "PowerControlEstimates",
+      "fields": [
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerControlChannel",
+            "nativeType": "uint8"
+          },
+          "name": "power_control_channel_id"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 100,
+            "minimumValue": 0,
+            "packedType": "uint16"
+          },
+          "name": "estimated_current_amperes"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 3000,
+            "minimumValue": 0,
+            "packedType": "uint16"
+          },
+          "name": "estimated_power_amperes"
+        }
+      ]
+    },
+    {
+      "name": "PowerControlLoadMeasurement",
+      "fields": [
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerControlChannel",
+            "nativeType": "uint8"
+          },
+          "name": "power_control_channel_id"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 30,
+            "minimumValue": 0,
+            "packedType": "uint16"
+          },
+          "name": "voltage_volts"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 30,
+            "minimumValue": -30,
+            "packedType": "uint16"
+          },
+          "name": "current_amperes"
+        },
+        {
+          "definition": {
+            "type": "packedFloat",
+            "originalType": "f32",
+            "maximumValue": 450,
+            "minimumValue": -450,
+            "packedType": "uint16"
+          },
+          "name": "power_watts"
+        }
+      ]
+    },
+    {
+      "name": "PowerControlLoadMeasurementError",
+      "fields": [
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerControlChannel",
+            "nativeType": "uint8"
+          },
+          "name": "power_control_channel_id"
+        },
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerControlLoadMeasurementError",
+            "nativeType": "uint8"
+          },
+          "name": "error"
+        }
+      ]
+    },
+    {
+      "name": "PowerControlResistanceMeasurementError",
+      "fields": [
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerControlChannel",
+            "nativeType": "uint8"
+          },
+          "name": "power_control_channel_id"
+        },
+        {
+          "definition": {
+            "type": "enum",
+            "enumName": "PowerControlResistanceMeasurementError",
+            "nativeType": "uint8"
+          },
+          "name": "error"
+        }
+      ]
+    },
+    {
+      "name": "PerformIgnition",
+      "fields": [
+        {
+          "definition": {
+            "type": "integer",
+            "nativeType": "int8"
+          },
+          "name": "this_number_must_be_positive_1"
+        },
+        {
+          "definition": {
+            "type": "integer",
+            "nativeType": "int8"
+          },
+          "name": "this_number_must_be_negative_2"
+        },
+        {
+          "definition": {
+            "type": "integer",
+            "nativeType": "int8"
+          },
+          "name": "this_number_must_be_positive_4"
+        },
+        {
+          "definition": {
+            "type": "integer",
+            "nativeType": "int8"
+          },
+          "name": "this_number_must_be_negative_8"
+        },
+        {
+          "definition": {
+            "type": "integer",
+            "nativeType": "int8"
+          },
+          "name": "this_number_must_be_positive_16"
+        },
+        {
+          "definition": {
+            "type": "integer",
+            "nativeType": "int8"
+          },
+          "name": "this_number_must_be_negative_32"
+        },
+        {
+          "definition": {
+            "type": "integer",
+            "nativeType": "int8"
+          },
+          "name": "this_number_must_be_positive_64"
+        },
+        {
+          "definition": {
+            "type": "integer",
+            "nativeType": "int8"
+          },
+          "name": "this_number_must_be_negative_128"
+        }
+      ]
+    },
+    {
+      "name": "IgnitionHappened",
+      "fields": []
+    },
+    {
+      "name": "IgnitionCannotHappen",
+      "fields": []
+    }
+  ],
+  "messages": [
+    {
+      "id": 0,
+      "dataType": "CurrentTimePing",
+      "receiverNodeId": 1,
+      "receiverNodeName": "Edda Controller",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 0,
+      "dataType": "CurrentTimePing",
+      "receiverNodeId": 2,
+      "receiverNodeName": "Edda Telemetry",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 0,
+      "dataType": "CurrentTimePing",
+      "receiverNodeId": 3,
+      "receiverNodeName": "Edda Pressure (Top)",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 0,
+      "dataType": "CurrentTimePing",
+      "receiverNodeId": 4,
+      "receiverNodeName": "Edda Pressure (Bottom)",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 4,
+      "dataType": "CurrentTimePong",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    },
+    {
+      "id": 5,
+      "dataType": "CurrentTimePong",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 2,
+      "senderNodeName": "Edda Telemetry"
+    },
+    {
+      "id": 6,
+      "dataType": "CurrentTimePong",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 3,
+      "senderNodeName": "Edda Pressure (Top)"
+    },
+    {
+      "id": 7,
+      "dataType": "CurrentTimePong",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 4,
+      "senderNodeName": "Edda Pressure (Bottom)"
+    },
+    {
+      "id": 1,
+      "dataType": "SayHi",
+      "receiverNodeId": 1,
+      "receiverNodeName": "Edda Controller",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 1,
+      "dataType": "SayHi",
+      "receiverNodeId": 2,
+      "receiverNodeName": "Edda Telemetry",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 1,
+      "dataType": "SayHi",
+      "receiverNodeId": 3,
+      "receiverNodeName": "Edda Pressure (Top)",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 1,
+      "dataType": "SayHi",
+      "receiverNodeId": 4,
+      "receiverNodeName": "Edda Pressure (Bottom)",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 8,
+      "dataType": "Hello",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    },
+    {
+      "id": 9,
+      "dataType": "Hello",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 2,
+      "senderNodeName": "Edda Telemetry"
+    },
+    {
+      "id": 10,
+      "dataType": "Hello",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 3,
+      "senderNodeName": "Edda Pressure (Top)"
+    },
+    {
+      "id": 11,
+      "dataType": "Hello",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 4,
+      "senderNodeName": "Edda Pressure (Bottom)"
+    },
+    {
+      "id": 48,
+      "dataType": "SetDebugModeRequest",
+      "receiverNodeId": 1,
+      "receiverNodeName": "Edda Controller",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 48,
+      "dataType": "SetDebugModeRequest",
+      "receiverNodeId": 2,
+      "receiverNodeName": "Edda Telemetry",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 48,
+      "dataType": "SetDebugModeRequest",
+      "receiverNodeId": 3,
+      "receiverNodeName": "Edda Pressure (Top)",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 48,
+      "dataType": "SetDebugModeRequest",
+      "receiverNodeId": 4,
+      "receiverNodeName": "Edda Pressure (Bottom)",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 49,
+      "dataType": "SetPowerModeRequest",
+      "receiverNodeId": 1,
+      "receiverNodeName": "Edda Controller",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 49,
+      "dataType": "SetPowerModeRequest",
+      "receiverNodeId": 2,
+      "receiverNodeName": "Edda Telemetry",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 49,
+      "dataType": "SetPowerModeRequest",
+      "receiverNodeId": 3,
+      "receiverNodeName": "Edda Pressure (Top)",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 49,
+      "dataType": "SetPowerModeRequest",
+      "receiverNodeId": 4,
+      "receiverNodeName": "Edda Pressure (Bottom)",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 50,
+      "dataType": "RequestShutdownOrRequest",
+      "receiverNodeId": 1,
+      "receiverNodeName": "Edda Controller",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 50,
+      "dataType": "RequestShutdownOrRequest",
+      "receiverNodeId": 2,
+      "receiverNodeName": "Edda Telemetry",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 50,
+      "dataType": "RequestShutdownOrRequest",
+      "receiverNodeId": 3,
+      "receiverNodeName": "Edda Pressure (Top)",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 50,
+      "dataType": "RequestShutdownOrRequest",
+      "receiverNodeId": 4,
+      "receiverNodeName": "Edda Pressure (Bottom)",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 144,
+      "dataType": "PowerInputMeasurement",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    },
+    {
+      "id": 145,
+      "dataType": "PowerInputMeasurement",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 2,
+      "senderNodeName": "Edda Telemetry"
+    },
+    {
+      "id": 146,
+      "dataType": "PowerInputMeasurement",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 3,
+      "senderNodeName": "Edda Pressure (Top)"
+    },
+    {
+      "id": 147,
+      "dataType": "PowerInputMeasurement",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 4,
+      "senderNodeName": "Edda Pressure (Bottom)"
+    },
+    {
+      "id": 148,
+      "dataType": "PowerInputMeasurementError",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    },
+    {
+      "id": 149,
+      "dataType": "PowerInputMeasurementError",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 2,
+      "senderNodeName": "Edda Telemetry"
+    },
+    {
+      "id": 150,
+      "dataType": "PowerInputMeasurementError",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 3,
+      "senderNodeName": "Edda Pressure (Top)"
+    },
+    {
+      "id": 151,
+      "dataType": "PowerInputMeasurementError",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 4,
+      "senderNodeName": "Edda Pressure (Bottom)"
+    },
+    {
+      "id": 152,
+      "dataType": "RawTransducerVoltage",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 3,
+      "senderNodeName": "Edda Pressure (Top)"
+    },
+    {
+      "id": 153,
+      "dataType": "RawTransducerVoltage",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 4,
+      "senderNodeName": "Edda Pressure (Bottom)"
+    },
+    {
+      "id": 154,
+      "dataType": "TransducerPressure",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 3,
+      "senderNodeName": "Edda Pressure (Top)"
+    },
+    {
+      "id": 154,
+      "dataType": "TransducerPressure",
+      "receiverNodeId": 2,
+      "receiverNodeName": "Edda Telemetry",
+      "senderNodeId": 3,
+      "senderNodeName": "Edda Pressure (Top)"
+    },
+    {
+      "id": 155,
+      "dataType": "TransducerPressure",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 4,
+      "senderNodeName": "Edda Pressure (Bottom)"
+    },
+    {
+      "id": 155,
+      "dataType": "TransducerPressure",
+      "receiverNodeId": 2,
+      "receiverNodeName": "Edda Telemetry",
+      "senderNodeId": 4,
+      "senderNodeName": "Edda Pressure (Bottom)"
+    },
+    {
+      "id": 156,
+      "dataType": "AmbientPressure",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 3,
+      "senderNodeName": "Edda Pressure (Top)"
+    },
+    {
+      "id": 157,
+      "dataType": "AmbientPressure",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 4,
+      "senderNodeName": "Edda Pressure (Bottom)"
+    },
+    {
+      "id": 158,
+      "dataType": "TransducerError",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 3,
+      "senderNodeName": "Edda Pressure (Top)"
+    },
+    {
+      "id": 159,
+      "dataType": "TransducerError",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 4,
+      "senderNodeName": "Edda Pressure (Bottom)"
+    },
+    {
+      "id": 160,
+      "dataType": "AmbientPressureError",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 3,
+      "senderNodeName": "Edda Pressure (Top)"
+    },
+    {
+      "id": 161,
+      "dataType": "AmbientPressureError",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 4,
+      "senderNodeName": "Edda Pressure (Bottom)"
+    },
+    {
+      "id": 162,
+      "dataType": "ColdSideTemperature",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 2,
+      "senderNodeName": "Edda Telemetry"
+    },
+    {
+      "id": 163,
+      "dataType": "ColdSideTemperature",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    },
+    {
+      "id": 164,
+      "dataType": "ColdSideTemperature",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 3,
+      "senderNodeName": "Edda Pressure (Top)"
+    },
+    {
+      "id": 165,
+      "dataType": "ColdSideTemperature",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 4,
+      "senderNodeName": "Edda Pressure (Bottom)"
+    },
+    {
+      "id": 166,
+      "dataType": "PlatinumSensorTemperature",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 2,
+      "senderNodeName": "Edda Telemetry"
+    },
+    {
+      "id": 167,
+      "dataType": "ThermocoupleTypeKTemperature",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 2,
+      "senderNodeName": "Edda Telemetry"
+    },
+    {
+      "id": 168,
+      "dataType": "TemperatureMeasurementError",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 2,
+      "senderNodeName": "Edda Telemetry"
+    },
+    {
+      "id": 169,
+      "dataType": "TemperatureMeasurementError",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    },
+    {
+      "id": 170,
+      "dataType": "TemperatureMeasurementError",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 3,
+      "senderNodeName": "Edda Pressure (Top)"
+    },
+    {
+      "id": 171,
+      "dataType": "TemperatureMeasurementError",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 4,
+      "senderNodeName": "Edda Pressure (Bottom)"
+    },
+    {
+      "id": 172,
+      "dataType": "ValveActuation",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 2,
+      "senderNodeName": "Edda Telemetry"
+    },
+    {
+      "id": 173,
+      "dataType": "ValveActuationError",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 2,
+      "senderNodeName": "Edda Telemetry"
+    },
+    {
+      "id": 174,
+      "dataType": "Humidity",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 2,
+      "senderNodeName": "Edda Telemetry"
+    },
+    {
+      "id": 175,
+      "dataType": "HumidityError",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 2,
+      "senderNodeName": "Edda Telemetry"
+    },
+    {
+      "id": 176,
+      "dataType": "Acceleration",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 2,
+      "senderNodeName": "Edda Telemetry"
+    },
+    {
+      "id": 177,
+      "dataType": "AccelerationError",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 2,
+      "senderNodeName": "Edda Telemetry"
+    },
+    {
+      "id": 64,
+      "dataType": "PartialDebugMessage",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 2,
+      "senderNodeName": "Edda Telemetry"
+    },
+    {
+      "id": 65,
+      "dataType": "PartialDebugMessage",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    },
+    {
+      "id": 66,
+      "dataType": "PartialDebugMessage",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 3,
+      "senderNodeName": "Edda Pressure (Top)"
+    },
+    {
+      "id": 67,
+      "dataType": "PartialDebugMessage",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 4,
+      "senderNodeName": "Edda Pressure (Bottom)"
+    },
+    {
+      "id": 51,
+      "dataType": "PowerControlNewStateRequest",
+      "receiverNodeId": 1,
+      "receiverNodeName": "Edda Controller",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 68,
+      "dataType": "PowerControlNewStateResponse",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    },
+    {
+      "id": 52,
+      "dataType": "PowerControlGetState",
+      "receiverNodeId": 1,
+      "receiverNodeName": "Edda Controller",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 69,
+      "dataType": "PowerControlState",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    },
+    {
+      "id": 178,
+      "dataType": "PowerControlVoltages",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    },
+    {
+      "id": 179,
+      "dataType": "PowerControlResistance",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    },
+    {
+      "id": 180,
+      "dataType": "PowerControlEstimates",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    },
+    {
+      "id": 181,
+      "dataType": "PowerControlLoadMeasurement",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    },
+    {
+      "id": 182,
+      "dataType": "PowerControlLoadMeasurementError",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    },
+    {
+      "id": 183,
+      "dataType": "PowerControlResistanceMeasurementError",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    },
+    {
+      "id": 53,
+      "dataType": "PerformIgnition",
+      "receiverNodeId": 1,
+      "receiverNodeName": "Edda Controller",
+      "senderNodeId": 0,
+      "senderNodeName": "Flight Controller"
+    },
+    {
+      "id": 70,
+      "dataType": "IgnitionHappened",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    },
+    {
+      "id": 70,
+      "dataType": "IgnitionHappened",
+      "receiverNodeId": 2,
+      "receiverNodeName": "Edda Telemetry",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    },
+    {
+      "id": 70,
+      "dataType": "IgnitionHappened",
+      "receiverNodeId": 3,
+      "receiverNodeName": "Edda Pressure (Top)",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    },
+    {
+      "id": 70,
+      "dataType": "IgnitionHappened",
+      "receiverNodeId": 4,
+      "receiverNodeName": "Edda Pressure (Bottom)",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    },
+    {
+      "id": 71,
+      "dataType": "IgnitionCannotHappen",
+      "receiverNodeId": 0,
+      "receiverNodeName": "Flight Controller",
+      "senderNodeId": 1,
+      "senderNodeName": "Edda Controller"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import datetime
 from threading import Thread
 
-from utils.serial_wrapper import SerialReader
+from utils.serial_reader import SerialReader
 from utils.data_handling import *
 from utils.definitions import *
 from collections import defaultdict
@@ -33,7 +33,7 @@ decoding_definitions = {}
 # set_parachute(self, armed, enable_1, enable_2)
 class Telecommand(SerialReader):
     def __init__(self, **kwargs):
-        super().__init__("telecommand", decoding_definitions, **kwargs)
+        super().__init__(device = "flight_controller", **kwargs)
 
     def __send_header(self, id):
         self.ser.write(bytes(SEPARATOR + [id]))
@@ -41,27 +41,27 @@ class Telecommand(SerialReader):
     def __wait_for_data(self, source, name):
         data = self.data[source][name]
         promise = Promise()
+        if self.serial_is_active:
+            tries = 50
+        else:
+            tries = 1
         def thread():
             start_len = len(data.y)
-            #wait 2 seconds before failing
-            for i in range(20):
+            #wait 5 seconds before failing
+            for i in range(tries):
                 time.sleep(0.1)
                 if start_len != len(data.y):
-                    print("happy")
                     promise.resolve(True)
                     break
             else:
-                print("sad")
                 promise.resolve(False)
-
         t = Thread(target = thread)
         t.start()
         return promise
-    
 
     # set the engine power mode
     def set_engine_power_mode(self, TBD):
-        if not self.state():
+        if not self.is_serial_open():
             # return a promise that always fails
             return self.__wait_for_data("engine", "nothing :(")
         return self.__wait_for_data("engine", "nothing :(")
@@ -73,7 +73,7 @@ class Telecommand(SerialReader):
     # armed - set to armed
     # enabled - set to enabled
     def set_engine_state(self, abort, armed, enabled):
-        if not self.state():
+        if not self.is_serial_open():
             # return a promise that always fails
             return self.__wait_for_data("engine", "nothing :(")
         return self.__wait_for_data("engine", "nothing :(")
@@ -86,7 +86,7 @@ class Telecommand(SerialReader):
 
     # fire rocket
     def fire_rocket(self):
-        if not self.state():
+        if not self.is_serial_open():
             # return a promise that always fails
             return self.__wait_for_data("engine", "nothing :(") 
         return self.__wait_for_data("engine", "nothing :(")
@@ -96,7 +96,7 @@ class Telecommand(SerialReader):
         
     # sends a time sync to the flight controller
     def time_sync(self,):
-        if not self.state():
+        if not self.is_serial_open():
             # return a promise that always fails
             return self.__wait_for_data("engine", "nothing :(")
         now = datetime.datetime.now()
@@ -110,12 +110,14 @@ class Telecommand(SerialReader):
         self.__send_header(ID_TIME_SYNC_FC)
         self.ser.write(bytes(buf))
         return self.__wait_for_data("flight", "time_sync")
-
+    
+    # send a handshake
     def handshake(self):
         self.__send_header(ID_HANDSHAKE)
+
     # set the power mode of the flight computer
     def set_flight_power_mode(self, TBD):
-        if not self.state():
+        if not self.is_serial_open():
             # return a promise that always fails
             return self.__wait_for_data("engine", "nothing :(")
         return self.__wait_for_data("engine", "nothing :(")
@@ -129,7 +131,7 @@ class Telecommand(SerialReader):
     # due to how the protocol is shaped the promise of the result doesn't
     # say if the command succeeded, use it for timing only
     def set_radio_emitters(self, fpv, tm):
-        if not self.state():
+        if not self.is_serial_open():
             # return a promise that always fails
             return self.__wait_for_data("engine", "nothing :(")
         self.__send_header(ID_SET_RADIO_EQUIPMENT_FC)
@@ -145,7 +147,7 @@ class Telecommand(SerialReader):
     # due to how the protocol is shaped the promise of the result doesn't
     # say if the command succeeded, use it for timing only
     def set_parachute(self, armed, enable_1, enable_2):
-        if not self.state():
+        if not self.is_serial_open():
             # return a promise that always fails
             return self.__wait_for_data("engine", "nothing :(")
         self.__send_header(ID_SET_PARACHUTE_OUTPUT_FC)
@@ -156,7 +158,7 @@ class Telecommand(SerialReader):
         return self.__wait_for_data("flight", "is_parachute_armed")
 
     def set_data_logging(self, logging_enabled):
-        if not self.state():
+        if not self.is_serial_open():
             # return a promise that always fails
             return self.__wait_for_data("engine", "nothing :(")
         self.__send_header(ID_SET_DATA_LOGGING)
@@ -164,49 +166,9 @@ class Telecommand(SerialReader):
         return self.__wait_for_data("flight", "is_logging_en")
     
     def save_data_to_sd(self):
-        if not self.state():
+        if not self.is_serial_open():
             # return a promise that always fails
             return self.__wait_for_data("engine", "nothing :(")
         self.__send_header(ID_SET_DUMP_FLASH)
         self.ser.write(bytes([1]))
         return self.__wait_for_data("flight", "dump_sd")
-
-#decoding_definitions[ID_SOFTWARE_STATE_EC] = [Decoder("engine",
-#decoding_definitions[ID_HARDWARE_STATE_EC] = [Decoder("engine",
-#decoding_definitions[ID_RETURN_POWER_MODE_EC] = [Decoder("engine",
-
-decoding_definitions[ID_RETURN_ENGINE_STATE_EC] = [BitDecoder(
-    "engine", ["is_launch_aborted","is_engine_armed", "is_engine_en"])]
-
-decoding_definitions[ID_RETURN_TIME_SYNC_FC] = [CustomDecoder(lambda x: [Data("flight", "time_sync", 1)])]
-#decoding_definitions[ID_FIRE_ROCKET_CONFIRMATION_EC] = [Decoder("engine",
-
-
-#decoding_definitions[ID_RETURN_POWER_MODE_FC] = todo
-
-decoding_definitions[ID_RETURN_RADIO_EQUIPMENT_FC] = [BitDecoder(
-    "flight", ["is_fpv_en", "is_tm_en"])]
-
-decoding_definitions[ID_RETURN_PARACHUTE_OUTPUT_FC] = [BitDecoder(
-    "flight", ["is_parachute_armed", "is_parachute1_en", "is_parachute2_en"])]
-
-decoding_definitions[ID_ONBOARD_BATTERY_VOLTAGE_FC] = MultiDecoder(
-    "flight", "<I", "battery", 1, 2, 0.01)
-
-decoding_definitions[ID_GNSS_DATA_FC] = [
-    Decoder("flight", "<I", "gnss_time"),
-    Decoder("flight", "<I", "latitude"),
-    Decoder("flight", "<I", "longitude"),
-    Decoder("flight", "<S", "h_dop", 0.01),
-    Decoder("flight", "<B", "n_satellites"),
-]
-
-decoding_definitions[ID_FLIGHT_CONTROLLER_STATUS_FC] = [
-    Decoder("flight", "<c", "HW_state"),
-    Decoder("flight", "<c", "SW_state"),
-    Decoder("flight", "<c", "mission_state")
-]
-
-decoding_definitions[ID_RETURN_SET_DATA_LOGGING_FC] = [BitDecoder("flight", ["is_logging_en"])]
-
-decoding_definitions[ID_RETURN_DUMP_FLASH_FC] = [BitDecoder("flight", ["dump_sd", "dump_flash"])]

@@ -9,7 +9,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 def main():
     #init threads
     tm = Telemetry()
-    tm.open_file("data/test")
+    tm.open_flash_file("data/test")
     # Init Qt
     app = QtWidgets.QApplication(sys.argv)
 
