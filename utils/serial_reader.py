@@ -254,7 +254,7 @@ class SerialReader():
     # ["Edda Pressure (top)", "PowerInputMeasurement", "current_amperes"] --> self.data["Edda Pressure (top)"]["PowerInputMeasurement"]["current_amperes"]
     #
     # generally it should have this form
-    # [*sender name*][*message name*][*field name*]
+    # [*sender name*][*datatype name*][*field name*]
     # sometimes the message and field name is the same but that's fine, just ignore it and have them repeat
     ###
     # NumDecoder(tree_pos, type, **min, **max, **scale)
@@ -291,7 +291,18 @@ class SerialReader():
             datatypes[name] = datatype
         
         for id in messages.keys():
-            pass
+            self.decoders[id] = []
+            datatype_name = messages["id"]["dataType"]
+            datatype = datatypes[type_name]
+            for field in type["fields"]:
+                actual_type = field["definition"] 
+                if field["definition"]["type"] == "integer":
+                    self.decoders[id].append(NumDecoder(tree_pos, ))
+
+                if field["definition"]["type"] == "enum":
+                    enum_name = field["definition"]["type"]
+                    self.decoders[id].append(EnumDecoder(tree_pos, enums[field["definition"]["type"]["enumName"]]))
+
             #do stuff with with the message
 
     #get the current time using either the computer clock or the last timestamp
@@ -332,12 +343,11 @@ class SerialReader():
                 continue
             #timestamp if reading from serial
             if self.stream == self.ser:
-                self.ser.timestamp(time.time() - self.start_time)
+                self.ser.timestamp((time.time() - self.start_time) * 1000)
             frame_id = self.stream.read(1)[0]
             if frame_id not in self.decoders:
                 print(self.device + ": Invalid ID: " + str(frame_id))
                 continue
-            self.last_message_time = time.time()
             decoders = self.decoders[frame_id]
             decoded_data = []
             #run through all decoders
