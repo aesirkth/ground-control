@@ -293,15 +293,15 @@ class SerialReader():
         for id in messages.keys():
             self.decoders[id] = []
             datatype_name = messages["id"]["dataType"]
-            datatype = datatypes[type_name]
+            datatype = datatypes[datatype_name]
             for field in type["fields"]:
                 actual_type = field["definition"] 
                 if field["definition"]["type"] == "integer":
                     self.decoders[id].append(NumDecoder(tree_pos, ))
-
                 if field["definition"]["type"] == "enum":
                     enum_name = field["definition"]["type"]
                     self.decoders[id].append(EnumDecoder(tree_pos, enums[field["definition"]["type"]["enumName"]]))
+                
 
             #do stuff with with the message
 
