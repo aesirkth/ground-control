@@ -6,8 +6,6 @@ from utils.data_handling import *
 from utils.definitions import *
 from collections import defaultdict
 
-#used further down
-decoding_definitions = {}
 
 ####
 # class to handle the telecommand link
@@ -16,13 +14,7 @@ decoding_definitions = {}
 #
 # self.data[*source*] - contains all the decoded data in TimeSeries
 #                       the source can be  either "flight" or "engine"
-# self.clocks[*source*] - contains the ms_since_boot converted to seconds in a RelativeTime class
-# source can be "engine" or "flight"
 # 
-##
-# none of the functions below will return a value.
-# Instead they will get an update pushed to the data dictionary
-# see the flight controller documentation for the names and sources
 ##
 # set_engine_power_mode(self, TBD)
 # set_engine_state(self, abort, armed, enabled)
