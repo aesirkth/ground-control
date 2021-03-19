@@ -3,16 +3,7 @@ telemetry_data
 data
 .vscode
 
-dashboard.py
-dashboard_fake_link.py
 doc
-gui/__init__.py
-gui/widgets.py
-launchpad_control.py
 radio_test.py
-utils/__init__.py
-utils/animation_perso.py
 utils/dummyserialwrapper.py
 utils/sensors.py
-engine_controller.py
-flight_controller.py
