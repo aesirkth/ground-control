@@ -81,6 +81,7 @@ def main():
     # Telecommand
     tc = Telecommand()
     tc.open_serial()
+    
     # Init Qt
     app = QtWidgets.QApplication(sys.argv)
     # print(QtWidgets.QStyleFactory.keys()) # Available styles
