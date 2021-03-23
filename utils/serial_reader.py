@@ -176,6 +176,7 @@ class SerialReader():
         self.pause = False
         self.exit = False
         self.decoders = decoding_definitions
+        self.parse_message_definitions("utils/edda_messages.json")
         #use defaultdict to let the front-end use uninitialized data
         self.data = defaultdict(lambda: defaultdict(TimeSeries))
 
@@ -249,7 +250,7 @@ class SerialReader():
     ##
     # Decoders are defined in data_handling.py
     ##
-    # all Decoders take tree_pos as an argument. Tree_pos is an array that specifies
+    # all Decoders take tree_pos as an argument. tree_pos is an array that specifies
     # where the data will be saved e.g. ["flight", "gyrox"] will be saved in self.data["flight"]["gyrox"]
     # ["Edda Pressure (top)", "PowerInputMeasurement", "current_amperes"] --> self.data["Edda Pressure (top)"]["PowerInputMeasurement"]["current_amperes"]
     #
@@ -280,27 +281,42 @@ class SerialReader():
         enums = {}
         datatypes = {}
         for message in raw["messages"]:
-            if message['receiverNodeName'] == "Flight controller":
+            if message['receiverNodeName'] == "Flight Controller":
                 id = message["id"]
                 messages[id] = message
         for enum in raw["enums"]:
             name = enum["name"]
             enums[name] = enum["entries"]
-        for datatype in raw["datatypes"]:
+        for datatype in raw["dataTypes"]:
             name = datatype["name"]
             datatypes[name] = datatype
-        
+        #TODO
+        #DEFINERA tree_pos
+        #hämta rätt argument för numdecoder
         for id in messages.keys():
             self.decoders[id] = []
-            datatype_name = messages["id"]["dataType"]
-            datatype = datatypes[datatype_name]
-            for field in type["fields"]:
-                actual_type = field["definition"] 
-                if field["definition"]["type"] == "integer":
-                    self.decoders[id].append(NumDecoder(tree_pos, ))
-                if field["definition"]["type"] == "enum":
-                    enum_name = field["definition"]["type"]
-                    self.decoders[id].append(EnumDecoder(tree_pos, enums[field["definition"]["type"]["enumName"]]))
+            #Beginning of defining tree_pos as [*sender name*][*datatype name*][*field name*]
+            sender_name = messages[id]["senderNodeName"]
+            datatype_name = messages[id]["dataType"]
+            ##
+            #Iterating through fields in message (eg. acceleration in x, y and z)
+            for field in datatype["fields"]:
+                actual_type = field["definition"]
+                #Finalizing definition of tree_pos
+                field_name = field["name"]
+                tree_pos = [sender_name, datatype_name, field_name]
+                ##
+                #Assigning correct decoder based on type
+                if field["definition"]["type"] in ("integer", "id"):
+                    NumDecoder_type = actual_type["nativeType"]
+                    self.decoders[id].append(NumDecoder(tree_pos, NumDecoder_type))
+                elif field["definition"]["type"] == "packedFloat":
+                    NumDecoder_type = actual_type["packedType"]
+                    maxi = actual_type["maximumValue"]
+                    mini = actual_type["minimumValue"]
+                    self.decoders[id].append(NumDecoder(tree_pos, NumDecoder_type, max=maxi, min=mini))
+                elif field["definition"]["type"] == "enum":
+                    self.decoders[id].append(EnumDecoder(tree_pos, enums[field["definition"]["enumName"]]))
                 
 
             #do stuff with with the message
