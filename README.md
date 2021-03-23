@@ -23,17 +23,19 @@ Tkinter is included with Python since Python 3.1
 
 ## file structure
 ```
-main.py - starts a basic tkinter GUI Only used for debugging
-main_qt.py - starts the QT GUI
+controller.py - starts the Qt GUI for the flight and engien controllers
+engine_dashbord.py - starts the Qt GUI for the engine dashboard
+
 utils/
-├─ widgets.py - GUI widgets for tkinter (only used for debugging)
-├─ serial_wrapper.py - wrapper around pyserial also contains the base for the 
-                       telecommand and telemetry thread
-├─ gateway.py - all the code for the gateway
-├─ telemetry.py - all the code for the telemetry downlink
-├─ telecommand.py - all the code for the telecommand downlink
 ├─ data_handling.py - functions and datatypes to handle the raw serial data
-├─ widgets_qt - GUI widgets for the dashboard
-├─ data/
-   ├─   backups of the raw serial communication
+├─ definitions.py - 
+├─ edda_messages.json
+├─ gateway.py - all the code for the gateway
+├─ serial_reader.py - reader around pyserial also contains the base for the 
+                      telecommand and telemetry thread
+├─ telecommand.py - all the code for the telecommand downlink
+├─ telemetry.py - all the code for the telemetry downlink
+├─ widgets_ec.py - GUI widgets for the engine part of controller.py
+├─ widgets_edb.py - GUI widgets for the engine dashboard
+├─ widgets_fc.py - GUI widgets for the flight part of controller.py
 ```
