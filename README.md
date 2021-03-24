@@ -1,4 +1,5 @@
-![image](docs/img.png)
+![image](docs/engine_dashboard.png)
+![image](docs/control_dashboard.png)
 
 ## dummy RFD modem
 Use [this](https://github.com/klownfish/serial-dummy) to emulate a basic version of the RFD modem.
@@ -19,7 +20,6 @@ tm.["engine"]["catastrophe"]
 Install the python dependencies\
 `python -m pip install -r requirements.txt`
 
-Tkinter is included with Python since Python 3.1
 
 ## file structure
 ```

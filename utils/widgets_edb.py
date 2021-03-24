@@ -437,13 +437,13 @@ class Status(QtWidgets.QWidget):
         layout.setContentsMargins(0,0,0,0)
 
         title = TitleWidget("Status signals")
-        relief = BoolIndicator("Relief valve trigger", timer)
-        valve = BoolIndicator("Abort valve trigger", timer)
+        # relief = BoolIndicator("Relief valve trigger", timer)
+        # valve = BoolIndicator("Abort valve trigger", timer)
         actuation = ValueIndicator("Main valve actuation", timer, tm.data["flight"]["gyrox"].get_last, formatting="{:.0f} mm")
 
         layout.addWidget(title)
-        layout.addWidget(relief)
-        layout.addWidget(valve)
+        # layout.addWidget(relief)
+        # layout.addWidget(valve)
         layout.addWidget(actuation)
 
         self.setLayout(layout)
@@ -478,8 +478,8 @@ class BoardVoltageIndicator(QtWidgets.QWidget):
 
         indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 0, 0)
         indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 0, 1)
-        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 0, 2)
-        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 0, 3)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 1, 0)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 1, 1)
         
 
         layout.addWidget(title)
@@ -538,8 +538,13 @@ class ErrorGraph(GraphWidget):
         updateFunctions = [random_update_plot_data]
         dataNames = None
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
-        self.setTitle("Error", color=(0, 0, 0))
+        self.setTitle("Errors", color=(0, 0, 0))
         self.setMaximumHeight(200)
+        self.setMinimumHeight(100)
+
+    def sizeHint(self):
+        size = GraphWidget.sizeHint(self)
+        return QtCore.QSize(size.width(), 130)
 
 
 class FPSIndicator(ValueIndicator):
@@ -574,22 +579,19 @@ class Diagnostic(QtWidgets.QWidget):
         layout.setContentsMargins(0,0,0,0)
 
         horiLayout = QtWidgets.QHBoxLayout()
-        vertLayoutLeft = QtWidgets.QVBoxLayout()
-        vertLayoutRight = QtWidgets.QVBoxLayout()
+        vertLayout = QtWidgets.QVBoxLayout()
 
         title = TitleWidget("Diagnostic readings")
         boardVoltage = BoardVoltageIndicator("Board input voltage", timer, tm)
         error = ErrorGraph(timer, tm)
-        rmc = RMCTemperatureIndicator("R&MC Temperature", timer, tm)
+        # rmc = RMCTemperatureIndicator("R&MC Temperature", timer, tm)
         fps = FPSIndicator(timer)
 
         layout.addWidget(title)
-        vertLayoutLeft.addWidget(boardVoltage)
-        vertLayoutLeft.addWidget(error)
-        vertLayoutRight.addWidget(rmc)
-        vertLayoutRight.addWidget(fps)
-        horiLayout.addLayout(vertLayoutLeft)
-        horiLayout.addLayout(vertLayoutRight)
+        horiLayout.addWidget(boardVoltage)
+        vertLayout.addWidget(error)
+        vertLayout.addWidget(fps)
+        horiLayout.addLayout(vertLayout)
         layout.addLayout(horiLayout)
 
         
@@ -604,13 +606,13 @@ class Diagnostic(QtWidgets.QWidget):
         # print("MinimumExpanding :", QtWidgets.QSizePolicy.MinimumExpanding)
         # print("Ignored :", QtWidgets.QSizePolicy.Ignored)
 
-        # self.aafficher = self
+        # self.aafficher = error
         # timer.timeout.connect(self.print_size)
 
         self.setLayout(layout)
 
     # def print_size(self):
-    #     print(self.aafficher.frameGeometry().width())
+    #     print(self.aafficher.frameGeometry().height())
 
 
 # Main window
