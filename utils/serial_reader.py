@@ -349,6 +349,7 @@ class SerialReader():
     def reader_thread(self):
         while not self.exit:
             if not self.stream_is_active or self.pause:
+                time.sleep(0.1) # Don't overload the computer
                 continue
             separator = self.stream.read(1)
             #test for frame separator, read one byte at a time so it aligns itself

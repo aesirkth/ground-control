@@ -70,12 +70,12 @@ class Line(object):
 
 class GraphWidget(pg.PlotWidget):
 
-    def __init__(self, parent, timer, updateFunctions=[random_update_plot_data]*4, dataNames=["test", "ok", "peut-être", None, None]):
+    def __init__(self, parent, timer, updateFunctions=[random_update_plot_data]*4, dataNames=["test", "ok", None, None, None]):
         """
             updateFunctions is a list of updateFunction
             updateFunction takes the list of x and y and return the new x and y lists
         """
-        super(GraphWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setAttribute(Qt.WA_DeleteOnClose, True)
         self.setMinimumWidth(260)
 
@@ -615,6 +615,64 @@ class Diagnostic(QtWidgets.QWidget):
     #     print(self.aafficher.frameGeometry().height())
 
 
+class MenuButton(QtWidgets.QPushButton):
+    def __init__(self, text, function, parent=None):
+        super().__init__(text, parent)
+        self.clicked.connect(function)
+
+        font = self.font()
+        font.setPointSize(12)
+        self.setFont(font)
+
+        self.setContentsMargins(500, 500, 500, 500)
+
+
+# Menu Widget
+class MainMenu(QtWidgets.QWidget):
+    def __init__(self, timer, tm, parent=None):
+        super().__init__(parent)
+        self.timer = timer
+        self.tm = tm
+
+        # Background color
+        self.setAutoFillBackground(True)
+        palette = self.palette()
+        palette.setColor(QPalette.Window, QColor(0, 0, 0, 128))
+        self.setPalette(palette)
+
+        self.serial_button = MenuButton("Open Serial", self._open_serial)
+
+        self.file_button = MenuButton("Open File", self._open_file)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(self.serial_button)
+        layout.addWidget(self.file_button)
+
+        layout.setSpacing(20)
+
+        wid = QtWidgets.QWidget()
+        wid.setLayout(layout)
+        wid.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(wid)
+        layout.setAlignment(Qt.AlignCenter)
+
+        self.setLayout(layout)
+
+    def _open_serial(self):
+        if self.tm.open_serial():
+            self.hide()
+            self.timer.start()
+        else:
+            print("Error while opening serial")
+
+    def _open_file(self):
+        self.tm.open_flash_file("data/test")
+        self.hide()
+        self.timer.start()
+
+
 # Main window
 class MainWindow(QtWidgets.QMainWindow):
 
@@ -686,20 +744,34 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addLayout(pressure)
         layout.addLayout(others)
 
-        widget = QtWidgets.QWidget(self)
-        widget.setLayout(layout)
+        self.widget = QtWidgets.QWidget(self)
+        self.widget.setLayout(layout)
+
+        # Main Menu
+        
+        # menu.move(0,0)
+        # stack = QtWidgets.QStackedWidget()
+        # stack.addWidget(MainMenu(self.timer, tm))
+        # stack.addWidget(widget)
         
         # Timer for update
-        self.timer.start()
+        # self.timer.start() # Now in the MainMenu class
+
         QtCore.QCoreApplication.setQuitLockEnabled(True)
         # Allow the application to end when the window is closed
 
         # Set the central widget of the Window. Widget will expand
         # to take up all the space in the window by default.
-        self.setCentralWidget(widget)
+        self.setCentralWidget(self.widget)
+
+        self.menu = MainMenu(self.timer, tm, parent=self)
+        electrical.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
 
         # properly stop all threads
         def closeEvent(event):
             tm.stop()
             event.accept()
         self.closeEvent = closeEvent
+
+    def resizeEvent(self, event):
+        self.menu.setFixedSize(self.size())
