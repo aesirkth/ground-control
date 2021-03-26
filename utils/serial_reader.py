@@ -7,7 +7,7 @@ import time
 from threading import Thread
 from collections import defaultdict
 import json
-
+import utils.fc as protocol
 from utils.definitions import *
 from utils.data_handling import (TimeSeries, write_data_db, get_current_time,
     formatted_time_to_sec, get_current_time_sec, NumDecoder, EnumDecoder,
@@ -16,9 +16,6 @@ from utils.data_handling import (TimeSeries, write_data_db, get_current_time,
 LIVE = 0
 BACKUP_TIMESTAMP = 1
 FLASH_TIMESTAMP = 2
-
-#contains all the decdoders defined on the bottom
-decoding_definitions = {}
 
 ####
 #a wrapper around the Serial class. It backups all communication to the ./data/ 
@@ -107,15 +104,13 @@ class SerialWrapper():
     
     #timestamp the backupfile
     def timestamp(self, time):
-        msg = []
-        msg += [ID_LOCAL_TIMESTAMP]
-        buf = [0 for x in range(4)]
-        buf[0] = time & 255
-        buf[1] = (time >> 8)  & 255
-        buf[2] = (time >> 16) & 255
-        buf[3] = (time >> 24) & 255
-        msg += buf
-        msg += SEPARATOR
+        time = int(time)
+        msg = protocol.local_timestamp_from_local_to_local()
+        msg.set_timestamp(time)
+        buf = []
+        buf += SEPARATOR
+        buf += [msg.get_id()]
+        buf += msg.get_buf()
         self.backup.write(bytes(msg))
 
     #start and open serial
@@ -175,10 +170,10 @@ class SerialReader():
         self.start_time = None
         self.pause = False
         self.exit = False
-        self.decoders = decoding_definitions
+        self.decoders = {}
         self.parse_message_definitions("utils/edda_messages.json")
         #use defaultdict to let the front-end use uninitialized data
-        self.data = defaultdict(lambda: defaultdict(TimeSeries))
+        self.data = defaultdict(lambda: defaultdict(lambda: defaultdict(TimeSeries)))
 
         t = Thread(target = self.reader_thread)
         t.start()
@@ -322,7 +317,7 @@ class SerialReader():
             #do stuff with with the message
 
     #get the current time using either the computer clock or the last timestamp
-    def decide_on_time(self, data):
+    def decide_on_time(self, name, value):
         self.last_message_time = time.time()
         if self.time_sync_state == LIVE:
             if self.start_time == None:
@@ -330,22 +325,21 @@ class SerialReader():
             return time.time() - self.start_time
 
         if self.time_sync_state == BACKUP_TIMESTAMP:
-            if data.tree_pos[-1] == "timestamp":
-                self.last_timestamp = data.value
+            if name == "timestamp":
+                self.last_timestamp = value
             if self.last_timestamp == None:
                 return 0 #can't tell a proper value
             else:
                 return self.last_timestamp / 1000 #convert to seconds
 
         if self.time_sync_state == FLASH_TIMESTAMP:
-            if data.tree_pos[-1] == "ms_since_boot":
-                self.last_timestamp = data.value
+            if name == "ms_since_boot":
+                self.last_timestamp = value
             if self.last_timestamp == None:
                 return 0 #can't tell a proper time
             else:
                 return self.last_timestamp / 1000 #convert to seconds
 
-    #thread that continously reads and extracs data from a stream
     def reader_thread(self):
         while not self.exit:
             if not self.stream_is_active or self.pause:
@@ -362,91 +356,73 @@ class SerialReader():
             if self.stream == self.ser:
                 self.ser.timestamp((time.time() - self.start_time) * 1000)
             frame_id = self.stream.read(1)[0]
-            if frame_id not in self.decoders:
-                print(self.device + ": Invalid ID: " + str(frame_id))
+
+            #we have two different protocol definitions so decide on which one ot use
+            #try to get fc decoder
+            fc_decoder = protocol.id_to_receiver(frame_id)
+            if frame_id in self.decoders:
+                ec_decoder = self.decoders[frame_id]
+            else:
+                ec_decoder = None
+
+            if fc_decoder:
+                self.read_fc_data(fc_decoder)
+            elif ec_decoder:
+                self.read_ec_data(ec_decoder)
+            else:
+                print("invalid id: ", frame_id)
+            
+    def read_fc_data(self, decoder):
+        length = decoder.get_size()
+        buf = self.stream.read(length)
+        if len(buf) != length:
+            print("invalid length")
+            return    
+        decoder.parse_buf(buf)
+        decoded_data = decoder.get_all_data()
+        source = decoder.get_source()
+        datatype = decoder.get_datatype()
+        sensor_index = None
+        if len(decoded_data) == 0:
+            current_time = self.decide_on_time("void", 0)
+            self.data[source.name][datatype.name]["value"].x.append(current_time)
+            self.data[source.name][datatype.name]["value"].y.append(1)
+        for single_data in decoded_data:
+            (field, value) = single_data
+            name = field.name
+            if name == "sensor_index":
+                sensor_index = value
                 continue
-            decoders = self.decoders[frame_id]
-            decoded_data = []
-            #run through all decoders
-            for decoder in decoders:
-                size = decoder.get_size()
-                buf = self.stream.read(size)
-                decoded_data += decoder.decode(buf)
-            sensor_index = None
-            for single_data in decoded_data:
-                if single_data.tree_pos[-1] == "sensor_index":
-                    sensor_index = single_data.value
-                    continue
-                #add the sensor index to the measurement so e.g. temperature becomes temperature2
-                if sensor_index != None:
-                    single_data.tree_pos[-1] += str(sensor_index)
-                current_time = self.decide_on_time(single_data)
-                current_pos = self.data
-                #get where to save the data
-                for key in single_data.tree_pos:
-                    current_pos = current_pos[key]
-                current_pos.x.append(current_time)
-                current_pos.y.append(single_data.value)
+            #add the sensor index to the measurement so e.g. temperature becomes temperature2
+            if sensor_index != None:
+                name += str(sensor_index)
+                sensor_index = None
+            current_time = self.decide_on_time(name, value)
+            self.data[source.name][datatype.name][name].x.append(current_time)
+            self.data[source.name][datatype.name][name].y.append(value)
 
-
-decoding_definitions[ID_RETURN_RADIO_EQUIPMENT_FC] = [
-    BitDecoder(["flight"], ["is_fpv_en", "is_tm_en"])
-]
-
-decoding_definitions[ID_RETURN_PARACHUTE_OUTPUT_FC] = [
-    BitDecoder(["flight"], ["is_parachute_armed", "is_parachute1_en", "is_parachute2_en"])
-]
-
-decoding_definitions[ID_RETURN_TIME_SYNC_FC] = [
-    EmptyDecoder(["flight", "time_sync"])
-]
-
-decoding_definitions[ID_ONBOARD_BATTERY_VOLTAGE_FC] = [
-    NumDecoder(["flight", "battery_1"], "uint16", scale = 100),
-    NumDecoder(["flight", "battery_2"], "uint16", scale = 100)
-]
-
-decoding_definitions[ID_GNSS_DATA_FC] = [
-    NumDecoder(["flight", "gnss_time"], "uint32"),
-    NumDecoder(["flight", "latitude"], "int32"),
-    NumDecoder(["flight", "longitude"], "int32"),
-    NumDecoder(["flight", "h_dop"], "uint16", scale = 100),
-    NumDecoder(["flight", "n_satellites"], "uint8"),
-]
-
-decoding_definitions[ID_RETURN_SET_DATA_LOGGING_FC] = [
-    BitDecoder(["flight"], ["is_logging_en"])
-]
-
-decoding_definitions[ID_RETURN_DUMP_FLASH_FC] = [
-    BitDecoder(["flight"], ["dump_sd", "dump_flash"])
-]
-
-decoding_definitions[ID_CURRENT_TIME] = [
-    NumDecoder(["flight", "current_time"], "uint32")
-]
-
-decoding_definitions[ID_LOCAL_TIMESTAMP] = [
-    NumDecoder(["misc", "timestmp"], "uint32")
-]
-
-decoding_definitions[ID_MS_SINCE_BOOT_FC] = [
-    NumDecoder(["flight", "ms_since_boot"], "uint32")
-]
-
-##
-#these are testing decoders
-#feel free to remove if they interfere
-##
-decoding_definitions[0x00] = [NumDecoder(["flight", "altitude"], "uint16")]
-decoding_definitions[0x01] = [NumDecoder(["flight", "acceleration"], "int8")]
-decoding_definitions[0x02] = [NumDecoder(["flight", "pressure"], "uint16")]
-decoding_definitions[0x03] = [BitDecoder(["engine"], ["catastrophe"])]
-decoding_definitions[0x04] = [
-    NumDecoder(["flight", "gyrox"], "uint8"),
-    NumDecoder(["flight", "gyroy"], "uint8"),
-    NumDecoder(["flight", "gyroz"], "uint8")
-]
-decoding_definitions[64] = [
-    NumDecoder(["flight", "ms_since_boot"], "uint32")
-]
+    def read_ec_data(self, decoders):
+        decoded_data = []
+        #run through all decoders
+        for decoder in decoders:
+            size = decoder.get_size()
+            buf = self.stream.read(size)
+            if len(buf) != size:
+                print("invalid length")
+                continue
+            decoded_data += decoder.decode(buf)
+        sensor_index = None
+        for single_data in decoded_data:
+            if single_data.tree_pos[-1] == "sensor_index":
+                sensor_index = single_data.value
+                continue
+            #add the sensor index to the measurement so e.g. temperature becomes temperature2
+            if sensor_index != None:
+                single_data.tree_pos[-1] += str(sensor_index)
+            current_time = self.decide_on_time(single_data.tree_pos[-1], single_data.value)
+            current_pos = self.data
+            #get where to save the data
+            for key in single_data.tree_pos:
+                current_pos = current_pos[key]
+            current_pos.x.append(current_time)
+            current_pos.y.append(single_data.value)
