@@ -103,9 +103,27 @@ class GraphWidget(pg.PlotWidget):
             self.data_lines[k] = Line(self, k, self.updateFunctions[k], timer, name=name)
 
 
-# Temperature
-class TempOxidizerGraph(GraphWidget):
+class GraphPlusWidget(QtWidgets.QWidget):
+    def __init__(self, timer, tm, Graph, labelFunctions, formatting="{:>5.1f}",parent=None):
+        super().__init__(parent=parent)
+        self.graph = Graph(self, timer, tm)
+        
+        labLayout = QtWidgets.QVBoxLayout()
+        for func in labelFunctions:
+            lab = DataWidget("-", timer, func, 10, formatting=formatting)
+            lab.setFixedWidth(30)
+            labLayout.addWidget(lab)
 
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.graph)
+        layout.addLayout(labLayout)
+        self.setLayout(layout)
+
+
+# Temperature
+# Graphs
+class TempOxidizerGraph(GraphWidget):
     def __init__(self, parent, timer, tm):
         updateFunction = tm.data["flight"]["gyrox"].pack
         updateFunctions = [updateFunction]*5
@@ -116,7 +134,6 @@ class TempOxidizerGraph(GraphWidget):
 
 
 class TempPipeworkGraph(GraphWidget):
-
     def __init__(self, parent, timer, tm):
         updateFunction = tm.data["flight"]["gyrox"].pack
         updateFunctions = [updateFunction]*4
@@ -127,7 +144,6 @@ class TempPipeworkGraph(GraphWidget):
 
 
 class TempInjectorGraph(GraphWidget):
-
     def __init__(self, parent, timer, tm):
         updateFunction = tm.data["flight"]["gyrox"].pack
         updateFunctions = [updateFunction]
@@ -138,7 +154,6 @@ class TempInjectorGraph(GraphWidget):
 
 
 class TempCombustionGraph(GraphWidget):
-
     def __init__(self, parent, timer, tm):
         updateFunction = tm.data["flight"]["gyrox"].pack
         updateFunctions = [updateFunction]*3
@@ -149,7 +164,6 @@ class TempCombustionGraph(GraphWidget):
 
 
 class TempNozzleGraph(GraphWidget):
-
     def __init__(self, parent, timer, tm):
         updateFunction = tm.data["flight"]["gyrox"].pack
         updateFunctions = [updateFunction]
@@ -157,10 +171,45 @@ class TempNozzleGraph(GraphWidget):
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
         self.setTitle("Nozzle", color=(0, 0, 0))
 
+# Widgets
+class TempOxidizer(GraphPlusWidget):
+    def __init__(self, timer, tm, parent=None):
+        graph = TempOxidizerGraph
+        labelFunctions = [lambda : random_value(-3000, 3000) for _ in range(5)]
+        super().__init__(timer, tm, graph, labelFunctions, parent=parent)
+
+
+class TempPipework(GraphPlusWidget):
+    def __init__(self, timer, tm, parent=None):
+        graph = TempPipeworkGraph
+        labelFunctions = [lambda : random_value(-3000, 3000) for _ in range(4)]
+        super().__init__(timer, tm, graph, labelFunctions, parent=parent)
+
+
+class TempInjector(GraphPlusWidget):
+    def __init__(self, timer, tm, parent=None):
+        graph = TempInjectorGraph
+        labelFunctions = [lambda : random_value(-3000, 50000)]
+        super().__init__(timer, tm, graph, labelFunctions, parent=parent)
+
+
+class TempCombustion(GraphPlusWidget):
+    def __init__(self, timer, tm, parent=None):
+        graph = TempCombustionGraph
+        labelFunctions = [lambda : random_value(0, 20000) for _ in range(3)]
+        super().__init__(timer, tm, graph, labelFunctions, parent=parent)
+
+
+class TempNozzle(GraphPlusWidget):
+    def __init__(self, timer, tm, parent=None):
+        graph = TempNozzleGraph
+        labelFunctions = [lambda : random_value(0, 20000)]
+        super().__init__(timer, tm, graph, labelFunctions, parent=parent)
+
 
 # Pression
+# Graphs
 class PreOxidizerGraph(GraphWidget):
-
     def __init__(self, parent, timer, tm):
         updateFunction = tm.data["flight"]["gyrox"].pack
         updateFunctions = [updateFunction]*2
@@ -171,7 +220,6 @@ class PreOxidizerGraph(GraphWidget):
 
 
 class PreInjectorGraph(GraphWidget):
-
     def __init__(self, parent, timer, tm):
         updateFunction = tm.data["flight"]["gyrox"].pack
         updateFunctions = [updateFunction]
@@ -182,7 +230,6 @@ class PreInjectorGraph(GraphWidget):
 
 
 class PreCombustionGraph(GraphWidget):
-
     def __init__(self, parent, timer, tm):
         updateFunction = tm.data["flight"]["gyrox"].pack
         updateFunctions = [updateFunction]
@@ -193,7 +240,6 @@ class PreCombustionGraph(GraphWidget):
 
 
 class PreAmbientGraph(GraphWidget):
-
     def __init__(self, parent, timer, tm):
         updateFunction = tm.data["flight"]["gyrox"].pack
         updateFunctions = [updateFunction]*2
@@ -201,6 +247,35 @@ class PreAmbientGraph(GraphWidget):
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
         self.setYRange(0, 1.5, padding=0)
         self.setTitle("Ambient pressure", color=(0, 0, 0))
+
+
+# Widgets
+class PreOxidizer(GraphPlusWidget):
+    def __init__(self, timer, tm, parent=None):
+        graph = PreOxidizerGraph
+        labelFunctions = [lambda : random_value(0, 6000) for _ in range(2)]
+        super().__init__(timer, tm, graph, labelFunctions, parent=parent)
+
+
+class PreInjector(GraphPlusWidget):
+    def __init__(self, timer, tm, parent=None):
+        graph = PreInjectorGraph
+        labelFunctions = [lambda : random_value(0, 6000)]
+        super().__init__(timer, tm, graph, labelFunctions, parent=parent)
+
+
+class PreCombustion(GraphPlusWidget):
+    def __init__(self, timer, tm, parent=None):
+        graph = PreCombustionGraph
+        labelFunctions = [lambda : random_value(0, 4000)]
+        super().__init__(timer, tm, graph, labelFunctions, parent=parent)
+
+
+class PreAmbient(GraphPlusWidget):
+    def __init__(self, timer, tm, parent=None):
+        graph = PreAmbientGraph
+        labelFunctions = [lambda : random_value(0, 150) for _ in range(2)]
+        super().__init__(timer, tm, graph, labelFunctions, formatting="{:>5.2f}", parent=parent)
 
 
 # Electrical
@@ -634,6 +709,8 @@ class MainMenu(QtWidgets.QWidget):
         self.timer = timer
         self.tm = tm
 
+        self.setAcceptDrops(True) # So one can drop a file to open it
+
         # Background color
         self.setAutoFillBackground(True)
         palette = self.palette()
@@ -668,9 +745,28 @@ class MainMenu(QtWidgets.QWidget):
             print("Error while opening serial")
 
     def _open_file(self):
-        self.tm.open_flash_file("data/test")
+        fname = QtWidgets.QFileDialog.getOpenFileName(self, "Open file")[0]
+        if fname == "":
+            return
+        self._load_file(fname)
+
+    def _load_file(self, fname):
+        print(fname)
+        self.tm.open_flash_file(fname)
+        # self.tm.open_flash_file("data/test")
         self.hide()
         self.timer.start()
+
+    def dragEnterEvent(self, event):
+        # No file verification here
+        # I assume the user know what he's doing...
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        # print(event.mimeData().urls())
+        fname = event.mimeData().urls()[0].toLocalFile()
+        self._load_file(fname)
 
 
 # Main window
@@ -688,11 +784,11 @@ class MainWindow(QtWidgets.QMainWindow):
         # Temperature
         # Left Column
         temperatureTitle = TitleWidget("Temperature")
-        tempOxidizer = TempOxidizerGraph(self, self.timer, tm)
-        tempPipework = TempPipeworkGraph(self, self.timer, tm)
-        tempInjector = TempInjectorGraph(self, self.timer, tm)
-        tempCombustion = TempCombustionGraph(self, self.timer, tm)
-        tempNozzle = TempNozzleGraph(self, self.timer, tm)
+        tempOxidizer = TempOxidizer(self.timer, tm, parent=self)
+        tempPipework = TempPipework(self.timer, tm, parent=self)
+        tempInjector = TempInjector(self.timer, tm, parent=self)
+        tempCombustion = TempCombustion(self.timer, tm, parent=self)
+        tempNozzle = TempNozzle(self.timer, tm, parent=self)
 
 
         temperature = QtWidgets.QVBoxLayout()
@@ -704,10 +800,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # Pressure
         # Middle Column
         pressureTitle = TitleWidget("Pressure")
-        preOxidizer = PreOxidizerGraph(self, self.timer, tm)
-        preInjector = PreInjectorGraph(self, self.timer, tm)
-        preCombustion = PreCombustionGraph(self, self.timer, tm)
-        preAmbient = PreAmbientGraph(self, self.timer, tm)
+        preOxidizer = PreOxidizer(self.timer, tm, parent=self)
+        preInjector = PreInjector(self.timer, tm, parent=self)
+        preCombustion = PreCombustion(self.timer, tm, parent=self)
+        preAmbient = PreAmbient(self.timer, tm, parent=self)
 
         pressure = QtWidgets.QVBoxLayout()
         widgets = [pressureTitle, preOxidizer, preInjector, preCombustion, preAmbient]
