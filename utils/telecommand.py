@@ -1,10 +1,11 @@
 import datetime
 from threading import Thread
-
+import time
 from utils.serial_reader import SerialReader
 from utils.data_handling import *
 from utils.definitions import *
 from collections import defaultdict
+import utils.fc as protocol
 
 
 ####
@@ -30,8 +31,8 @@ class Telecommand(SerialReader):
     def __send_header(self, id):
         self.ser.write(bytes(SEPARATOR + [id]))
 
-    def __wait_for_data(self, source, name):
-        data = self.data[source][name]
+    def __wait_for_data(self, source, datatype, field):
+        data = self.data[source][datatype][field]
         promise = Promise()
         if self.serial_is_active:
             tries = 50
@@ -51,14 +52,16 @@ class Telecommand(SerialReader):
         t.start()
         return promise
 
+    def __send_message(self, msg):
+        self.__send_header(msg.get_id())
+        self.ser.write(msg.get_buf())
+
     # set the engine power mode
     def set_engine_power_mode(self, TBD):
         if not self.is_serial_open():
             # return a promise that always fails
-            return self.__wait_for_data("engine", "nothing :(")
-        return self.__wait_for_data("engine", "nothing :(")
-        self.__send_header(ID_SET_POWER_MODE_EC)
-        return self.__wait_for_data("engine", "TBD")
+            return self.__wait_for_data("nothing", " ", " ")
+        return self.__wait_for_data("engine","TBD", "TBD")
 
     # set the engine state
     # abort - abort 
@@ -67,54 +70,35 @@ class Telecommand(SerialReader):
     def set_engine_state(self, abort, armed, enabled):
         if not self.is_serial_open():
             # return a promise that always fails
-            return self.__wait_for_data("engine", "nothing :(")
-        return self.__wait_for_data("engine", "nothing :(")
-        out = abort > 0
-        out += (armed > 0) * 2
-        out += (enabled > 0) * 4
-        self.__send_header(ID_SET_ENGINE_STATE_EC)
-        self.ser.write(bytes([out]))
-        return self.__wait_for_data("engine", "TBD")
+            return self.__wait_for_data("nothing", " ", " ")
+        return self.__wait_for_data("engine", "TBD", "TBD")
 
     # fire rocket
     def fire_rocket(self):
         if not self.is_serial_open():
             # return a promise that always fails
-            return self.__wait_for_data("engine", "nothing :(") 
-        return self.__wait_for_data("engine", "nothing :(")
-        self.__send_header(ID_FIRE_ROCKET_EC)
-        self.__wait_for_data("engine", "TBD")
-        return self.__wait_for_data("engine", "TBD")
+            return self.__wait_for_data("nothing", " ", " ") 
+        return self.__wait_for_data("engine", "TBD", "TBD")
         
     # sends a time sync to the flight controller
     def time_sync(self,):
         if not self.is_serial_open():
             # return a promise that always fails
-            return self.__wait_for_data("engine", "nothing :(")
+            return self.__wait_for_data("nothing", " ", " ")
         now = datetime.datetime.now()
         time = now.strftime("%H%M%S%f")[:9]
         time = int(time)
-        buf = [0 for x in range(4)]
-        buf[0] = time & 255
-        buf[1] = (time >> 8)  & 255
-        buf[2] = (time >> 16) & 255
-        buf[3] = (time >> 24) & 255
-        self.__send_header(ID_TIME_SYNC_FC)
-        self.ser.write(bytes(buf))
-        return self.__wait_for_data("flight", "time_sync")
-    
-    # send a handshake
-    def handshake(self):
-        self.__send_header(ID_HANDSHAKE)
+        msg = protocol.time_sync_from_ground_station_to_flight_controller_tc()
+        msg.set_system_time(time)
+        self.__send_message(msg)
+        return self.__wait_for_data("flight", "return_time_sync", "value")
 
     # set the power mode of the flight computer
     def set_flight_power_mode(self, TBD):
         if not self.is_serial_open():
             # return a promise that always fails
-            return self.__wait_for_data("engine", "nothing :(")
-        return self.__wait_for_data("engine", "nothing :(")
-        self.__send_header(ID_SET_POWER_MODE_FC)
-        return self.__wait_for_data("flight", "TBD")
+            return self.__wait_for_data("nothing", " ", " ")
+        return self.__wait_for_data("flight", "TBD", "TBD")
         #TBD
 
     # turn on/off radio transmitters
@@ -125,12 +109,12 @@ class Telecommand(SerialReader):
     def set_radio_emitters(self, fpv, tm):
         if not self.is_serial_open():
             # return a promise that always fails
-            return self.__wait_for_data("engine", "nothing :(")
-        self.__send_header(ID_SET_RADIO_EQUIPMENT_FC)
-        data = fpv
-        data += 2 * (tm > 0)
-        self.ser.write(bytes([data]))
-        return self.__wait_for_data("flight", "is_fpv_en")
+            return self.__wait_for_data("nothing", " ", " ")
+        msg = protocol.set_radio_equipment_from_ground_station_to_flight_controller_tc()
+        msg.set_is_fpv_en(fpv)
+        msg.set_is_tm_en(tm)
+        self.__send_message(msg)
+        return self.__wait_for_data("flight", "return_radio_equipment", "is_fpv_en")
 
     # set the parachutes
     # armed - arm the parachute
@@ -141,26 +125,28 @@ class Telecommand(SerialReader):
     def set_parachute(self, armed, enable_1, enable_2):
         if not self.is_serial_open():
             # return a promise that always fails
-            return self.__wait_for_data("engine", "nothing :(")
-        self.__send_header(ID_SET_PARACHUTE_OUTPUT_FC)
-        data = armed
-        data += 2 * (enable_1 > 0)
-        data += 4 * (enable_2 > 0)
-        self.ser.write(bytes([data]))
-        return self.__wait_for_data("flight", "is_parachute_armed")
+            return self.__wait_for_data("nothing", " ", " ")
+        msg = protocol.set_parachute_output_from_ground_station_to_flight_controller_tc()
+        msg.set_is_parachute_armed(armed)
+        msg.set_is_parachute1_en(enable_1)
+        msg.set_is_parachute2_en(enable_2)
+        self.__send_message(msg)
+        return self.__wait_for_data("flight", "return_parachute_status", "is_parachute_armed")
 
     def set_data_logging(self, logging_enabled):
         if not self.is_serial_open():
             # return a promise that always fails
-            return self.__wait_for_data("engine", "nothing :(")
-        self.__send_header(ID_SET_DATA_LOGGING)
-        self.ser.write(logging_enabled)
-        return self.__wait_for_data("flight", "is_logging_en")
+            return self.__wait_for_data("nothing", " ", " ")
+        msg = protocol.set_data_logging_from_ground_station_to_flight_controller_tc()
+        msg.set_is_logging_en(logging_enabled)
+        self.__send_message(msg)
+        return self.__wait_for_data("flight", "data_logging", "is_logging_en")
     
     def save_data_to_sd(self):
         if not self.is_serial_open():
             # return a promise that always fails
-            return self.__wait_for_data("engine", "nothing :(")
-        self.__send_header(ID_SET_DUMP_FLASH)
-        self.ser.write(bytes([1]))
-        return self.__wait_for_data("flight", "dump_sd")
+            return self.__wait_for_data("nothing", " ", " ")
+        msg = protocol.dump_flash_from_ground_station_to_flight_controller_tc()
+        msg.set_dump_sd(True)
+        self.__send_message(msg)
+        return self.__wait_for_data("flight","return_dump_flash", "dump_sd")

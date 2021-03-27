@@ -1,6 +1,8 @@
 
 SEPARATOR = [0x0A, 0x0D]
 
+
+#The IDs are no longer updated. do not use
 #engine commands
 ID_SET_POWER_MODE_EC = 0x22
 ID_SET_ENGINE_STATE_EC = 0x23

@@ -4,6 +4,7 @@ import pyqtgraph as pg
 from PyQt5.QtGui import QPalette, QColor
 from time import time
 from random import randint
+import utils.fc as fc
 
 
 INTERVAL = 30 # delay in ms - increase it if the dashboard is freezing, decrease to speed up the update rate
@@ -125,7 +126,7 @@ class GraphPlusWidget(QtWidgets.QWidget):
 # Graphs
 class TempOxidizerGraph(GraphWidget):
     def __init__(self, parent, timer, tm):
-        updateFunction = tm.data["flight"]["gyrox"].pack
+        updateFunction = tm.data["test"]["gyro"]["x"].pack
         updateFunctions = [updateFunction]*5
         dataNames = None
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
@@ -135,7 +136,7 @@ class TempOxidizerGraph(GraphWidget):
 
 class TempPipeworkGraph(GraphWidget):
     def __init__(self, parent, timer, tm):
-        updateFunction = tm.data["flight"]["gyrox"].pack
+        updateFunction = tm.data["test"]["gyro"]["x"].pack
         updateFunctions = [updateFunction]*4
         dataNames = None
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
@@ -145,7 +146,7 @@ class TempPipeworkGraph(GraphWidget):
 
 class TempInjectorGraph(GraphWidget):
     def __init__(self, parent, timer, tm):
-        updateFunction = tm.data["flight"]["gyrox"].pack
+        updateFunction = tm.data["test"]["gyro"]["x"].pack
         updateFunctions = [updateFunction]
         dataNames = None
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
@@ -155,7 +156,7 @@ class TempInjectorGraph(GraphWidget):
 
 class TempCombustionGraph(GraphWidget):
     def __init__(self, parent, timer, tm):
-        updateFunction = tm.data["flight"]["gyrox"].pack
+        updateFunction = tm.data["test"]["gyro"]["x"].pack
         updateFunctions = [updateFunction]*3
         dataNames = ["Wall 1", "Wall 2", "Wall 3"]
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
@@ -165,7 +166,7 @@ class TempCombustionGraph(GraphWidget):
 
 class TempNozzleGraph(GraphWidget):
     def __init__(self, parent, timer, tm):
-        updateFunction = tm.data["flight"]["gyrox"].pack
+        updateFunction = tm.data["test"]["gyro"]["x"].pack
         updateFunctions = [updateFunction]
         dataNames = None
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
@@ -211,7 +212,7 @@ class TempNozzle(GraphPlusWidget):
 # Graphs
 class PreOxidizerGraph(GraphWidget):
     def __init__(self, parent, timer, tm):
-        updateFunction = tm.data["flight"]["gyrox"].pack
+        updateFunction = tm.data["test"]["gyro"]["x"].pack
         updateFunctions = [updateFunction]*2
         dataNames = ["Top", "Bottom"]
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
@@ -221,7 +222,7 @@ class PreOxidizerGraph(GraphWidget):
 
 class PreInjectorGraph(GraphWidget):
     def __init__(self, parent, timer, tm):
-        updateFunction = tm.data["flight"]["gyrox"].pack
+        updateFunction = tm.data["test"]["gyro"]["x"].pack
         updateFunctions = [updateFunction]
         dataNames = None
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
@@ -231,7 +232,7 @@ class PreInjectorGraph(GraphWidget):
 
 class PreCombustionGraph(GraphWidget):
     def __init__(self, parent, timer, tm):
-        updateFunction = tm.data["flight"]["gyrox"].pack
+        updateFunction = tm.data["test"]["gyro"]["x"].pack
         updateFunctions = [updateFunction]
         dataNames = None
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
@@ -241,7 +242,7 @@ class PreCombustionGraph(GraphWidget):
 
 class PreAmbientGraph(GraphWidget):
     def __init__(self, parent, timer, tm):
-        updateFunction = tm.data["flight"]["gyrox"].pack
+        updateFunction = tm.data["test"]["gyro"]["x"].pack
         updateFunctions = [updateFunction]*2
         dataNames = None
         super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
@@ -396,15 +397,15 @@ class Electrical(QtWidgets.QWidget):
         tab.addWidget(HorizontalTextWidget(self, "Vent line solenoid"), 0, 2)
         tab.addWidget(HorizontalTextWidget(self, "Ignition system"), 0, 3)
 
-        tab.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 25), 1, 1)
-        tab.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 25), 1, 2)
-        tab.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 25), 1, 3)
-        tab.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 25), 2, 1)
-        tab.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 25), 2, 2)
-        tab.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 25), 2, 3)
-        tab.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 25), 3, 1)
-        tab.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 25), 3, 2)
-        tab.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 25), 3, 3)
+        tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 1, 1)
+        tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 1, 2)
+        tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 1, 3)
+        tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 2, 1)
+        tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 2, 2)
+        tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 2, 3)
+        tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 3, 1)
+        tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 3, 2)
+        tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 3, 3)
 
         layout.addWidget(title)
         layout.addLayout(tab)
@@ -514,7 +515,7 @@ class Status(QtWidgets.QWidget):
         title = TitleWidget("Status signals")
         # relief = BoolIndicator("Relief valve trigger", timer)
         # valve = BoolIndicator("Abort valve trigger", timer)
-        actuation = ValueIndicator("Main valve actuation", timer, tm.data["flight"]["gyrox"].get_last, formatting="{:.0f} mm")
+        actuation = ValueIndicator("Main valve actuation", timer, tm.data["test"]["gyro"]["x"].get_last, formatting="{:.0f} mm")
 
         layout.addWidget(title)
         # layout.addWidget(relief)
@@ -551,10 +552,10 @@ class BoardVoltageIndicator(QtWidgets.QWidget):
         # Indicators
         indicLayout = QtWidgets.QGridLayout()
 
-        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 0, 0)
-        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 0, 1)
-        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 1, 0)
-        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 1, 1)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 14), 0, 0)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 14), 0, 1)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 14), 1, 0)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 14), 1, 1)
         
 
         layout.addWidget(title)
@@ -591,14 +592,14 @@ class RMCTemperatureIndicator(QtWidgets.QWidget):
         # Indicators
         indicLayout = QtWidgets.QGridLayout()
 
-        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 0, 0)
-        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 0, 1)
-        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 1, 0)
-        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 1, 1)
-        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 2, 0)
-        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 2, 1)
-        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 3, 0)
-        indicLayout.addWidget(DataWidget("-", timer, tm.data["flight"]["gyrox"].get_last, 14), 3, 1)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 14), 0, 0)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 14), 0, 1)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 14), 1, 0)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 14), 1, 1)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 14), 2, 0)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 14), 2, 1)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 14), 3, 0)
+        indicLayout.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 14), 3, 1)
         
 
         layout.addWidget(title)
