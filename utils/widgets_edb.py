@@ -770,6 +770,37 @@ class MainMenu(QtWidgets.QWidget):
         self._load_file(fname)
 
 
+class MenuBar(QtWidgets.QMenuBar):
+    def __init__(self, timer, tm, menu, parent=None):
+        super().__init__(parent=parent)
+        self.timer, self.tm = timer, tm
+        self.widgetMenu = menu
+
+        self.fileMenu = QtWidgets.QMenu("&File", self)
+
+        self.openAction = QtWidgets.QAction("&Open")
+        self.openAction.triggered.connect(self.open_file)
+
+        self.exitAction = QtWidgets.QAction("&Exit")
+        self.exitAction.triggered.connect(self.close)
+
+        self.fileMenu.addAction(self.openAction)
+        self.fileMenu.addAction(self.exitAction)
+        self.addMenu(self.fileMenu)
+
+    def open_file(self):
+        fname = QtWidgets.QFileDialog.getOpenFileName(self, "Open file")[0]
+        if fname == "":
+            return
+        self.tm.open_flash_file(fname)
+        self.timer.start()
+        self.widgetMenu.hide()
+
+    def close(self):
+        self.parent().close()
+        # self.parent.close()
+
+
 # Main window
 class MainWindow(QtWidgets.QMainWindow):
 
@@ -863,6 +894,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.menu = MainMenu(self.timer, tm, parent=self)
         electrical.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+
+        self.menuBar = MenuBar(self.timer, tm, self.menu, parent=self)
+        self.setMenuBar(self.menuBar)
 
         # properly stop all threads
         def closeEvent(event):
