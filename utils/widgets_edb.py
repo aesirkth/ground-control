@@ -117,6 +117,7 @@ class GraphPlusWidget(QtWidgets.QWidget):
 
         layout = QtWidgets.QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(3)
         layout.addWidget(self.graph)
         layout.addLayout(labLayout)
         self.setLayout(layout)
@@ -691,6 +692,7 @@ class Diagnostic(QtWidgets.QWidget):
     #     print(self.aafficher.frameGeometry().height())
 
 
+# Menu Widgets
 class MenuButton(QtWidgets.QPushButton):
     def __init__(self, text, function, parent=None):
         super().__init__(text, parent)
@@ -703,7 +705,6 @@ class MenuButton(QtWidgets.QPushButton):
         self.setContentsMargins(500, 500, 500, 500)
 
 
-# Menu Widget
 class MainMenu(QtWidgets.QWidget):
     def __init__(self, timer, tm, parent=None):
         super().__init__(parent)
@@ -718,9 +719,9 @@ class MainMenu(QtWidgets.QWidget):
         palette.setColor(QPalette.Window, QColor(0, 0, 0, 128))
         self.setPalette(palette)
 
-        self.serial_button = MenuButton("Open Serial", self._open_serial)
+        self.serial_button = MenuButton("Open Serial", self.parent()._open_serial)
 
-        self.file_button = MenuButton("Open File", self._open_file)
+        self.file_button = MenuButton("Open File", self.parent()._open_file)
 
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.serial_button)
@@ -738,26 +739,6 @@ class MainMenu(QtWidgets.QWidget):
 
         self.setLayout(layout)
 
-    def _open_serial(self):
-        if self.tm.open_serial():
-            self.hide()
-            self.timer.start()
-        else:
-            print("Error while opening serial")
-
-    def _open_file(self):
-        fname = QtWidgets.QFileDialog.getOpenFileName(self, "Open file")[0]
-        if fname == "":
-            return
-        self._load_file(fname)
-
-    def _load_file(self, fname):
-        print(fname)
-        self.tm.open_flash_file(fname)
-        # self.tm.open_flash_file("data/test")
-        self.hide()
-        self.timer.start()
-
     def dragEnterEvent(self, event):
         # No file verification here
         # I assume the user know what he's doing...
@@ -767,38 +748,86 @@ class MainMenu(QtWidgets.QWidget):
     def dropEvent(self, event):
         # print(event.mimeData().urls())
         fname = event.mimeData().urls()[0].toLocalFile()
-        self._load_file(fname)
+        self.parent()._load_file(fname)
+
+
+class InfoDialog(QtWidgets.QDialog):
+    def __init__(self, title, text, image=None, parent=None):
+        super().__init__(parent=parent)
+
+        self.setFixedWidth(400)
+        self.setWindowTitle(title)
+
+        layout = QtWidgets.QVBoxLayout()
+
+        if image is not None:
+            label = QtWidgets.QLabel()
+            label.setPixmap(QtGui.QPixmap(image))
+            label.setAlignment(Qt.AlignCenter)
+            layout.addWidget(label)
+
+        label = QtWidgets.QLabel(text)
+        label.setWordWrap(True)
+        label.setTextFormat(Qt.RichText)
+        label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        label.setOpenExternalLinks(True)
+
+        # Alignment / Font size
+        label.setAlignment(Qt.AlignJustify)
+        font = label.font()
+        font.setPointSize(10)
+        label.setFont(font)
+
+        layout.addWidget(label)
+        self.setLayout(layout)
+
 
 
 class MenuBar(QtWidgets.QMenuBar):
-    def __init__(self, timer, tm, menu, parent=None):
+    def __init__(self, timer, tm, parent=None):
         super().__init__(parent=parent)
         self.timer, self.tm = timer, tm
-        self.widgetMenu = menu
 
+        # File
         self.fileMenu = QtWidgets.QMenu("&File", self)
 
-        self.openAction = QtWidgets.QAction("&Open")
-        self.openAction.triggered.connect(self.open_file)
+        self.openSerial = QtWidgets.QAction("Open &serial")
+        self.openSerial.triggered.connect(self.parent()._open_serial)
 
-        self.exitAction = QtWidgets.QAction("&Exit")
-        self.exitAction.triggered.connect(self.close)
+        self.openFile = QtWidgets.QAction("Open &file")
+        self.openFile.triggered.connect(self.parent()._open_file)
 
-        self.fileMenu.addAction(self.openAction)
-        self.fileMenu.addAction(self.exitAction)
+        self.exit = QtWidgets.QAction("&Exit")
+        self.exit.triggered.connect(self.parent().close)
+
+        self.fileMenu.addAction(self.openSerial)
+        self.fileMenu.addAction(self.openFile)
+        self.fileMenu.addAction(self.exit)
         self.addMenu(self.fileMenu)
 
-    def open_file(self):
-        fname = QtWidgets.QFileDialog.getOpenFileName(self, "Open file")[0]
-        if fname == "":
-            return
-        self.tm.open_flash_file(fname)
-        self.timer.start()
-        self.widgetMenu.hide()
+        # Help
+        self.helpMenu = QtWidgets.QMenu("&Help", self)
 
-    def close(self):
-        self.parent().close()
-        # self.parent.close()
+        self.aboutEDB = QtWidgets.QAction("About &Engine Dashboard")
+        self.aboutEDB.triggered.connect(self._aboutEDB)
+
+        self.aboutAesir = QtWidgets.QAction("&About Æsir")
+        self.aboutAesir.triggered.connect(self._aboutAesir)
+
+        self.helpMenu.addAction(self.aboutEDB)
+        self.helpMenu.addAction(self.aboutAesir)
+        self.addMenu(self.helpMenu)
+
+    def _aboutEDB(self):
+        title = "Engine Dashboard"
+        text = """This dashboard was developed in 2021 in the context of Project Mjollnir. The purpose is to monitor the state of the rocket's engine.<br /><br />Project Mjollnir is the third project of the Æsir association. The objective is to reach an altitude of 10 km with a sounding rocket made by students."""
+        InfoDialog(title, text).exec_()
+
+    def _aboutAesir(self):
+        title = "Æsir"
+        text = """ÆSIR is a student rocketry association founded in 2016 at KTH Royal Institute of Technology in Stockholm. It has around 40 members every year, which are all students at KTH. Roughly half of the members are international students and they cover many disciplines and levels of study, although most of ÆSIR's members study Aerospace Engineering, Computer Science, Vehicle Engineering, Electrical Engineering, Engineering Physics and Mechanical Engineering.<br /><br /><a href=\"http://aesir.se\">ÆSIR website</a>"""
+        image = 'gui/logo/256x256.png'
+        InfoDialog(title, text, image).exec_()
 
 
 # Main window
@@ -810,6 +839,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setWindowTitle("Æsir - Engine dashboard")
 
+        self.tm = tm
         self.timer = QtCore.QTimer(self)
         self.timer.setInterval(INTERVAL)
 
@@ -874,13 +904,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.widget = QtWidgets.QWidget(self)
         self.widget.setLayout(layout)
-
-        # Main Menu
-        
-        # menu.move(0,0)
-        # stack = QtWidgets.QStackedWidget()
-        # stack.addWidget(MainMenu(self.timer, tm))
-        # stack.addWidget(widget)
         
         # Timer for update
         # self.timer.start() # Now in the MainMenu class
@@ -892,17 +915,38 @@ class MainWindow(QtWidgets.QMainWindow):
         # to take up all the space in the window by default.
         self.setCentralWidget(self.widget)
 
+        # Main menu
         self.menu = MainMenu(self.timer, tm, parent=self)
         electrical.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
 
-        self.menuBar = MenuBar(self.timer, tm, self.menu, parent=self)
+        # Menu bar
+        self.menuBar = MenuBar(self.timer, tm, parent=self)
         self.setMenuBar(self.menuBar)
 
+    def closeEvent(self, event):
         # properly stop all threads
-        def closeEvent(event):
-            tm.stop()
-            event.accept()
-        self.closeEvent = closeEvent
+        self.tm.stop()
+        event.accept()
 
     def resizeEvent(self, event):
         self.menu.setFixedSize(self.size())
+
+    def _open_serial(self):
+        if self.tm.open_serial():
+            self.menu.hide()
+            self.timer.start()
+        else:
+            print("Error while opening serial")
+
+    def _open_file(self):
+        fname = QtWidgets.QFileDialog.getOpenFileName(self, "Open file")[0]
+        if fname == "":
+            return
+        self._load_file(fname)
+
+    def _load_file(self, fname):
+        print("Loading:", fname)
+        self.tm.open_flash_file(fname)
+        # self.tm.open_flash_file("data/test")
+        self.menu.hide()
+        self.timer.start()
