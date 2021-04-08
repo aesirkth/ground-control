@@ -144,7 +144,7 @@ class EngineState(QtWidgets.QWidget):
 		# PUT HERE SOME VERIFICATION OF THE ARMING STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
 		# DON'T FORGET TO ENABLE THE BUTTON
 
-		print("This is the greatest plan !")
+		print("This is the greatest plan!")
 		self.fire.setEnabled(True)
 		self.status.setText("Engine enabled")
 
