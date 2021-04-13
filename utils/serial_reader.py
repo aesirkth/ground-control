@@ -269,6 +269,7 @@ class SerialReader():
     # lifehack: open the edda_messages.json in chrome or firefox to get an overview
     # and drop-down menus with everything
     def parse_message_definitions(self, path):
+        #Assigns decoders (defined in data_handling.py) to each message type.
         f = open(path)
         raw = json.load(f)
         f.close()
@@ -285,35 +286,36 @@ class SerialReader():
         for datatype in raw["dataTypes"]:
             name = datatype["name"]
             datatypes[name] = datatype
-        #TODO
-        #DEFINERA tree_pos
-        #hämta rätt argument för numdecoder
+
         for id in messages.keys():
             self.decoders[id] = []
             #Beginning of defining tree_pos as [*sender name*][*datatype name*][*field name*]
             sender_name = messages[id]["senderNodeName"]
             datatype_name = messages[id]["dataType"]
             ##
-            #Iterating through fields in message (eg. acceleration in x, y and z)
-            for field in datatype["fields"]:
-                actual_type = field["definition"]
-                #Finalizing definition of tree_pos
-                field_name = field["name"]
-                tree_pos = [sender_name, datatype_name, field_name]
-                ##
-                #Assigning correct decoder based on type
-                if field["definition"]["type"] in ("integer", "id"):
-                    NumDecoder_type = actual_type["nativeType"]
-                    self.decoders[id].append(NumDecoder(tree_pos, NumDecoder_type))
-                elif field["definition"]["type"] == "packedFloat":
-                    NumDecoder_type = actual_type["packedType"]
-                    maxi = actual_type["maximumValue"]
-                    mini = actual_type["minimumValue"]
-                    self.decoders[id].append(NumDecoder(tree_pos, NumDecoder_type, max=maxi, min=mini))
-                elif field["definition"]["type"] == "enum":
-                    self.decoders[id].append(EnumDecoder(tree_pos, enums[field["definition"]["enumName"]]))
+            if len(datatypes[datatype_name]["fields"]) == 0:
+                tree_pos = [sender_name, datatype_name]
+                self.decoders[id].append(EmptyDecoder(tree_pos))
+            #Iterating through fields in message (eg. acceleration in x, y and z)            
+            else:
+                for field in datatypes[datatype_name]["fields"]:
+                    actual_type = field["definition"]
+                    #Finalizing definition of tree_pos
+                    field_name = field["name"]
+                    tree_pos = [sender_name, datatype_name, field_name]
+                    ##
+                    #Assigning correct decoder based on type
+                    if field["definition"]["type"] in ("integer", "id"):
+                        NumDecoder_type = actual_type["nativeType"]
+                        self.decoders[id].append(NumDecoder(tree_pos, NumDecoder_type))
+                    elif field["definition"]["type"] == "packedFloat":
+                        NumDecoder_type = actual_type["packedType"]
+                        maxi = actual_type["maximumValue"]
+                        mini = actual_type["minimumValue"]
+                        self.decoders[id].append(NumDecoder(tree_pos, NumDecoder_type, max=maxi, min=mini))
+                    elif field["definition"]["type"] == "enum":
+                        self.decoders[id].append(EnumDecoder(tree_pos, enums[field["definition"]["enumName"]]))
                 
-
             #do stuff with with the message
 
     #get the current time using either the computer clock or the last timestamp
