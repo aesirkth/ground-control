@@ -306,6 +306,9 @@ class SerialReader():
             else:
                 return self.last_timestamp / 1000 #convert to seconds
 
+    def get_current_time(self):
+        return self.decide_on_time("", 0)
+    
     def reader_thread(self):
         while not self.exit:
             if not self.stream_is_active or self.pause:
@@ -347,12 +350,12 @@ class SerialReader():
         decoder.parse_buf(buf)
         decoded_data = decoder.get_all_data()
         source = decoder.get_source()
-        datatype = decoder.get_datatype()
+        message = decoder.get_message()
         sensor_index = None
         if len(decoded_data) == 0:
-            current_time = self.decide_on_time("void", 0)
-            self.data[source.name][datatype.name]["value"].x.append(current_time)
-            self.data[source.name][datatype.name]["value"].y.append(1)
+            current_time = self.decide_on_time("", 0)
+            self.data[source.name][message.name]["value"].x.append(current_time)
+            self.data[source.name][message.name]["value"].y.append(1)
         for single_data in decoded_data:
             (field, value) = single_data
             name = field.name
@@ -364,8 +367,8 @@ class SerialReader():
                 name += str(sensor_index)
                 sensor_index = None
             current_time = self.decide_on_time(name, value)
-            self.data[source.name][datatype.name][name].x.append(current_time)
-            self.data[source.name][datatype.name][name].y.append(value)
+            self.data[source.name][message.name][name].x.append(current_time)
+            self.data[source.name][message.name][name].y.append(value)
 
     def read_ec_data(self, decoders):
         decoded_data = []

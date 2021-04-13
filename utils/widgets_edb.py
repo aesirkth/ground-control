@@ -49,6 +49,19 @@ def random_update_plot_data(x, y, mini=0, maxi=200):
     return x, y
 
 
+def updateData(tm, device, datatype, field):
+    t_max = tm.get_current_time()
+    t_min = t_max - X_AXIS_LENGTH
+    x, y = tm.data[device][datatype][field].pack()
+    k = len(x)-1
+    while k > 0 and x[k] >= t_min:
+        k -= 1
+    # This whole loop can be optimized using a dichotomy
+    # It select all the data that are in the time window, and the first one
+    # which is not in the time window
+    return x[k:], y[k:], t_min, t_max
+
+
 class Line(object):
     def __init__(self, graph, num, updateFunction, timer, name=""):
         self.graph = graph
@@ -63,15 +76,16 @@ class Line(object):
         timer.timeout.connect(self.update)
 
     def update(self):
-        self.x, self.y = self.updateFunction(self.x, self.y)
+        # self.x, self.y = self.updateFunction(self.x, self.y)
+        self.x, self.y, t_min, t_max = self.updateFunction()
         self.line.setData(self.x, self.y)
         if len(self.x) != 0:
-            self.graph.setXRange(self.x[-1] - X_AXIS_LENGTH, self.x[-1])
+            self.graph.setXRange(t_min, t_max)
 
 
 class GraphWidget(pg.PlotWidget):
 
-    def __init__(self, parent, timer, updateFunctions=[random_update_plot_data]*4, dataNames=["test", "ok", None, None, None]):
+    def __init__(self, timer, updateFunctions=[random_update_plot_data]*4, dataNames=["test", "ok", None, None, None], displayXLabel=True, parent=None):
         """
             updateFunctions is a list of updateFunction
             updateFunction takes the list of x and y and return the new x and y lists
@@ -82,10 +96,13 @@ class GraphWidget(pg.PlotWidget):
 
         self.setBackground('w')
         self.setMouseEnabled(x=False, y=False)
+        # self.getPlotItem().getViewBox().setBorder(width=4.5, color='r')
+        self.getAxis("left").setWidth(25)
 
         # Labels
-        self.setLabel('bottom', 'Time (s)')
-        self.addLegend(offset=(1, 1))
+        if displayXLabel:
+            self.setLabel('bottom', 'Time (s)')
+            self.addLegend(offset=(1, 1))
 
         self.nbPlots = len(updateFunctions)
         self.updateFunctions = updateFunctions
@@ -107,7 +124,7 @@ class GraphWidget(pg.PlotWidget):
 class GraphPlusWidget(QtWidgets.QWidget):
     def __init__(self, timer, tm, Graph, labelFunctions, formatting="{:>5.1f}",parent=None):
         super().__init__(parent=parent)
-        self.graph = Graph(self, timer, tm)
+        self.graph = Graph(timer, tm, parent=self)
         
         labLayout = QtWidgets.QVBoxLayout()
         for func in labelFunctions:
@@ -117,6 +134,7 @@ class GraphPlusWidget(QtWidgets.QWidget):
 
         layout = QtWidgets.QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(3)
         layout.addWidget(self.graph)
         layout.addLayout(labLayout)
         self.setLayout(layout)
@@ -125,51 +143,51 @@ class GraphPlusWidget(QtWidgets.QWidget):
 # Temperature
 # Graphs
 class TempOxidizerGraph(GraphWidget):
-    def __init__(self, parent, timer, tm):
-        updateFunction = tm.data["test"]["gyro"]["x"].pack
+    def __init__(self, timer, tm, parent=None):
+        updateFunction = lambda : updateData(tm, "test", "gyro", "x")
         updateFunctions = [updateFunction]*5
         dataNames = None
-        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
+        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
         self.setYRange(-30, 30, padding=0)
         self.setTitle("Oxidizer tank + Passive vent line", color=(0, 0, 0))
 
 
 class TempPipeworkGraph(GraphWidget):
-    def __init__(self, parent, timer, tm):
-        updateFunction = tm.data["test"]["gyro"]["x"].pack
+    def __init__(self, timer, tm, parent=None):
+        updateFunction = lambda : updateData(tm, "test", "gyro", "x")
         updateFunctions = [updateFunction]*4
         dataNames = None
-        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
+        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
         self.setYRange(-30, 30, padding=0)
         self.setTitle("Pipework", color=(0, 0, 0))
 
 
 class TempInjectorGraph(GraphWidget):
-    def __init__(self, parent, timer, tm):
-        updateFunction = tm.data["test"]["gyro"]["x"].pack
+    def __init__(self, timer, tm, parent=None):
+        updateFunction = lambda : updateData(tm, "test", "gyro", "x")
         updateFunctions = [updateFunction]
         dataNames = None
-        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
+        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
         self.setYRange(-30, 500, padding=0)
         self.setTitle("Injector", color=(0, 0, 0))
 
 
 class TempCombustionGraph(GraphWidget):
-    def __init__(self, parent, timer, tm):
-        updateFunction = tm.data["test"]["gyro"]["x"].pack
+    def __init__(self, timer, tm, parent=None):
+        updateFunction = lambda : updateData(tm, "test", "gyro", "x")
         updateFunctions = [updateFunction]*3
         dataNames = ["Wall 1", "Wall 2", "Wall 3"]
-        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
+        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
         self.setYRange(0, 200, padding=0)
         self.setTitle("Combustion chamber", color=(0, 0, 0))
 
 
 class TempNozzleGraph(GraphWidget):
-    def __init__(self, parent, timer, tm):
-        updateFunction = tm.data["test"]["gyro"]["x"].pack
+    def __init__(self, timer, tm, parent=None):
+        updateFunction = lambda : updateData(tm, "test", "gyro", "x")
         updateFunctions = [updateFunction]
         dataNames = None
-        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
+        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
         self.setTitle("Nozzle", color=(0, 0, 0))
 
 # Widgets
@@ -211,41 +229,41 @@ class TempNozzle(GraphPlusWidget):
 # Pression
 # Graphs
 class PreOxidizerGraph(GraphWidget):
-    def __init__(self, parent, timer, tm):
-        updateFunction = tm.data["test"]["gyro"]["x"].pack
+    def __init__(self, timer, tm, parent=None):
+        updateFunction = lambda : updateData(tm, "test", "gyro", "x")
         updateFunctions = [updateFunction]*2
         dataNames = ["Top", "Bottom"]
-        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
+        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
         self.setYRange(0, 60, padding=0)
         self.setTitle("Oxidizer tank readings", color=(0, 0, 0))
 
 
 class PreInjectorGraph(GraphWidget):
-    def __init__(self, parent, timer, tm):
-        updateFunction = tm.data["test"]["gyro"]["x"].pack
+    def __init__(self, timer, tm, parent=None):
+        updateFunction = lambda : updateData(tm, "test", "gyro", "x")
         updateFunctions = [updateFunction]
         dataNames = None
-        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
+        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
         self.setYRange(0, 60, padding=0)
         self.setTitle("Injector", color=(0, 0, 0))
 
 
 class PreCombustionGraph(GraphWidget):
-    def __init__(self, parent, timer, tm):
-        updateFunction = tm.data["test"]["gyro"]["x"].pack
+    def __init__(self, timer, tm, parent=None):
+        updateFunction = lambda : updateData(tm, "test", "gyro", "x")
         updateFunctions = [updateFunction]
         dataNames = None
-        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
+        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
         self.setYRange(0, 40, padding=0)
         self.setTitle("Combustion chamber", color=(0, 0, 0))
 
 
 class PreAmbientGraph(GraphWidget):
-    def __init__(self, parent, timer, tm):
-        updateFunction = tm.data["test"]["gyro"]["x"].pack
+    def __init__(self, timer, tm, parent=None):
+        updateFunction = lambda : updateData(tm, "test", "gyro", "x")
         updateFunctions = [updateFunction]*2
         dataNames = None
-        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
+        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
         self.setYRange(0, 1.5, padding=0)
         self.setTitle("Ambient pressure", color=(0, 0, 0))
 
@@ -389,23 +407,52 @@ class Electrical(QtWidgets.QWidget):
         tab = QtWidgets.QGridLayout()
         tab.setSpacing(2)
 
-        tab.addWidget(VerticalTextWidget(self, "Voltage"), 1, 0)
-        tab.addWidget(VerticalTextWidget(self, "Current"), 2, 0)
-        tab.addWidget(VerticalTextWidget(self, "Resistance"), 3, 0)
+        tab.addWidget(VerticalTextWidget(self, "Voltage (V)"), 1, 0, 2, 1)
+        tab.addWidget(VerticalTextWidget(self, "Current (A)"), 3, 0, 2, 1)
+        tab.addWidget(VerticalTextWidget(self, "Resistance (Ω)"), 5, 0, 2, 1)
 
         tab.addWidget(HorizontalTextWidget(self, "Main valve solenoid"), 0, 1)
         tab.addWidget(HorizontalTextWidget(self, "Vent line solenoid"), 0, 2)
         tab.addWidget(HorizontalTextWidget(self, "Ignition system"), 0, 3)
 
+        # Data
         tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 1, 1)
         tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 1, 2)
         tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 1, 3)
-        tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 2, 1)
-        tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 2, 2)
-        tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 2, 3)
         tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 3, 1)
         tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 3, 2)
         tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 3, 3)
+        tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 5, 1)
+        tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 5, 2)
+        tab.addWidget(DataWidget("-", timer, tm.data["test"]["gyro"]["x"].get_last, 25), 5, 3)
+
+        # Graphs
+        listGraphs = [
+            GraphWidget(timer, [lambda : updateData(tm, "test", "gyro", "x")], displayXLabel=False),
+            GraphWidget(timer, [lambda : updateData(tm, "test", "gyro", "x")], displayXLabel=False),
+            GraphWidget(timer, [lambda : updateData(tm, "test", "gyro", "x")], displayXLabel=False),
+            GraphWidget(timer, [lambda : updateData(tm, "test", "gyro", "x")], displayXLabel=False),
+            GraphWidget(timer, [lambda : updateData(tm, "test", "gyro", "x")], displayXLabel=False),
+            GraphWidget(timer, [lambda : updateData(tm, "test", "gyro", "x")], displayXLabel=False),
+            GraphWidget(timer, [lambda : updateData(tm, "test", "gyro", "x")], displayXLabel=False),
+            GraphWidget(timer, [lambda : updateData(tm, "test", "gyro", "x")], displayXLabel=False),
+            GraphWidget(timer, [lambda : updateData(tm, "test", "gyro", "x")], displayXLabel=False)
+        ]
+
+        # Changing the background color
+        palette = self.palette()
+        for graph in listGraphs:
+            graph.setBackground(palette.color(QPalette.Window))
+
+        tab.addWidget(listGraphs[0], 2, 1)
+        tab.addWidget(listGraphs[1], 2, 2)
+        tab.addWidget(listGraphs[2], 2, 3)
+        tab.addWidget(listGraphs[3], 4, 1)
+        tab.addWidget(listGraphs[4], 4, 2)
+        tab.addWidget(listGraphs[5], 4, 3)
+        tab.addWidget(listGraphs[6], 6, 1)
+        tab.addWidget(listGraphs[7], 6, 2)
+        tab.addWidget(listGraphs[8], 6, 3)
 
         layout.addWidget(title)
         layout.addLayout(tab)
@@ -611,9 +658,9 @@ class RMCTemperatureIndicator(QtWidgets.QWidget):
 class ErrorGraph(GraphWidget):
 
     def __init__(self, timer, tm, parent=None):
-        updateFunctions = [random_update_plot_data]
+        updateFunctions = []
         dataNames = None
-        super().__init__(parent, timer, updateFunctions=updateFunctions, dataNames=dataNames)
+        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
         self.setTitle("Errors", color=(0, 0, 0))
         self.setMaximumHeight(200)
         self.setMinimumHeight(100)
@@ -691,6 +738,7 @@ class Diagnostic(QtWidgets.QWidget):
     #     print(self.aafficher.frameGeometry().height())
 
 
+# Menu Widgets
 class MenuButton(QtWidgets.QPushButton):
     def __init__(self, text, function, parent=None):
         super().__init__(text, parent)
@@ -703,7 +751,6 @@ class MenuButton(QtWidgets.QPushButton):
         self.setContentsMargins(500, 500, 500, 500)
 
 
-# Menu Widget
 class MainMenu(QtWidgets.QWidget):
     def __init__(self, timer, tm, parent=None):
         super().__init__(parent)
@@ -718,9 +765,9 @@ class MainMenu(QtWidgets.QWidget):
         palette.setColor(QPalette.Window, QColor(0, 0, 0, 128))
         self.setPalette(palette)
 
-        self.serial_button = MenuButton("Open Serial", self._open_serial)
+        self.serial_button = MenuButton("Open Serial", self.parent()._open_serial)
 
-        self.file_button = MenuButton("Open File", self._open_file)
+        self.file_button = MenuButton("Open File", self.parent()._open_file)
 
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.serial_button)
@@ -738,26 +785,6 @@ class MainMenu(QtWidgets.QWidget):
 
         self.setLayout(layout)
 
-    def _open_serial(self):
-        if self.tm.open_serial():
-            self.hide()
-            self.timer.start()
-        else:
-            print("Error while opening serial")
-
-    def _open_file(self):
-        fname = QtWidgets.QFileDialog.getOpenFileName(self, "Open file")[0]
-        if fname == "":
-            return
-        self._load_file(fname)
-
-    def _load_file(self, fname):
-        print(fname)
-        self.tm.open_flash_file(fname)
-        # self.tm.open_flash_file("data/test")
-        self.hide()
-        self.timer.start()
-
     def dragEnterEvent(self, event):
         # No file verification here
         # I assume the user know what he's doing...
@@ -767,7 +794,85 @@ class MainMenu(QtWidgets.QWidget):
     def dropEvent(self, event):
         # print(event.mimeData().urls())
         fname = event.mimeData().urls()[0].toLocalFile()
-        self._load_file(fname)
+        self.parent()._load_file(fname)
+
+
+class InfoDialog(QtWidgets.QDialog):
+    def __init__(self, title, text, image=None, parent=None):
+        super().__init__(parent=parent)
+
+        self.setFixedWidth(400)
+        self.setWindowTitle(title)
+
+        layout = QtWidgets.QVBoxLayout()
+
+        if image is not None:
+            label = QtWidgets.QLabel()
+            label.setPixmap(QtGui.QPixmap(image))
+            label.setAlignment(Qt.AlignCenter)
+            layout.addWidget(label)
+
+        label = QtWidgets.QLabel(text)
+        label.setWordWrap(True)
+        label.setTextFormat(Qt.RichText)
+        label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        label.setOpenExternalLinks(True)
+
+        # Alignment / Font size
+        label.setAlignment(Qt.AlignJustify)
+        font = label.font()
+        font.setPointSize(10)
+        label.setFont(font)
+
+        layout.addWidget(label)
+        self.setLayout(layout)
+
+
+class MenuBar(QtWidgets.QMenuBar):
+    def __init__(self, timer, tm, parent=None):
+        super().__init__(parent=parent)
+        self.timer, self.tm = timer, tm
+
+        # File
+        self.fileMenu = QtWidgets.QMenu("&File", self)
+
+        self.openSerial = QtWidgets.QAction("Open &serial")
+        self.openSerial.triggered.connect(self.parent()._open_serial)
+
+        self.openFile = QtWidgets.QAction("Open &file")
+        self.openFile.triggered.connect(self.parent()._open_file)
+
+        self.exit = QtWidgets.QAction("&Exit")
+        self.exit.triggered.connect(self.parent().close)
+
+        self.fileMenu.addAction(self.openSerial)
+        self.fileMenu.addAction(self.openFile)
+        self.fileMenu.addAction(self.exit)
+        self.addMenu(self.fileMenu)
+
+        # Help
+        self.helpMenu = QtWidgets.QMenu("&Help", self)
+
+        self.aboutEDB = QtWidgets.QAction("About &Engine Dashboard")
+        self.aboutEDB.triggered.connect(self._aboutEDB)
+
+        self.aboutAesir = QtWidgets.QAction("&About Æsir")
+        self.aboutAesir.triggered.connect(self._aboutAesir)
+
+        self.helpMenu.addAction(self.aboutEDB)
+        self.helpMenu.addAction(self.aboutAesir)
+        self.addMenu(self.helpMenu)
+
+    def _aboutEDB(self):
+        title = "Engine Dashboard"
+        text = """This dashboard was developed in 2021 in the context of Project Mjollnir. The purpose is to monitor the state of the rocket's engine.<br /><br />Project Mjollnir is the third project of the Æsir association. The objective is to reach an altitude of 10 km with a sounding rocket made by students."""
+        InfoDialog(title, text).exec_()
+
+    def _aboutAesir(self):
+        title = "Æsir"
+        text = """ÆSIR is a student rocketry association founded in 2016 at KTH Royal Institute of Technology in Stockholm. It has around 40 members every year, which are all students at KTH. Roughly half of the members are international students and they cover many disciplines and levels of study, although most of ÆSIR's members study Aerospace Engineering, Computer Science, Vehicle Engineering, Electrical Engineering, Engineering Physics and Mechanical Engineering.<br /><br /><a href=\"http://aesir.se\">ÆSIR website</a>"""
+        image = 'gui/logo/256x256.png'
+        InfoDialog(title, text, image).exec_()
 
 
 # Main window
@@ -779,6 +884,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setWindowTitle("Æsir - Engine dashboard")
 
+        self.tm = tm
         self.timer = QtCore.QTimer(self)
         self.timer.setInterval(INTERVAL)
 
@@ -843,13 +949,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.widget = QtWidgets.QWidget(self)
         self.widget.setLayout(layout)
-
-        # Main Menu
-        
-        # menu.move(0,0)
-        # stack = QtWidgets.QStackedWidget()
-        # stack.addWidget(MainMenu(self.timer, tm))
-        # stack.addWidget(widget)
         
         # Timer for update
         # self.timer.start() # Now in the MainMenu class
@@ -861,14 +960,38 @@ class MainWindow(QtWidgets.QMainWindow):
         # to take up all the space in the window by default.
         self.setCentralWidget(self.widget)
 
+        # Main menu
         self.menu = MainMenu(self.timer, tm, parent=self)
         electrical.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
 
+        # Menu bar
+        self.menuBar = MenuBar(self.timer, tm, parent=self)
+        self.setMenuBar(self.menuBar)
+
+    def closeEvent(self, event):
         # properly stop all threads
-        def closeEvent(event):
-            tm.stop()
-            event.accept()
-        self.closeEvent = closeEvent
+        self.tm.stop()
+        event.accept()
 
     def resizeEvent(self, event):
         self.menu.setFixedSize(self.size())
+
+    def _open_serial(self):
+        if self.tm.open_serial():
+            self.menu.hide()
+            self.timer.start()
+        else:
+            print("Error while opening serial")
+
+    def _open_file(self):
+        fname = QtWidgets.QFileDialog.getOpenFileName(self, "Open file")[0]
+        if fname == "":
+            return
+        self._load_file(fname)
+
+    def _load_file(self, fname):
+        print("Loading:", fname)
+        self.tm.open_flash_file(fname)
+        # self.tm.open_flash_file("data/test")
+        self.menu.hide()
+        self.timer.start()
