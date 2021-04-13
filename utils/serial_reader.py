@@ -232,42 +232,6 @@ class SerialReader():
     def seconds_since_last_message(self):
         return time.time() - self.last_message_time
 
-    #TODO: parse the engine protocol in utils/edda_messages.json
-    # The goal is to assign decoders to each ID based on the protocol in the json file
-    # each decoder takes care of a single field.
-    # self.decoders is a dictionary that contains arrays with decoders corresponding to all data fields for every id.
-    # see the bottom of this file for examples 
-    #
-    # The json object has 3 sub-objects; messages, datatypes and enums
-    # "messages" contains IDs and their datatypes
-    # "dataypes" contains all the fields for a specific datatype like uint32, enum and packedfloat
-    # "enums" contains all the enums
-    ##
-    # Decoders are defined in data_handling.py
-    ##
-    # all Decoders take tree_pos as an argument. tree_pos is an array that specifies
-    # where the data will be saved e.g. ["flight", "gyrox"] will be saved in self.data["flight"]["gyrox"]
-    # ["Edda Pressure (top)", "PowerInputMeasurement", "current_amperes"] --> self.data["Edda Pressure (top)"]["PowerInputMeasurement"]["current_amperes"]
-    #
-    # generally it should have this form
-    # [*sender name*][*datatype name*][*field name*]
-    # sometimes the message and field name is the same but that's fine, just ignore it and have them repeat
-    ###
-    # NumDecoder(tree_pos, type, **min, **max, **scale)
-    # can decode both integers and packed floats
-    # to unpack a float specify "min=" and "max="
-    # the type it takes is just the native or packedtype so "uint16" or "int8"
-    # "scale=" is not used for the json protocol
-    ###
-    # EnumDecoder(tree_pos, enum)
-    # using the code below; enum would be just be enums[*enum name*] directly
-    ###
-    # EmptyDecoder(tree_pos)
-    # Decodes a data with no fields
-    # only useful for fire rocket confirmation
-    ###
-    # lifehack: open the edda_messages.json in chrome or firefox to get an overview
-    # and drop-down menus with everything
     def parse_message_definitions(self, path):
         #Assigns decoders (defined in data_handling.py) to each message type.
         f = open(path)
@@ -294,7 +258,7 @@ class SerialReader():
             datatype_name = messages[id]["dataType"]
             ##
             if len(datatypes[datatype_name]["fields"]) == 0:
-                tree_pos = [sender_name, datatype_name]
+                tree_pos = [sender_name, datatype_name, "value"]
                 self.decoders[id].append(EmptyDecoder(tree_pos))
             #Iterating through fields in message (eg. acceleration in x, y and z)            
             else:
