@@ -11,7 +11,9 @@ INTERVAL = 30 # delay in ms - increase it if the dashboard is freezing, decrease
 
 COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 0, 255), (0, 255, 255)]
 
-X_AXIS_LENGTH = 60
+X_AXIS_LENGTH = 120
+
+AUTO_MODE = True
 
 class TitleWidget(QtWidgets.QLabel):
     """Widget use to write columns' title"""
@@ -49,7 +51,21 @@ def random_update_plot_data(x, y, mini=0, maxi=200):
     return x, y
 
 
+def getDataBetween(time_list, data_list, t_min, t_max):
+    k = len(time_list)
+    while k > 0 and time_list[k-1] >= t_max:
+        k -= 1
+    k_max = k
+    while k > 0 and time_list[k-1] >= t_min:
+        k -= 1
+    # These two loops can be optimized using a dichotomy
+    # It select all the data that are in the time window, and the first one
+    # which is not in the time window
+    return time_list[k:k_max], time_list[k:k_max]
+
+
 def updateData(tm, device, datatype, field):
+
     t_max = tm.get_current_time()
     t_min = t_max - X_AXIS_LENGTH
     x, y = tm.data[device][datatype][field].pack()
@@ -63,53 +79,72 @@ def updateData(tm, device, datatype, field):
 
 
 class Line(object):
-    def __init__(self, graph, num, updateFunction, timer, name=""):
+    def __init__(self, graph, num, tm, updateField, timer, name=""):
         self.graph = graph
         self.k = num
-        self.updateFunction = updateFunction
+        self.tm = tm
+        self.device = updateField[0]
+        self.datatype = updateField[1]
+        self.field = updateField[2]
+        self.updateFunction = tm.data[self.device][self.datatype][self.field].pack
         self.name = name
         self.x = []
         self.y = []
         pen = pg.mkPen(color=COLORS[self.k])
         self.line = graph.plot(self.x, self.y, name=self.name, pen=pen)
+        self.t_min = 0
+        self.t_max = 0
 
         timer.timeout.connect(self.update)
 
     def update(self):
-        # self.x, self.y = self.updateFunction(self.x, self.y)
-        self.x, self.y, t_min, t_max = self.updateFunction()
-        self.line.setData(self.x, self.y)
-        if len(self.x) != 0:
+        x, y = self.updateFunction()
+        
+        if AUTO_MODE:
+            t_max = self.tm.get_current_time()
+            t_min = t_max - X_AXIS_LENGTH
             self.graph.setXRange(t_min, t_max)
 
+        else:
+            state = self.graph.getPlotItem().getViewBox().getState()
+            t_min, t_max = state['targetRange'][0]
+
+        # self.x, self.y = x, y
+        # self.line.setData(self.x, self.y)
+
+        # self.x, self.y = getDataBetween(x, y, t_min, t_max)
+        # self.line.setData(self.x, self.y)
+        # # This method is less efficient than the one above
+
+        if t_max != self.t_max or t_min != self.t_min:
+            self.t_max, self.t_min = t_max, t_min
+            self.x, self.y = x, y
+            self.line.setData(self.x, self.y)
+            
 
 class GraphWidget(pg.PlotWidget):
 
-    def __init__(self, timer, updateFunctions=[random_update_plot_data]*4, dataNames=["test", "ok", None, None, None], displayXLabel=True, parent=None):
+    def __init__(self, timer, tm, updateFields=[], dataNames=None, displayXLabel=True, parent=None):
         """
-            updateFunctions is a list of updateFunction
-            updateFunction takes the list of x and y and return the new x and y lists
+            updateFields is a list of [device, datatype, field]
         """
         super().__init__(parent)
         self.setAttribute(Qt.WA_DeleteOnClose, True)
         self.setMinimumWidth(260)
 
         self.setBackground('w')
-        self.setMouseEnabled(x=False, y=False)
+        self.setMouseEnabled(x=not AUTO_MODE, y=False)
         # self.getPlotItem().getViewBox().setBorder(width=4.5, color='r')
         self.getAxis("left").setWidth(25)
+        self.getPlotItem().hideButtons()
 
         # Labels
         if displayXLabel:
             self.setLabel('bottom', 'Time (s)')
             self.addLegend(offset=(1, 1))
 
-        self.nbPlots = len(updateFunctions)
-        self.updateFunctions = updateFunctions
-
-        # Init x and y data
-        self.x = [[] for _ in range(self.nbPlots)]
-        self.y = [[] for _ in range(self.nbPlots)]
+        self.nbPlots = len(updateFields)
+        self.updateFields = updateFields
 
         # Init lines
         self.data_lines = [None]*self.nbPlots
@@ -118,16 +153,17 @@ class GraphWidget(pg.PlotWidget):
                 name = None
             else:
                 name = dataNames[k]
-            self.data_lines[k] = Line(self, k, self.updateFunctions[k], timer, name=name)
+            self.data_lines[k] = Line(self, k, tm, self.updateFields[k], timer, name=name)
 
 
 class GraphPlusWidget(QtWidgets.QWidget):
-    def __init__(self, timer, tm, Graph, labelFunctions, formatting="{:>5.1f}",parent=None):
+    def __init__(self, timer, tm, Graph, updateFields=[], formatting="{:>5.1f}", parent=None):
         super().__init__(parent=parent)
         self.graph = Graph(timer, tm, parent=self)
         
         labLayout = QtWidgets.QVBoxLayout()
-        for func in labelFunctions:
+        for device, datatype, field in updateFields:
+            func = tm.data[device][datatype][field].get_last
             lab = DataWidget("-", timer, func, 10, formatting=formatting)
             lab.setFixedWidth(30)
             labLayout.addWidget(lab)
@@ -140,130 +176,163 @@ class GraphPlusWidget(QtWidgets.QWidget):
         self.setLayout(layout)
 
 
+class AutoModeSwitch(QtWidgets.QWidget):
+    def __init__(self, graphs_list, parent=None):
+        super().__init__(parent=parent)
+        self.graphs_list = graphs_list
+        self.checkBox = QtWidgets.QCheckBox('Enable auto mode')
+        self.checkBox.setChecked(AUTO_MODE)
+        self.checkBox.stateChanged.connect(self.change_mode)
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.addWidget(self.checkBox)
+        self.setLayout(layout)
+
+
+    def change_mode(self):
+        global AUTO_MODE
+        AUTO_MODE = self.checkBox.isChecked()
+        for graph in self.graphs_list:
+            graph.setMouseEnabled(x=not AUTO_MODE, y=False)
+
+
 # Temperature
 # Graphs
 class TempOxidizerGraph(GraphWidget):
     def __init__(self, timer, tm, parent=None):
-        updateFunction = lambda : updateData(tm, "test", "gyro", "x")
-        updateFunctions = [updateFunction]*5
+        updateField = ["test", "gyro", "x"]
+        updateFields = [updateField]*5
         dataNames = None
-        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
+        super().__init__(timer, tm, updateFields=updateFields, dataNames=dataNames, parent=parent)
         self.setYRange(-30, 30, padding=0)
         self.setTitle("Oxidizer tank + Passive vent line", color=(0, 0, 0))
+
+        # timer.timeout.connect(lambda : print(self.getPlotItem().getViewBox().getState()))
 
 
 class TempPipeworkGraph(GraphWidget):
     def __init__(self, timer, tm, parent=None):
-        updateFunction = lambda : updateData(tm, "test", "gyro", "x")
-        updateFunctions = [updateFunction]*4
+        updateField = ["test", "gyro", "x"]
+        updateFields = [updateField]*4
         dataNames = None
-        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
+        super().__init__(timer, tm, updateFields=updateFields, dataNames=dataNames, parent=parent)
         self.setYRange(-30, 30, padding=0)
         self.setTitle("Pipework", color=(0, 0, 0))
 
 
 class TempInjectorGraph(GraphWidget):
     def __init__(self, timer, tm, parent=None):
-        updateFunction = lambda : updateData(tm, "test", "gyro", "x")
-        updateFunctions = [updateFunction]
+        updateField = ["test", "gyro", "x"]
+        updateFields = [updateField]
         dataNames = None
-        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
+        super().__init__(timer, tm, updateFields=updateFields, dataNames=dataNames, parent=parent)
         self.setYRange(-30, 500, padding=0)
         self.setTitle("Injector", color=(0, 0, 0))
 
 
 class TempCombustionGraph(GraphWidget):
     def __init__(self, timer, tm, parent=None):
-        updateFunction = lambda : updateData(tm, "test", "gyro", "x")
-        updateFunctions = [updateFunction]*3
+        updateField = ["test", "gyro", "x"]
+        updateFields = [updateField]*3
         dataNames = ["Wall 1", "Wall 2", "Wall 3"]
-        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
+        super().__init__(timer, tm, updateFields=updateFields, dataNames=dataNames, parent=parent)
         self.setYRange(0, 200, padding=0)
         self.setTitle("Combustion chamber", color=(0, 0, 0))
 
 
 class TempNozzleGraph(GraphWidget):
     def __init__(self, timer, tm, parent=None):
-        updateFunction = lambda : updateData(tm, "test", "gyro", "x")
-        updateFunctions = [updateFunction]
+        updateField = ["test", "gyro", "x"]
+        updateFields = [updateField]
         dataNames = None
-        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
+        super().__init__(timer, tm, updateFields=updateFields, dataNames=dataNames, parent=parent)
         self.setTitle("Nozzle", color=(0, 0, 0))
 
 # Widgets
 class TempOxidizer(GraphPlusWidget):
     def __init__(self, timer, tm, parent=None):
         graph = TempOxidizerGraph
-        labelFunctions = [lambda : random_value(-3000, 3000) for _ in range(5)]
-        super().__init__(timer, tm, graph, labelFunctions, parent=parent)
+        updateFields = [
+            ["test", "gyro", "x"],
+            ["test", "gyro", "x"],
+            ["test", "gyro", "x"],
+            ["test", "gyro", "x"],
+            ["test", "gyro", "x"]]
+        super().__init__(timer, tm, graph, updateFields, parent=parent)
 
 
 class TempPipework(GraphPlusWidget):
     def __init__(self, timer, tm, parent=None):
         graph = TempPipeworkGraph
-        labelFunctions = [lambda : random_value(-3000, 3000) for _ in range(4)]
-        super().__init__(timer, tm, graph, labelFunctions, parent=parent)
+        updateFields = [
+            ["test", "gyro", "x"],
+            ["test", "gyro", "x"],
+            ["test", "gyro", "x"],
+            ["test", "gyro", "x"]]
+        super().__init__(timer, tm, graph, updateFields, parent=parent)
 
 
 class TempInjector(GraphPlusWidget):
     def __init__(self, timer, tm, parent=None):
         graph = TempInjectorGraph
-        labelFunctions = [lambda : random_value(-3000, 50000)]
-        super().__init__(timer, tm, graph, labelFunctions, parent=parent)
+        updateFields = [["test", "gyro", "x"]]
+        super().__init__(timer, tm, graph, updateFields, parent=parent)
 
 
 class TempCombustion(GraphPlusWidget):
     def __init__(self, timer, tm, parent=None):
         graph = TempCombustionGraph
-        labelFunctions = [lambda : random_value(0, 20000) for _ in range(3)]
-        super().__init__(timer, tm, graph, labelFunctions, parent=parent)
+        updateFields = [
+            ["test", "gyro", "x"],
+            ["test", "gyro", "x"],
+            ["test", "gyro", "x"]]
+        super().__init__(timer, tm, graph, updateFields, parent=parent)
 
 
 class TempNozzle(GraphPlusWidget):
     def __init__(self, timer, tm, parent=None):
         graph = TempNozzleGraph
-        labelFunctions = [lambda : random_value(0, 20000)]
-        super().__init__(timer, tm, graph, labelFunctions, parent=parent)
+        updateFields = [["test", "gyro", "x"]]
+        super().__init__(timer, tm, graph, updateFields, parent=parent)
 
 
 # Pression
 # Graphs
 class PreOxidizerGraph(GraphWidget):
     def __init__(self, timer, tm, parent=None):
-        updateFunction = lambda : updateData(tm, "test", "gyro", "x")
-        updateFunctions = [updateFunction]*2
+        updateField = ["test", "gyro", "x"]
+        updateFields = [updateField]*2
         dataNames = ["Top", "Bottom"]
-        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
+        super().__init__(timer, tm, updateFields=updateFields, dataNames=dataNames, parent=parent)
         self.setYRange(0, 60, padding=0)
         self.setTitle("Oxidizer tank readings", color=(0, 0, 0))
 
 
 class PreInjectorGraph(GraphWidget):
     def __init__(self, timer, tm, parent=None):
-        updateFunction = lambda : updateData(tm, "test", "gyro", "x")
-        updateFunctions = [updateFunction]
+        updateField = ["test", "gyro", "x"]
+        updateFields = [updateField]
         dataNames = None
-        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
+        super().__init__(timer, tm, updateFields=updateFields, dataNames=dataNames, parent=parent)
         self.setYRange(0, 60, padding=0)
         self.setTitle("Injector", color=(0, 0, 0))
 
 
 class PreCombustionGraph(GraphWidget):
     def __init__(self, timer, tm, parent=None):
-        updateFunction = lambda : updateData(tm, "test", "gyro", "x")
-        updateFunctions = [updateFunction]
+        updateField = ["test", "gyro", "x"]
+        updateFields = [updateField]
         dataNames = None
-        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
+        super().__init__(timer, tm, updateFields=updateFields, dataNames=dataNames, parent=parent)
         self.setYRange(0, 40, padding=0)
         self.setTitle("Combustion chamber", color=(0, 0, 0))
 
 
 class PreAmbientGraph(GraphWidget):
     def __init__(self, timer, tm, parent=None):
-        updateFunction = lambda : updateData(tm, "test", "gyro", "x")
-        updateFunctions = [updateFunction]*2
+        updateField = ["test", "gyro", "x"]
+        updateFields = [updateField]*2
         dataNames = None
-        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
+        super().__init__(timer, tm, updateFields=updateFields, dataNames=dataNames, parent=parent)
         self.setYRange(0, 1.5, padding=0)
         self.setTitle("Ambient pressure", color=(0, 0, 0))
 
@@ -272,29 +341,33 @@ class PreAmbientGraph(GraphWidget):
 class PreOxidizer(GraphPlusWidget):
     def __init__(self, timer, tm, parent=None):
         graph = PreOxidizerGraph
-        labelFunctions = [lambda : random_value(0, 6000) for _ in range(2)]
-        super().__init__(timer, tm, graph, labelFunctions, parent=parent)
+        updateFields = [
+            ["test", "gyro", "x"],
+            ["test", "gyro", "x"]]
+        super().__init__(timer, tm, graph, updateFields, parent=parent)
 
 
 class PreInjector(GraphPlusWidget):
     def __init__(self, timer, tm, parent=None):
         graph = PreInjectorGraph
-        labelFunctions = [lambda : random_value(0, 6000)]
-        super().__init__(timer, tm, graph, labelFunctions, parent=parent)
+        updateFields = [["test", "gyro", "x"]]
+        super().__init__(timer, tm, graph, updateFields, parent=parent)
 
 
 class PreCombustion(GraphPlusWidget):
     def __init__(self, timer, tm, parent=None):
         graph = PreCombustionGraph
-        labelFunctions = [lambda : random_value(0, 4000)]
-        super().__init__(timer, tm, graph, labelFunctions, parent=parent)
+        updateFields = [["test", "gyro", "x"]]
+        super().__init__(timer, tm, graph, updateFields, parent=parent)
 
 
 class PreAmbient(GraphPlusWidget):
     def __init__(self, timer, tm, parent=None):
         graph = PreAmbientGraph
-        labelFunctions = [lambda : random_value(0, 150) for _ in range(2)]
-        super().__init__(timer, tm, graph, labelFunctions, formatting="{:>5.2f}", parent=parent)
+        updateFields = [
+            ["test", "gyro", "x"],
+            ["test", "gyro", "x"]]
+        super().__init__(timer, tm, graph, updateFields, formatting="{:>5.2f}", parent=parent)
 
 
 # Electrical
@@ -383,7 +456,7 @@ class DataWidget(QtWidgets.QLabel):
         self.formatting = formatting
         self.updateFunction = updateFunction
         timer.timeout.connect(self.update_value)
-    
+
     def update_value(self):
         value = self.updateFunction()
         if isinstance(value, str):
@@ -428,21 +501,22 @@ class Electrical(QtWidgets.QWidget):
 
         # Graphs
         listGraphs = [
-            GraphWidget(timer, [lambda : updateData(tm, "test", "gyro", "x")], displayXLabel=False),
-            GraphWidget(timer, [lambda : updateData(tm, "test", "gyro", "x")], displayXLabel=False),
-            GraphWidget(timer, [lambda : updateData(tm, "test", "gyro", "x")], displayXLabel=False),
-            GraphWidget(timer, [lambda : updateData(tm, "test", "gyro", "x")], displayXLabel=False),
-            GraphWidget(timer, [lambda : updateData(tm, "test", "gyro", "x")], displayXLabel=False),
-            GraphWidget(timer, [lambda : updateData(tm, "test", "gyro", "x")], displayXLabel=False),
-            GraphWidget(timer, [lambda : updateData(tm, "test", "gyro", "x")], displayXLabel=False),
-            GraphWidget(timer, [lambda : updateData(tm, "test", "gyro", "x")], displayXLabel=False),
-            GraphWidget(timer, [lambda : updateData(tm, "test", "gyro", "x")], displayXLabel=False)
+            GraphWidget(timer, tm, [["test", "gyro", "x"]], displayXLabel=False),
+            GraphWidget(timer, tm, [["test", "gyro", "x"]], displayXLabel=False),
+            GraphWidget(timer, tm, [["test", "gyro", "x"]], displayXLabel=False),
+            GraphWidget(timer, tm, [["test", "gyro", "x"]], displayXLabel=False),
+            GraphWidget(timer, tm, [["test", "gyro", "x"]], displayXLabel=False),
+            GraphWidget(timer, tm, [["test", "gyro", "x"]], displayXLabel=False),
+            GraphWidget(timer, tm, [["test", "gyro", "x"]], displayXLabel=False),
+            GraphWidget(timer, tm, [["test", "gyro", "x"]], displayXLabel=False),
+            GraphWidget(timer, tm, [["test", "gyro", "x"]], displayXLabel=False)
         ]
 
         # Changing the background color
         palette = self.palette()
         for graph in listGraphs:
             graph.setBackground(palette.color(QPalette.Window))
+            graph.setMinimumWidth(100) # It seems that the minimum is 144
 
         tab.addWidget(listGraphs[0], 2, 1)
         tab.addWidget(listGraphs[1], 2, 2)
@@ -453,6 +527,8 @@ class Electrical(QtWidgets.QWidget):
         tab.addWidget(listGraphs[6], 6, 1)
         tab.addWidget(listGraphs[7], 6, 2)
         tab.addWidget(listGraphs[8], 6, 3)
+
+        self.listGraphs = listGraphs
 
         layout.addWidget(title)
         layout.addLayout(tab)
@@ -658,9 +734,9 @@ class RMCTemperatureIndicator(QtWidgets.QWidget):
 class ErrorGraph(GraphWidget):
 
     def __init__(self, timer, tm, parent=None):
-        updateFunctions = []
+        updateFields = []
         dataNames = None
-        super().__init__(timer, updateFunctions=updateFunctions, dataNames=dataNames, parent=parent)
+        super().__init__(timer, tm, updateFields=updateFields, dataNames=dataNames, parent=parent)
         self.setTitle("Errors", color=(0, 0, 0))
         self.setMaximumHeight(200)
         self.setMinimumHeight(100)
@@ -695,7 +771,7 @@ class FPSIndicator(ValueIndicator):
 
 class Diagnostic(QtWidgets.QWidget):
 
-    def __init__(self, timer, tm, parent=None):
+    def __init__(self, timer, tm, graphs_list, parent=None):
         super().__init__(parent)
         self.setMaximumWidth(570)
         layout = QtWidgets.QVBoxLayout(self)
@@ -714,6 +790,7 @@ class Diagnostic(QtWidgets.QWidget):
         horiLayout.addWidget(boardVoltage)
         vertLayout.addWidget(error)
         vertLayout.addWidget(fps)
+        vertLayout.addWidget(AutoModeSwitch(graphs_list + [error], self))
         horiLayout.addLayout(vertLayout)
         layout.addLayout(horiLayout)
 
@@ -890,7 +967,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Temperature
         # Left Column
-        temperatureTitle = TitleWidget("Temperature")
+        temperatureTitle = TitleWidget("Temperature (°C)")
         tempOxidizer = TempOxidizer(self.timer, tm, parent=self)
         tempPipework = TempPipework(self.timer, tm, parent=self)
         tempInjector = TempInjector(self.timer, tm, parent=self)
@@ -906,7 +983,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Pressure
         # Middle Column
-        pressureTitle = TitleWidget("Pressure")
+        pressureTitle = TitleWidget("Pressure (bar)")
         preOxidizer = PreOxidizer(self.timer, tm, parent=self)
         preInjector = PreInjector(self.timer, tm, parent=self)
         preCombustion = PreCombustion(self.timer, tm, parent=self)
@@ -918,13 +995,17 @@ class MainWindow(QtWidgets.QMainWindow):
         for w in widgets:
             pressure.addWidget(w)
 
+        # Graphs list
+        graphs_list = [tempOxidizer.graph, tempPipework.graph, tempInjector.graph, tempCombustion.graph, tempNozzle.graph, preOxidizer.graph, preInjector.graph, preCombustion.graph, preAmbient.graph]
+
+        
         # Others
         # Right Column
         others = QtWidgets.QVBoxLayout()
 
         electrical = Electrical(self.timer, tm)
         status = Status(self.timer, tm)
-        diagnostic = Diagnostic(self.timer, tm)
+        diagnostic = Diagnostic(self.timer, tm, graphs_list + electrical.listGraphs)
 
         sizePolicy = electrical.sizePolicy()
         sizePolicy.setVerticalPolicy(QtWidgets.QSizePolicy.Expanding)

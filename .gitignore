@@ -7,3 +7,4 @@ doc
 radio_test.py
 utils/dummyserialwrapper.py
 utils/sensors.py
+test.py
