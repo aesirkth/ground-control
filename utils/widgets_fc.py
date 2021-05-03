@@ -64,19 +64,18 @@ class PowerMode(QtWidgets.QPushButton):
 		self.tc.set_flight_power_mode(None).then(self._powerIsOff) # TBD
 
 	def _timeSync(self, result):
-		# if not result:
-		#     print("Flight power: Got no response")
-		#     return
-
-		# PUT HERE SOME VERIFICATION OF THE POWER STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
-
+		if not result:
+		    print("Flight power: Got no response")
+		    return
+		# a response means that it was succesful
 		print("Power on")
 		self.tc.time_sync().then(self._powerIsOn)
 
 	def _powerIsOn(self, result):
-		# if not result:
-		#     print("Time Sync: Got no response")
-		#     return
+		# we don't really have a power on message yet
+		#if not result:
+		#    print("Power On: Got no response")
+		#    return
 
 		# PUT HERE SOME VERIFICATION OF THE POWER STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
 
@@ -91,9 +90,10 @@ class PowerMode(QtWidgets.QPushButton):
 
 
 	def _powerIsOff(self, result):
-		# if not result:
-		#     print("Time Sync: Got no response")
-		#     return
+		# we don't really have a power off message yet
+		#if not result:
+		#    print("Power Off: Got no response")
+		#    return
 
 		# PUT HERE SOME VERIFICATION OF THE POWER STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
 
@@ -145,14 +145,12 @@ class RadioEquipment(QtWidgets.QWidget):
 		self.tc.set_radio_emitters(True, self.state[1]).then(self._updateFVP)
 
 	def _updateFVP(self, result):
-		# if not result:
-		#     print("FVP: Got no response")
-		#     return
+		if not result:
+			print("FVP: Got no response")
+			return
 
-		# PUT HERE SOME VERIFICATION OF THE FVP STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
 		# DON'T FORGET TO ENABLE THE BUTTON
-
-		self.state[0] = True
+		self.state[0] = tc.data["flight_controller"]["return_radio_transmitters"]["is_fpv_en"].get_last()
 		print("FVP enabled")
 
 
@@ -161,14 +159,12 @@ class RadioEquipment(QtWidgets.QWidget):
 		self.tc.set_radio_emitters(self.state[0], True).then(self._updateTM)
 
 	def _updateTM(self, result):
-		# if not result:
-		#     print("TM: Got no response")
-		#     return
-
-		# PUT HERE SOME VERIFICATION OF THE TM STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
+		if not result:
+		    print("TM: Got no response")
+		    return
 		# DON'T FORGET TO ENABLE THE BUTTON
 
-		self.state[1] = True
+		self.state[1] = tc.data["flight_controller"]["return_radio_transmitters"]["is_tm_en"].get_last()
 		print("TM enabled")
 
 	def setEnabled(self, b):
@@ -224,14 +220,11 @@ class Parachute(QtWidgets.QWidget):
 		self.tc.set_parachute(True, False, False).then(self._updateArming)
 
 	def _updateArming(self, result):
-		# if not result:
-		#     print("Parachute arming: Got no response")
-		#     return
-
-		# PUT HERE SOME VERIFICATION OF THE PARACHUTE STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
+		if not result:
+		    print("Parachute arming: Got no response")
+		    return
 		# DON'T FORGET TO ENABLE THE BUTTON
-
-		self.state[0] = True
+		self.state[0] = self.tc.data["flight_controller"]["return_parachute_status"]["parachute_armed"]
 		print("Parachute armed")
 		self.en1.setEnabled(True)
 		self.en2.setEnabled(True)
@@ -241,14 +234,11 @@ class Parachute(QtWidgets.QWidget):
 		self.tc.set_parachute(True, True, self.state[2]).then(self._updateEn1)
 
 	def _updateEn1(self, result):
-		# if not result:
-		#     print("Parachute arming: Got no response")
-		#     return
-
-		# PUT HERE SOME VERIFICATION OF THE PARACHUTE STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
+		if not result:
+		    print("Parachute 1: Got no response")
+		    return
 		# DON'T FORGET TO ENABLE THE BUTTON
-
-		self.state[1] = True
+		self.state[1] = self.tc.data["flight_controller"]["return_parachute_status"]["parachute1_en"].get_last()
 		print("Parachute 1 enable")
 
 	def _functionEn2(self):
@@ -256,14 +246,11 @@ class Parachute(QtWidgets.QWidget):
 		self.tc.set_parachute(True, self.state[1], True).then(self._updateEn2)
 
 	def _updateEn2(self, result):
-		# if not result:
-		#     print("Parachute arming: Got no response")
-		#     return
-
-		# PUT HERE SOME VERIFICATION OF THE PARACHUTE STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
+		if not result:
+		    print("Parachute arming: Got no response")
+		    return
 		# DON'T FORGET TO ENABLE THE BUTTON
-
-		self.state[2] = True
+		self.state[2] = self.tc.data["flight_controller"]["return_parachute_status"]["parachute2_en"].get_last()
 		print("Parachute 2 enable")
 
 	def setEnabled(self, b):
@@ -319,16 +306,15 @@ class Backup(QtWidgets.QWidget):
 	def _functionEnable(self):
 		self.enable.setEnabled(False)
 		self.disable.setEnabled(False)
-		# something.then(
-		self._updateEnable(None)
+		self.tc.set_data_logging(True).then(self._updateEnable)
 
 	def _updateEnable(self, result):
-		# if not result:
-		#     print("Enable backup: Got no response")
-		#     return
-
-		# PUT HERE SOME VERIFICATION OF THE STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
-
+		if not result:
+		    print("Enable backup: Got no response")
+		    return
+		if not self.tc.data["flight_controller"]["return_data_logging"]["is_logging_en"].get_last():
+			print("Enable backup: flight controller denied the request")
+			return
 		print("Backup enable")
 		self.enable.setEnabled(True)
 		self.disable.setEnabled(True)
@@ -336,32 +322,30 @@ class Backup(QtWidgets.QWidget):
 	def _functionDisable(self):
 		self.enable.setEnabled(False)
 		self.disable.setEnabled(False)
-		# something.then(
-		self._updateDisable(None)
+		self.tc.set_data_logging(False).then(self._updateDisable)
 
 	def _updateDisable(self, result):
-		# if not result:
-		#     print("Disable backup: Got no response")
-		#     return
-
-		# PUT HERE SOME VERIFICATION OF THE STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
-
+		if not result:
+		    print("Disable backup: Got no response")
+		    return
+		if self.tc.data["flight_controller"]["return_data_logging"]["is_logging_en"].get_last():
+			print("Enable backup: flight controller denied the request")
+			return
 		print("Backup disable")
 		self.enable.setEnabled(True)
 		self.disable.setEnabled(True)
 
 	def _functionSave(self):
 		self.save.setEnabled(False)
-		# something.then(
-		self._updateSave(None)
-
+		self.tc.save_data_to_sd().then(self._updateSave)
 
 	def _updateSave(self, result):
-		# if not result:
-		#     print("Saving backup: Got no response")
-		#     return
-
-		# PUT HERE SOME VERIFICATION OF THE STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
+		if not result:
+		    print("Saving backup: Got no response")
+		    return
+		if not self.tc.data["flight_controller"]["return_dump_flash"]["dump_sd"].get_last():
+		    print("Saving backup: Flight controller denied the request")
+		    return
 
 		print("Backup saved")
 		self.save.setEnabled(True)
@@ -485,11 +469,11 @@ class RadioEquipmentStatus(QtWidgets.QWidget):
 		self.setLayout(layout)
 
 	def _updateFPV(self):
-		return "No"
+		return self.tc.data["flight_controller"]["return_radio_equipment"]["is_fpv_en"].get_last()
 
 
 	def _updateTM(self):
-		return "No"
+		return self.tc.data["flight_controller"]["return_radio_equipment"]["is_tm_en"].get_last()
 
 
 class ParachuteStatus(QtWidgets.QWidget):
@@ -520,15 +504,14 @@ class ParachuteStatus(QtWidgets.QWidget):
 		self.setLayout(layout)
 
 	def _updateArmed(self):
-		return "No"
-
+		return self.tc.data["flight_controller"]["return_parachute_status"]["is_parachute_armed"].get_last()
 
 	def _updateEn1(self):
-		return "Disable"
+		return self.tc.data["flight_controller"]["return_parachute_status"]["is_parachute1_en"].get_last()
 
 
 	def _updateEn2(self):
-		return "Disable"
+		return self.tc.data["flight_controller"]["return_parachute_status"]["is_parachute2_en"].get_last()
 
 
 class FlightStatus(QtWidgets.QWidget):
@@ -580,11 +563,11 @@ class BatteryStatus(QtWidgets.QWidget):
 
 
 	def _updateBat1(self):
-		return "{:>5.2f} V".format(3.141592653589793)
+		return self.tc.data["flight_controller"]["onboard_battery_voltage"]["battery_1"].get_last()
 
 
 	def _updateBat2(self):
-		return "{:>5.2f} V".format(2.718281828459045)
+		return self.tc.data["flight_controller"]["onboard_battery_voltage"]["battery_2"].get_last()
 
 
 class GNSSStatus(QtWidgets.QWidget):
@@ -596,6 +579,7 @@ class GNSSStatus(QtWidgets.QWidget):
 		lat = ValueIndicator("Latitude:", timer, self._updateLat)
 		lon = ValueIndicator("Longitude:", timer, self._updateLon)
 		hdop = ValueIndicator("Horizontal dilution\nof precision:", timer, self._updateHDOP)
+		n_satellites =hdop = ValueIndicator("Amount of satellites:", timer, self._updateSatellites)
 
 		# abort.title.setFixedHeight(12)
 		# abort.indic.setFixedHeight(12)
@@ -617,16 +601,19 @@ class GNSSStatus(QtWidgets.QWidget):
 		self.setLayout(layout)
 
 	def _updateTime(self):
-		return "-"
+		return self.tc.data["flight_controller"]["gnss_data"]["gnss_time"].get_last()
 
 	def _updateLat(self):
-		return "-"
+		return self.tc.data["flight_controller"]["gnss_data"]["latitude"].get_last()
 
 	def _updateLon(self):
-		return "-"
+		return self.tc.data["flight_controller"]["gnss_data"]["longitude"].get_last()
 
 	def _updateHDOP(self):
-		return "-"
+		return self.tc.data["flight_controller"]["gnss_data"]["h_dop"].get_last()
+
+	def _updateSatellites(self):
+		return self.tc.data["flight_controller"]["gnss_data"]["n_satellites"].get_last()
 
 
 class FlightStatus2(QtWidgets.QWidget):
@@ -666,7 +653,7 @@ class SerialStatus(QtWidgets.QLabel):
 
 
 	def _update(self):
-		pass
+		return self.tc.is_serial_open()
 
 
 class BackupStatus(ValueIndicator):
@@ -675,13 +662,14 @@ class BackupStatus(ValueIndicator):
 		self.tc = tc
 
 	def _updateFunction(self):
-		return "No"
+		return self.tc.data["flight_controller"]["return_data_logging"]["is_logging_en"].get_last()
 
 
 class DebugStatus(QtWidgets.QWidget):
 	def __init__(self, tc, timer, flightController, parent=None):
 		super(DebugStatus, self).__init__(parent=parent)
 
+		self.tc = tc
 		self.setMinimumSize(230, 0)
 
 		backupStatus = BackupStatus(tc, timer)
@@ -704,7 +692,7 @@ class DebugStatus(QtWidgets.QWidget):
 		self.setLayout(layout)
 
 	def _updateTime(self):
-		return "{:>5.3f} s".format(1.23456)
+		return "{:.2f}".format(self.tc.seconds_since_last_message())
 
 
 # Main window

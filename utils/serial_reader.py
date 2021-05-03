@@ -164,7 +164,7 @@ class SerialReader():
         self.ser = None
         self.stream = None
         self.client = False
-        self.last_message_time = LIVE
+        self.last_message_time = time.time()
         self.last_timestamp = 0
         self.time_sync_state = 0
         self.start_time = None
@@ -184,10 +184,10 @@ class SerialReader():
 
     #if the serial port is open
     def is_serial_open(self):
-        return self.ser_is_active
+        return self.serial_is_active
     
     #if the is reading either from file or serial
-    def is_serial_open(self):
+    def is_stream_open(self):
         return self.stream_is_active
 
     #pause the reader thread
