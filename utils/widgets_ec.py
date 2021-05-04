@@ -26,6 +26,19 @@ class TitleWidget(QtWidgets.QLabel):
 		self.setFixedHeight(35)
 
 
+class OpenSerial(QtWidgets.QPushButton):
+	def __init__(self, parent):
+		self.parent = parent
+		text = "Open serial"
+		self.shortcut = "Ctrl+O"
+		tooltip = "{} ({})".format("Open the serial communication", self.shortcut)
+
+		super(OpenSerial, self).__init__(text)
+		self.setShortcut(self.shortcut) # Shortcut key
+		self.clicked.connect(self.parent.parent()._open_serial)
+		self.setToolTip(tooltip) # Tool tip
+
+
 class PowerMode(QtWidgets.QPushButton):
 	def __init__(self, tc, engineState):
 		text = "Turn on"
@@ -41,11 +54,11 @@ class PowerMode(QtWidgets.QPushButton):
 		self.engineState.power = self
 
 		self.tc = tc
-
+		self.state = False # Power is off
+		self.setEnabled(False)
 
 	def _powerOn(self):
 		self.tc.set_engine_power_mode(None).then(self._update) # TBD
-
 
 	def _update(self, result):
 		# if not result:
@@ -56,6 +69,7 @@ class PowerMode(QtWidgets.QPushButton):
 
 		self.engineState.setEnabled(True)
 		self.setEnabled(False)
+		self.state = True
 		print("Engine on")
 
 
@@ -113,6 +127,7 @@ class EngineState(QtWidgets.QWidget):
 		#     return
 		print("Abort the mission !")
 		self.power.setEnabled(True)
+		self.power.state = False
 
 	def _functionArming(self):
 		self.arming.setEnabled(False)
@@ -180,9 +195,10 @@ class EngineController(QtWidgets.QWidget):
 		super(EngineController, self).__init__(parent=parent)
 
 		title = TitleWidget("Engine Controller")
+		self.serial = OpenSerial(self)
 		fire = FireRocket(tc)
 		engineState = EngineState(tc, fire)
-		power = PowerMode(tc, engineState)
+		self.power = PowerMode(tc, engineState)
 
 
 		title.setMinimumSize(250, 0)
@@ -191,7 +207,7 @@ class EngineController(QtWidgets.QWidget):
 		layout = QtWidgets.QVBoxLayout()
 		layout.setContentsMargins(5,5,5,5)
 		layout.setSpacing(10)
-		widgets = [title, power, engineState, fire]
+		widgets = [title, self.serial, self.power, engineState, fire]
 		
 		for w in widgets:
 			layout.addWidget(w)

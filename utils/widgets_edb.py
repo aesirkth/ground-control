@@ -829,11 +829,8 @@ class MenuButton(QtWidgets.QPushButton):
 
 
 class MainMenu(QtWidgets.QWidget):
-    def __init__(self, timer, tm, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.timer = timer
-        self.tm = tm
-
         self.setAcceptDrops(True) # So one can drop a file to open it
 
         # Background color
@@ -906,9 +903,8 @@ class InfoDialog(QtWidgets.QDialog):
 
 
 class MenuBar(QtWidgets.QMenuBar):
-    def __init__(self, timer, tm, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent=parent)
-        self.timer, self.tm = timer, tm
 
         # File
         self.fileMenu = QtWidgets.QMenu("&File", self)
@@ -1042,11 +1038,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.widget)
 
         # Main menu
-        self.menu = MainMenu(self.timer, tm, parent=self)
+        self.menu = MainMenu(parent=self)
         electrical.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
 
         # Menu bar
-        self.menuBar = MenuBar(self.timer, tm, parent=self)
+        self.menuBar = MenuBar(parent=self)
         self.setMenuBar(self.menuBar)
 
     def closeEvent(self, event):

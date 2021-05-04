@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QColor
-from utils.widgets_ec import ValueIndicator
+from utils.widgets_ec import ValueIndicator, OpenSerial
 
 
 class TitleWidget(QtWidgets.QLabel):
@@ -44,7 +44,7 @@ class PowerMode(QtWidgets.QPushButton):
 		self.tc = tc
 
 		self.state = False # Power is off
-
+		self.setEnabled(False)
 
 	def _power(self):
 		if self.state:
@@ -363,10 +363,11 @@ class FlightController(QtWidgets.QWidget):
 		super(FlightController, self).__init__(parent=parent)
 
 		title = TitleWidget("Flight Controller")
+		self.serial = OpenSerial(self)
 		radioEquipment = RadioEquipment(tc)
 		parachute = Parachute(tc)
 		self.backup = Backup(tc)
-		power = PowerMode(tc, radioEquipment, parachute, self.backup)
+		self.power = PowerMode(tc, radioEquipment, parachute, self.backup)
 
 
 		title.setMinimumSize(250, 0)
@@ -374,7 +375,7 @@ class FlightController(QtWidgets.QWidget):
 		layout = QtWidgets.QVBoxLayout()
 		layout.setContentsMargins(5,5,5,5)
 		layout.setSpacing(10)
-		widgets = [title, power, radioEquipment, parachute]
+		widgets = [title, self.serial, self.power, radioEquipment, parachute]
 		
 		for w in widgets:
 			layout.addWidget(w)
