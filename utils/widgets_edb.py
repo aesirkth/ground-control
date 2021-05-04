@@ -4,7 +4,6 @@ import pyqtgraph as pg
 from PyQt5.QtGui import QPalette, QColor
 from time import time
 from random import randint
-import utils.fc as fc
 
 
 INTERVAL = 30 # delay in ms - increase it if the dashboard is freezing, decrease to speed up the update rate

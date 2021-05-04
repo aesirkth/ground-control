@@ -1,6 +1,5 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPalette, QColor
 from utils.widgets_edb import DataWidget
 
 
@@ -181,7 +180,7 @@ class FireRocket(QtWidgets.QPushButton):
 		fonction = tc.fire_rocket
 		shortcut = "Ctrl+F"
 		tooltip = "{} ({})".format(text, shortcut)
-		debug = "Fire Rocket"
+		# debug = "Fire Rocket"
 
 		super(FireRocket, self).__init__(text)
 		self.setShortcut(shortcut)  #shortcut key

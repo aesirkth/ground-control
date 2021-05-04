@@ -6,7 +6,6 @@ from utils.widgets_ec import EngineController, EngineStatus
 from utils.widgets_fc import FlightController, FlightStatus, FlightStatus2, DebugStatus
 from utils.widgets_edb import InfoDialog
 from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtGui import QPalette, QColor
 
 INTERVAL = 30
 

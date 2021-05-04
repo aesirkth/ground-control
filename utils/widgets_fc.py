@@ -1,6 +1,5 @@
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPalette, QColor
 from utils.widgets_ec import ValueIndicator, OpenSerial
 
 
@@ -134,7 +133,7 @@ class RadioEquipment(QtWidgets.QWidget):
 
 		self.tm = QtWidgets.QPushButton("Enable tm")
 		self.tm.clicked.connect(self._functionTM)
-		self.tm.setToolTip(tooltipFVP) # Tool tip
+		self.tm.setToolTip(tooltipTM) # Tool tip
 		self.tm.setEnabled(False)
 		layout.addWidget(self.tm, 1, 1, 1, 1)
 
@@ -150,7 +149,7 @@ class RadioEquipment(QtWidgets.QWidget):
 			return
 
 		# DON'T FORGET TO ENABLE THE BUTTON
-		self.state[0] = tc.data["flight_controller"]["return_radio_transmitters"]["is_fpv_en"].get_last()
+		self.state[0] = self.tc.data["flight_controller"]["return_radio_transmitters"]["is_fpv_en"].get_last()
 		print("FVP enabled")
 
 
@@ -164,7 +163,7 @@ class RadioEquipment(QtWidgets.QWidget):
 		    return
 		# DON'T FORGET TO ENABLE THE BUTTON
 
-		self.state[1] = tc.data["flight_controller"]["return_radio_transmitters"]["is_tm_en"].get_last()
+		self.state[1] = self.tc.data["flight_controller"]["return_radio_transmitters"]["is_tm_en"].get_last()
 		print("TM enabled")
 
 	def setEnabled(self, b):
@@ -580,7 +579,7 @@ class GNSSStatus(QtWidgets.QWidget):
 		lat = ValueIndicator("Latitude:", timer, self._updateLat)
 		lon = ValueIndicator("Longitude:", timer, self._updateLon)
 		hdop = ValueIndicator("Horizontal dilution\nof precision:", timer, self._updateHDOP)
-		n_satellites =hdop = ValueIndicator("Amount of satellites:", timer, self._updateSatellites)
+		n_satellites = ValueIndicator("Amount of satellites:", timer, self._updateSatellites)
 
 		# abort.title.setFixedHeight(12)
 		# abort.indic.setFixedHeight(12)
@@ -599,6 +598,7 @@ class GNSSStatus(QtWidgets.QWidget):
 		layout.addWidget(lat)
 		layout.addWidget(lon)
 		layout.addWidget(hdop)
+		layout.addWidget(n_satellites)
 		self.setLayout(layout)
 
 	def _updateTime(self):
