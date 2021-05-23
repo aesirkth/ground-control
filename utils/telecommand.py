@@ -11,10 +11,10 @@ import utils.fc as protocol
 ####
 # class to handle the telecommand link
 ####
-# source can be "flight" or "engine"
+# source can be "flight_controller" or "engine"
 #
 # self.data[*source*] - contains all the decoded data in TimeSeries
-#                       the source can be  either "flight" or "engine"
+#                       the source can be  either "flight_controller" or "engine"
 # 
 ##
 # set_engine_power_mode(self, TBD)
@@ -26,7 +26,7 @@ import utils.fc as protocol
 # set_parachute(self, armed, enable_1, enable_2)
 class Telecommand(SerialReader):
     def __init__(self, **kwargs):
-        super().__init__(device = "flight_controller", **kwargs)
+        super().__init__(device = "RFD", **kwargs)
 
     def __send_header(self, id):
         self.ser.write(bytes(SEPARATOR + [id]))
@@ -35,7 +35,7 @@ class Telecommand(SerialReader):
         data = self.data[source][datatype][field]
         promise = Promise()
         if self.serial_is_active:
-            tries = 50
+            tries = 80
         else:
             tries = 1
         def thread():
@@ -47,6 +47,7 @@ class Telecommand(SerialReader):
                     promise.resolve(True)
                     break
             else:
+
                 promise.resolve(False)
         t = Thread(target = thread)
         t.start()
@@ -91,14 +92,14 @@ class Telecommand(SerialReader):
         msg = protocol.time_sync_from_ground_station_to_flight_controller()
         msg.set_system_time(time)
         self.__send_message(msg)
-        return self.__wait_for_data("flight", "return_time_sync", "value")
+        return self.__wait_for_data("flight_controller", "return_time_sync", "value")
 
     # set the power mode of the flight computer
     def set_flight_power_mode(self, TBD):
         if not self.is_serial_open():
             # return a promise that always fails
             return self.__wait_for_data("nothing", " ", " ")
-        return self.__wait_for_data("flight", "TBD", "TBD")
+        return self.__wait_for_data("flight_controller", "TBD", "TBD")
         #TBD
 
     # turn on/off radio transmitters
@@ -114,7 +115,7 @@ class Telecommand(SerialReader):
         msg.set_is_fpv_en(fpv)
         msg.set_is_tm_en(tm)
         self.__send_message(msg)
-        return self.__wait_for_data("flight", "return_radio_equipment", "is_fpv_en")
+        return self.__wait_for_data("flight_controller", "return_radio_equipment", "is_fpv_en")
 
     # set the parachutes
     # armed - arm the parachute
@@ -131,7 +132,7 @@ class Telecommand(SerialReader):
         msg.set_is_parachute1_en(enable_1)
         msg.set_is_parachute2_en(enable_2)
         self.__send_message(msg)
-        return self.__wait_for_data("flight", "return_parachute_status", "is_parachute_armed")
+        return self.__wait_for_data("flight_controller", "return_parachute_output", "is_parachute_armed")
 
     def set_data_logging(self, logging_enabled):
         if not self.is_serial_open():
@@ -140,7 +141,7 @@ class Telecommand(SerialReader):
         msg = protocol.set_data_logging_from_ground_station_to_flight_controller()
         msg.set_is_logging_en(logging_enabled)
         self.__send_message(msg)
-        return self.__wait_for_data("flight", "data_logging", "is_logging_en")
+        return self.__wait_for_data("flight_controller", "data_logging", "is_logging_en")
     
     def save_data_to_sd(self):
         if not self.is_serial_open():
@@ -149,4 +150,4 @@ class Telecommand(SerialReader):
         msg = protocol.dump_flash_from_ground_station_to_flight_controller()
         msg.set_dump_sd(True)
         self.__send_message(msg)
-        return self.__wait_for_data("flight","return_dump_flash", "dump_sd")
+        return self.__wait_for_data("flight_controller","return_dump_flash", "dump_sd")

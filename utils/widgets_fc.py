@@ -60,12 +60,10 @@ class PowerMode(QtWidgets.QPushButton):
 		self.radioEquipment.setEnabled(False)
 		self.parachute.setEnabled(False)
 		self.backup.setEnabled(False)
-		self.tc.set_flight_power_mode(None).then(self._powerIsOff) # TBD
-
+		#self.tc.set_flight_power_mode(None).then(self._powerIsOff) # TBD
+		self._powerIsOff()
+		
 	def _timeSync(self, result):
-		if not result:
-		    print("Flight power: Got no response")
-		    return
 		# a response means that it was succesful
 		print("Power on")
 		self.tc.time_sync().then(self._powerIsOn)
@@ -75,6 +73,9 @@ class PowerMode(QtWidgets.QPushButton):
 		#if not result:
 		#    print("Power On: Got no response")
 		#    return
+		if not result:
+		    print("Flight power: Got no response")
+		    return
 
 		# PUT HERE SOME VERIFICATION OF THE POWER STATUS (WAIT FOR THE DATA PROTOCOL TO BE UPDATED)
 

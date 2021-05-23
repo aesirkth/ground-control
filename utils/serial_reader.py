@@ -93,10 +93,13 @@ class SerialWrapper():
             buff = self.ser.read_all()
             return bonjour in buff
         elif self.device == "flight_controller":
-            handshake = bytes(SEPARATOR + [ID_HANDSHAKE]) 
-            response = bytes(SEPARATOR + [ID_RETURN_HANDSHAKE])
+            msg = protocol.handshake_from_ground_station_to_flight_controller()
+            reply = protocol.return_handshake_from_flight_controller_to_ground_station()
+            handshake = bytes(SEPARATOR + [msg.get_id()]) 
+            response = bytes(SEPARATOR + [reply.get_id()])
+            self.ser.read_all()
             self.ser.write(handshake)
-            time.sleep(5)
+            time.sleep(0.5)
             buff = self.ser.read_all()
             return response in buff
         else:
@@ -110,8 +113,8 @@ class SerialWrapper():
         buf = []
         buf += SEPARATOR
         buf += [msg.get_id()]
-        buf += msg.get_buf()
-        self.backup.write(bytes(msg))
+        buf += msg.build_buf()
+        self.backup.write(bytes(buf))
 
     #start and open serial
     def open_serial(self):
@@ -323,12 +326,12 @@ class SerialReader():
                 continue
             #timestamp if reading from serial
             if self.stream == self.ser:
-                self.ser.timestamp((time.time() - self.start_time) * 1000)
+                self.ser.timestamp(self.get_current_time() * 1000)
             frame_id = self.stream.read(1)[0]
 
             #we have two different protocol definitions so decide on which one ot use
             #try to get fc decoder
-            fc_decoder = protocol.id_to_receiver(frame_id)
+            fc_decoder = protocol.id_to_message_class(frame_id)
             if frame_id in self.decoders:
                 ec_decoder = self.decoders[frame_id]
             else:
@@ -337,7 +340,8 @@ class SerialReader():
             if fc_decoder:
                 self.read_fc_data(fc_decoder)
             elif ec_decoder:
-                self.read_ec_data(ec_decoder)
+                pass
+                #self.read_ec_data(ec_decoder)
             else:
                 print("invalid id: ", frame_id)
             
@@ -349,7 +353,7 @@ class SerialReader():
             return    
         decoder.parse_buf(buf)
         decoded_data = decoder.get_all_data()
-        source = decoder.get_source()
+        source = decoder.get_sender()
         message = decoder.get_message()
         sensor_index = None
         if len(decoded_data) == 0:
@@ -367,6 +371,7 @@ class SerialReader():
                 name += str(sensor_index)
                 sensor_index = None
             current_time = self.decide_on_time(name, value)
+            print("bajs", message.name, name)
             self.data[source.name][message.name][name].x.append(current_time)
             self.data[source.name][message.name][name].y.append(value)
 
