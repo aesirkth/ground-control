@@ -3,6 +3,14 @@ from PyQt5.QtCore import Qt
 from utils.widgets_edb import DataWidget
 
 
+class LargePushButton(QtWidgets.QPushButton):
+	def __init__(self, text, parent=None):
+		super().__init__(text, parent=parent)
+		sizePolicy = self.sizePolicy()
+		sizePolicy.setVerticalPolicy(QtWidgets.QSizePolicy.Expanding)
+		self.setSizePolicy(sizePolicy)
+
+
 class TitleWidget(QtWidgets.QLabel):
 	"""Widget use to write columns' title"""
 	def __init__(self, text, parent=None):
@@ -38,7 +46,7 @@ class OpenSerial(QtWidgets.QPushButton):
 		self.setToolTip(tooltip) # Tool tip
 
 
-class PowerMode(QtWidgets.QPushButton):
+class PowerMode(LargePushButton):
 	def __init__(self, tc, engineState):
 		text = "Turn on"
 		shortcut = "Ctrl+M"
@@ -87,7 +95,7 @@ class EngineState(QtWidgets.QWidget):
 		layout = QtWidgets.QGridLayout()
 		layout.setContentsMargins(0,0,0,0)
 
-		self.abort = QtWidgets.QPushButton("Abort")
+		self.abort = LargePushButton("Abort")
 		self.abort.setShortcut(shortcutAbort)  # Shortcut key
 		self.abort.clicked.connect(self._functionAbort)
 		self.abort.setToolTip(tooltipAbort) # Tool tip
@@ -98,13 +106,13 @@ class EngineState(QtWidgets.QWidget):
 		self.abort.setSizePolicy(sizePolicy)
 		layout.addWidget(self.abort, 0, 0, 3, 1)
 
-		self.arming = QtWidgets.QPushButton("Arming")
+		self.arming = LargePushButton("Arming")
 		self.arming.clicked.connect(self._functionArming)
 		self.arming.setToolTip(tooltipArming) # Tool tip
 		self.arming.setEnabled(False)
 		layout.addWidget(self.arming, 1, 1, 1, 2)
 
-		self.enable = QtWidgets.QPushButton("Enable")
+		self.enable = LargePushButton("Enable")
 		self.enable.clicked.connect(self._functionEnable)
 		self.enable.setToolTip(tooltipEnable) # Tool tip
 		self.enable.setEnabled(False)
@@ -174,7 +182,7 @@ class EngineState(QtWidgets.QWidget):
 			self.status.setText("Engine off")
 
 
-class FireRocket(QtWidgets.QPushButton):
+class FireRocket(LargePushButton):
 	def __init__(self, tc):
 		text = "Fire the rocket"
 		fonction = tc.fire_rocket

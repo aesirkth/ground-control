@@ -122,6 +122,7 @@ class MainWindow(QtWidgets.QMainWindow):
         def closeEvent(event):
             tc.stop()
             event.accept()
+
         self.closeEvent = closeEvent
 
     def _open_serial(self):

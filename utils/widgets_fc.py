@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
-from utils.widgets_ec import ValueIndicator, OpenSerial
+from utils.widgets_ec import ValueIndicator, OpenSerial, LargePushButton
 
 
 class TitleWidget(QtWidgets.QLabel):
@@ -25,7 +25,7 @@ class TitleWidget(QtWidgets.QLabel):
 		self.setFixedHeight(35)
 
 
-class PowerMode(QtWidgets.QPushButton):
+class PowerMode(LargePushButton):
 	def __init__(self, tc, radioEquipment, parachute, backup):
 		text = "Turn on"
 		self.shortcut = "Ctrl+P"
@@ -65,7 +65,6 @@ class PowerMode(QtWidgets.QPushButton):
 
 	def _powerIsOn(self, result):
 		# we don't really have a power on message yet
-		print(result)
 		if not result:
 			print("Flight power: Got no response")
 			self.setEnabled(True)
@@ -120,13 +119,13 @@ class RadioEquipment(QtWidgets.QWidget):
 		self.title.setFont(font)
 		layout.addWidget(self.title, 0, 0, 1, 2)
 
-		self.fpv = QtWidgets.QPushButton("Enable fvp")
+		self.fpv = LargePushButton("Enable fvp")
 		self.fpv.clicked.connect(self._functionFVP)
 		self.fpv.setToolTip(tooltipFVP) # Tool tip
 		self.fpv.setEnabled(False)
 		layout.addWidget(self.fpv, 1, 0, 1, 1)
 
-		self.tm = QtWidgets.QPushButton("Enable tm")
+		self.tm = LargePushButton("Enable tm")
 		self.tm.clicked.connect(self._functionTM)
 		self.tm.setToolTip(tooltipTM) # Tool tip
 		self.tm.setEnabled(False)
@@ -189,19 +188,19 @@ class Parachute(QtWidgets.QWidget):
 		self.title.setFont(font)
 		layout.addWidget(self.title, 0, 0, 1, 2)
 
-		self.arming = QtWidgets.QPushButton("Arming")
+		self.arming = LargePushButton("Arming")
 		self.arming.clicked.connect(self._functionArming)
 		self.arming.setToolTip(tooltipArming) # Tool tip
 		self.arming.setEnabled(False)
 		layout.addWidget(self.arming, 1, 0, 1, 2)
 
-		self.en1 = QtWidgets.QPushButton("Enable 1")
+		self.en1 = LargePushButton("Enable 1")
 		self.en1.clicked.connect(self._functionEn1)
 		self.en1.setToolTip(tooltipEn1) # Tool tip
 		self.en1.setEnabled(False)
 		layout.addWidget(self.en1, 2, 0, 1, 1)
 
-		self.en2 = QtWidgets.QPushButton("Enable 2")
+		self.en2 = LargePushButton("Enable 2")
 		self.en2.clicked.connect(self._functionEn2)
 		self.en2.setToolTip(tooltipEn2) # Tool tip
 		self.en2.setEnabled(False)
@@ -274,13 +273,13 @@ class Backup(QtWidgets.QWidget):
 		layout.addWidget(self.title)
 
 		layout1 = QtWidgets.QVBoxLayout()
-		self.enable = QtWidgets.QPushButton("Enable")
+		self.enable = LargePushButton("Enable")
 		self.enable.clicked.connect(self._functionEnable)
 		self.enable.setToolTip(tooltipEnable) # Tool tip
 		self.enable.setEnabled(False)
 		layout1.addWidget(self.enable)
 
-		self.disable = QtWidgets.QPushButton("Disable")
+		self.disable = LargePushButton("Disable")
 		self.disable.clicked.connect(self._functionDisable)
 		self.disable.setToolTip(tooltipDisable) # Tool tip
 		self.disable.setEnabled(False)
@@ -288,7 +287,7 @@ class Backup(QtWidgets.QWidget):
 
 		layout2 = QtWidgets.QHBoxLayout()
 		layout2.addLayout(layout1)
-		self.save = QtWidgets.QPushButton("Save")
+		self.save = LargePushButton("Save")
 		self.save.clicked.connect(self._functionSave)
 		self.save.setToolTip(tooltipSave) # Tool tip
 		self.save.setEnabled(False)
