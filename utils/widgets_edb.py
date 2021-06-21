@@ -156,6 +156,7 @@ class GraphWidget(pg.PlotWidget):
 
 
 class GraphPlusWidget(QtWidgets.QWidget):
+	"""A GraphWidget with the last value of each line written on the right side"""
 	def __init__(self, timer, tm, Graph, updateFields=[], formatting="{:>5.1f}", parent=None):
 		super().__init__(parent=parent)
 		self.graph = Graph(timer, tm, parent=self)
@@ -1038,7 +1039,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		# Main menu
 		self.menu = MainMenu(parent=self)
-		electrical.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
 
 		# Menu bar
 		self.menuBar = MenuBar(parent=self)
