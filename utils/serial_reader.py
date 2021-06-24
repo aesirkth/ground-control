@@ -8,6 +8,7 @@ from threading import Thread
 from collections import defaultdict
 import json
 import utils.fc as protocol
+import utils.EDDA as edda
 from utils.definitions import *
 from utils.data_handling import (TimeSeries, write_data_db, get_current_time,
     formatted_time_to_sec, get_current_time_sec, NumDecoder, EnumDecoder,
@@ -332,16 +333,13 @@ class SerialReader():
             #we have two different protocol definitions so decide on which one ot use
             #try to get fc decoder
             fc_decoder = protocol.id_to_message_class(frame_id)
-            if frame_id in self.decoders:
-                ec_decoder = self.decoders[frame_id]
-            else:
-                ec_decoder = None
+            ec_decoder = edda.id_to_message_class(frame_id)
 
             if fc_decoder:
-                self.read_fc_data(fc_decoder)
+                self.read_data(fc_decoder)
             elif ec_decoder:
                 pass
-                #self.read_ec_data(ec_decoder)
+                self.read_data(ec_decoder)
             else:
                 print("invalid id: ", frame_id)
             
@@ -374,29 +372,3 @@ class SerialReader():
             print("bajs", message.name, name)
             self.data[source.name][message.name][name].x.append(current_time)
             self.data[source.name][message.name][name].y.append(value)
-
-    def read_ec_data(self, decoders):
-        decoded_data = []
-        #run through all decoders
-        for decoder in decoders:
-            size = decoder.get_size()
-            buf = self.stream.read(size)
-            if len(buf) != size:
-                print("invalid length")
-                continue
-            decoded_data += decoder.decode(buf)
-        sensor_index = None
-        for single_data in decoded_data:
-            if single_data.tree_pos[-1] == "sensor_index":
-                sensor_index = single_data.value
-                continue
-            #add the sensor index to the measurement so e.g. temperature becomes temperature2
-            if sensor_index != None:
-                single_data.tree_pos[-1] += str(sensor_index)
-            current_time = self.decide_on_time(single_data.tree_pos[-1], single_data.value)
-            current_pos = self.data
-            #get where to save the data
-            for key in single_data.tree_pos:
-                current_pos = current_pos[key]
-            current_pos.x.append(current_time)
-            current_pos.y.append(single_data.value)

@@ -230,7 +230,7 @@ class Parachute(QtWidgets.QWidget):
 		self.en2.setEnabled(True)
 
 	def _functionEn1(self):
-		self.en1.setEnabled(False)
+		#self.en1.setEnabled(False)
 		self.tc.set_parachute(True, True, self.state[2]).then(self._updateEn1)
 
 	def _updateEn1(self, result):
@@ -242,7 +242,7 @@ class Parachute(QtWidgets.QWidget):
 		print("Parachute 1 enable")
 
 	def _functionEn2(self):
-		self.en2.setEnabled(False)
+		#self.en2.setEnabled(False)
 		self.tc.set_parachute(True, self.state[1], True).then(self._updateEn2)
 
 	def _updateEn2(self, result):
