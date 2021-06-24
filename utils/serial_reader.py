@@ -343,7 +343,7 @@ class SerialReader():
             else:
                 print("invalid id: ", frame_id)
             
-    def read_fc_data(self, decoder):
+    def read_data(self, decoder):
         length = decoder.get_size()
         buf = self.stream.read(length)
         if len(buf) != length:
