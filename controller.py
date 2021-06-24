@@ -122,6 +122,7 @@ class MainWindow(QtWidgets.QMainWindow):
         def closeEvent(event):
             tc.stop()
             event.accept()
+
         self.closeEvent = closeEvent
 
     def _open_serial(self):
@@ -131,7 +132,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if not self.flightController.power.state:
                 self.flightController.power.setEnabled(True)
             if not self.engineController.power.state:
-                self.flightController.power.setEnabled(True)
+                self.engineController.power.setEnabled(True)
         else:
             self.flightController.serial.setEnabled(True)
             self.engineController.serial.setEnabled(True)
