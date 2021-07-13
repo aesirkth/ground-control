@@ -68,7 +68,7 @@ def getDataBetween(time_list, data_list, t_min, t_max):
 
 def updateData(tm, device, datatype, field):
 
-	t_max = tm.get_current_time2()
+	t_max = tm.get_current_time()
 	t_min = t_max - X_AXIS_LENGTH
 	x, y = tm.data[device][datatype][field].pack()
 	k = len(x)-1
@@ -103,7 +103,7 @@ class Line(object):
 		x, y = self.updateFunction()
 		
 		if AUTO_MODE:
-			t_max = self.tm.get_current_time2()
+			t_max = self.tm.get_current_time()
 			t_min = t_max - X_AXIS_LENGTH
 			self.graph.setXRange(t_min, t_max)
 
