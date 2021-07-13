@@ -1,9 +1,12 @@
+import os.path
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import Qt
 import pyqtgraph as pg
 from PyQt5.QtGui import QPalette, QColor
 from time import time
 from random import randint
+from .save import save_data_to_file_json, load_json
+from datetime import datetime
 
 
 INTERVAL = 30 # delay in ms - increase it if the dashboard is freezing, decrease to speed up the update rate
@@ -65,7 +68,7 @@ def getDataBetween(time_list, data_list, t_min, t_max):
 
 def updateData(tm, device, datatype, field):
 
-	t_max = tm.get_current_time()
+	t_max = tm.get_current_time2()
 	t_min = t_max - X_AXIS_LENGTH
 	x, y = tm.data[device][datatype][field].pack()
 	k = len(x)-1
@@ -100,7 +103,7 @@ class Line(object):
 		x, y = self.updateFunction()
 		
 		if AUTO_MODE:
-			t_max = self.tm.get_current_time()
+			t_max = self.tm.get_current_time2()
 			t_min = t_max - X_AXIS_LENGTH
 			self.graph.setXRange(t_min, t_max)
 
@@ -915,11 +918,19 @@ class MenuBar(QtWidgets.QMenuBar):
 		self.openFile = QtWidgets.QAction("Open &file")
 		self.openFile.triggered.connect(self.parent()._open_file)
 
+		self.saveJSON = QtWidgets.QAction("Save as &JSON")
+		self.saveJSON.triggered.connect(self.parent()._save_to_json)
+
+		self.saveCSV = QtWidgets.QAction("Save as &CSV")
+		self.saveCSV.triggered.connect(self.parent()._save_to_csv)
+
 		self.exit = QtWidgets.QAction("&Exit")
 		self.exit.triggered.connect(self.parent().close)
 
 		self.fileMenu.addAction(self.openSerial)
 		self.fileMenu.addAction(self.openFile)
+		self.fileMenu.addAction(self.saveJSON)
+		self.fileMenu.addAction(self.saveCSV)
 		self.fileMenu.addAction(self.exit)
 		self.addMenu(self.fileMenu)
 
@@ -1067,7 +1078,31 @@ class MainWindow(QtWidgets.QMainWindow):
 
 	def _load_file(self, fname):
 		print("Loading:", fname)
-		self.tm.open_flash_file(fname)
-		# self.tm.open_flash_file("data/test")
-		self.menu.hide()
-		self.timer.start()
+		_, ext = os.path.splitext(fname)
+		if ext == "":
+			self.tm.open_flash_file(fname)
+			# self.tm.open_flash_file("data/test")
+			self.menu.hide()
+			self.timer.start()
+		elif ext == ".json":
+			load_json(self.tm, fname)
+			self.menu.hide()
+			self.timer.start()
+		elif ext == ".csv":
+			#Load csv
+			pass
+		else:
+			print("Cannot load this file")
+
+	def _save_to_json(self):
+		now = datetime.now()
+		date = now.strftime("%Y-%m-%d-%H-%M-%S")
+		fname = self.tm.device + "-" + date + ".json"
+		path = save_data_to_file_json(dict(self.tm.data), fname)
+		print('Save as "{}"'.format(path))
+
+	def _save_to_csv(self):
+		now = datetime.now()
+		date = now.strftime("%Y-%m-%d-%H-%M-%S")
+		fname = self.tm.device + "-" + date + ".csv"
+		# TODO
