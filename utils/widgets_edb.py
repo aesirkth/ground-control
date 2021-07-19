@@ -5,7 +5,7 @@ import pyqtgraph as pg
 from PyQt5.QtGui import QPalette, QColor
 from time import time
 from random import randint
-from .save import save_data_to_file_json, load_json
+from .save import save_data_to_file_json, load_json, save_data_to_file_csv, load_csv
 from datetime import datetime
 
 
@@ -1090,7 +1090,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			self.timer.start()
 		elif ext == ".csv":
 			#Load csv
-			pass
+			print("Cannot load csv files yet")
 		else:
 			print("Cannot load this file")
 
@@ -1098,11 +1098,12 @@ class MainWindow(QtWidgets.QMainWindow):
 		now = datetime.now()
 		date = now.strftime("%Y-%m-%d-%H-%M-%S")
 		fname = self.tm.device + "-" + date + ".json"
-		path = save_data_to_file_json(dict(self.tm.data), fname)
+		path = save_data_to_file_json(self.tm.data, fname)
 		print('Save as "{}"'.format(path))
 
 	def _save_to_csv(self):
 		now = datetime.now()
 		date = now.strftime("%Y-%m-%d-%H-%M-%S")
 		fname = self.tm.device + "-" + date + ".csv"
-		# TODO
+		path = save_data_to_file_csv(self.tm.data, fname)
+		print('Save as "{}"'.format(path))
