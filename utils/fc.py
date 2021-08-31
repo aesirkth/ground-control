@@ -63,26 +63,26 @@ class fields(Enum):
     battery_2 = 12
     ms_since_boot = 13
     gnss_time = 14
-    latitude = 15
-    longitude = 16
-    altitude = 17
-    heading = 18
-    horiz_speed = 19
-    fix_status = 20
-    n_satellites = 21
-    h_dop = 22
-    pressure = 23
-    temperature = 24
-    imu_id = 25
-    accel_x = 26
-    accel_y = 27
-    accel_z = 28
-    gyro_x = 29
-    gyro_y = 30
-    gyro_z = 31
-    magnet_x = 32
-    magnet_y = 33
-    magnet_z = 34
+    altitude = 15
+    heading = 16
+    horiz_speed = 17
+    fix_status = 18
+    n_satellites = 19
+    h_dop = 20
+    pressure = 21
+    temperature = 22
+    imu_id = 23
+    accel_x = 24
+    accel_y = 25
+    accel_z = 26
+    gyro_x = 27
+    gyro_y = 28
+    gyro_z = 29
+    magnet_x = 30
+    magnet_y = 31
+    magnet_z = 32
+    longitude = 33
+    latitude = 34
     differential_pressure = 35
 class messages(Enum):
     local_timestamp = 0
@@ -101,13 +101,12 @@ class messages(Enum):
     return_dump_flash = 13
     return_handshake = 14
     ms_since_boot = 15
-    GNSS_data_1 = 16
-    GNSS_data_2 = 17
-    ms_raw = 18
-    bmp_raw = 19
-    imu_raw = 20
-    position = 21
-    differential_pressure = 22
+    GNSS_data = 16
+    ms_raw = 17
+    bmp_raw = 18
+    imu_raw = 19
+    position = 20
+    differential_pressure = 21
 class categories(Enum):
     none = 0
 class local_timestamp_from_local_to_local:
@@ -726,70 +725,15 @@ class ms_since_boot_from_flight_controller_to_ground_station:
         self._ms_since_boot = struct.unpack_from("<L", buf, index)[0]
         index += 4
         return
-class GNSS_data_1_from_flight_controller_to_ground_station:
+class GNSS_data_from_flight_controller_to_ground_station:
     def __init__(self):
         self._sender = nodes.flight_controller
         self._receiver = nodes.ground_station
-        self._message = messages.GNSS_data_1
+        self._message = messages.GNSS_data
         self._category = categories.none
         self._id = 81
-        self._size = 12
+        self._size = 16
         self._gnss_time = 0
-        self._latitude = 0
-        self._longitude = 0
-    def get_sender(self):
-        return self._sender
-    def get_receiver(self):
-        return self._receiver
-    def get_message(self):
-        return self._message
-    def get_id(self):
-        return self._id
-    def get_size(self):
-        return self._size
-    def get_category(self):
-        return self._category
-    def set_gnss_time(self, value):
-        self._gnss_time = value
-    def set_latitude(self, value):
-        self._latitude = value
-    def set_longitude(self, value):
-        self._longitude = value
-    def build_buf(self):
-        buf = b""
-        buf += struct.pack("<L", self._gnss_time)
-        buf += struct.pack("<l", self._latitude)
-        buf += struct.pack("<l", self._longitude)
-        return buf
-    def get_gnss_time(self):
-        return self._gnss_time
-    def get_latitude(self):
-        return self._latitude
-    def get_longitude(self):
-        return self._longitude
-    def get_all_data(self):
-        data = []
-        data.append((fields.gnss_time, self.get_gnss_time()))
-        data.append((fields.latitude, self.get_latitude()))
-        data.append((fields.longitude, self.get_longitude()))
-        return data
-    def parse_buf(self, buf):
-        index = 0
-        self._gnss_time = struct.unpack_from("<L", buf, index)[0]
-        index += 4
-        self._latitude = struct.unpack_from("<l", buf, index)[0]
-        index += 4
-        self._longitude = struct.unpack_from("<l", buf, index)[0]
-        index += 4
-        return
-class GNSS_data_2_from_flight_controller_to_ground_station:
-    def __init__(self):
-        self._sender = nodes.flight_controller
-        self._receiver = nodes.ground_station
-        self._message = messages.GNSS_data_2
-        self._category = categories.none
-        self._id = 82
-        self._size = 12
         self._altitude = 0
         self._heading = 0
         self._horiz_speed = 0
@@ -808,6 +752,8 @@ class GNSS_data_2_from_flight_controller_to_ground_station:
         return self._size
     def get_category(self):
         return self._category
+    def set_gnss_time(self, value):
+        self._gnss_time = value
     def set_altitude(self, value):
         self._altitude = scaledFloat_to_uint(value, 10)
     def set_heading(self, value):
@@ -822,6 +768,7 @@ class GNSS_data_2_from_flight_controller_to_ground_station:
         self._h_dop = scaledFloat_to_uint(value, 10)
     def build_buf(self):
         buf = b""
+        buf += struct.pack("<f", self._gnss_time)
         buf += struct.pack("<l", self._altitude)
         buf += struct.pack("<h", self._heading)
         buf += struct.pack("<h", self._horiz_speed)
@@ -829,6 +776,8 @@ class GNSS_data_2_from_flight_controller_to_ground_station:
         buf += struct.pack("<B", self._n_satellites)
         buf += struct.pack("<H", self._h_dop)
         return buf
+    def get_gnss_time(self):
+        return self._gnss_time
     def get_altitude(self):
         return uint_to_scaledFloat(self._altitude, 10)
     def get_heading(self):
@@ -843,6 +792,7 @@ class GNSS_data_2_from_flight_controller_to_ground_station:
         return uint_to_scaledFloat(self._h_dop, 10)
     def get_all_data(self):
         data = []
+        data.append((fields.gnss_time, self.get_gnss_time()))
         data.append((fields.altitude, self.get_altitude()))
         data.append((fields.heading, self.get_heading()))
         data.append((fields.horiz_speed, self.get_horiz_speed()))
@@ -852,6 +802,8 @@ class GNSS_data_2_from_flight_controller_to_ground_station:
         return data
     def parse_buf(self, buf):
         index = 0
+        self._gnss_time = struct.unpack_from("<f", buf, index)[0]
+        index += 4
         self._altitude = struct.unpack_from("<l", buf, index)[0]
         index += 4
         self._heading = struct.unpack_from("<h", buf, index)[0]
@@ -871,7 +823,7 @@ class ms_raw_from_flight_controller_to_ground_station:
         self._receiver = nodes.ground_station
         self._message = messages.ms_raw
         self._category = categories.none
-        self._id = 83
+        self._id = 82
         self._size = 8
         self._pressure = 0
         self._temperature = 0
@@ -918,7 +870,7 @@ class bmp_raw_from_flight_controller_to_ground_station:
         self._receiver = nodes.ground_station
         self._message = messages.bmp_raw
         self._category = categories.none
-        self._id = 84
+        self._id = 83
         self._size = 8
         self._pressure = 0
         self._temperature = 0
@@ -965,7 +917,7 @@ class imu_raw_from_flight_controller_to_ground_station:
         self._receiver = nodes.ground_station
         self._message = messages.imu_raw
         self._category = categories.none
-        self._id = 85
+        self._id = 84
         self._size = 37
         self._imu_id = 0
         self._accel_x = 0
@@ -1084,7 +1036,7 @@ class position_from_flight_controller_to_ground_station:
         self._receiver = nodes.ground_station
         self._message = messages.position
         self._category = categories.none
-        self._id = 86
+        self._id = 85
         self._size = 12
         self._altitude = 0
         self._longitude = 0
@@ -1140,7 +1092,7 @@ class differential_pressure_from_flight_controller_to_ground_station:
         self._receiver = nodes.ground_station
         self._message = messages.differential_pressure
         self._category = categories.none
-        self._id = 87
+        self._id = 86
         self._size = 4
         self._differential_pressure = 0
     def get_sender(self):
@@ -1222,24 +1174,21 @@ def id_to_message_class(id):
         receiver = ms_since_boot_from_flight_controller_to_ground_station()
         return receiver
     if id == 81:
-        receiver = GNSS_data_1_from_flight_controller_to_ground_station()
+        receiver = GNSS_data_from_flight_controller_to_ground_station()
         return receiver
     if id == 82:
-        receiver = GNSS_data_2_from_flight_controller_to_ground_station()
-        return receiver
-    if id == 83:
         receiver = ms_raw_from_flight_controller_to_ground_station()
         return receiver
-    if id == 84:
+    if id == 83:
         receiver = bmp_raw_from_flight_controller_to_ground_station()
         return receiver
-    if id == 85:
+    if id == 84:
         receiver = imu_raw_from_flight_controller_to_ground_station()
         return receiver
-    if id == 86:
+    if id == 85:
         receiver = position_from_flight_controller_to_ground_station()
         return receiver
-    if id == 87:
+    if id == 86:
         receiver = differential_pressure_from_flight_controller_to_ground_station()
         return receiver
 def is_specifier(sender, name, field):
@@ -1260,14 +1209,9 @@ def is_specifier(sender, name, field):
     if (messages.ms_since_boot == name and nodes.flight_controller == sender):
         if (fields.ms_since_boot == field):
             return False
-    if (messages.GNSS_data_1 == name and nodes.flight_controller == sender):
+    if (messages.GNSS_data == name and nodes.flight_controller == sender):
         if (fields.gnss_time == field):
             return False
-        if (fields.latitude == field):
-            return False
-        if (fields.longitude == field):
-            return False
-    if (messages.GNSS_data_2 == name and nodes.flight_controller == sender):
         if (fields.altitude == field):
             return False
         if (fields.heading == field):

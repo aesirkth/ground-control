@@ -112,40 +112,34 @@ GENERATED FILE DO NOT EDIT
 <td>81</td>
 <td>flight_controller</td>
 <td>ground_station</td>
-<td>GNSS_data_1</td>
+<td>GNSS_data</td>
 </tr>
 <tr>
 <td>82</td>
 <td>flight_controller</td>
 <td>ground_station</td>
-<td>GNSS_data_2</td>
+<td>ms_raw</td>
 </tr>
 <tr>
 <td>83</td>
 <td>flight_controller</td>
 <td>ground_station</td>
-<td>ms_raw</td>
+<td>bmp_raw</td>
 </tr>
 <tr>
 <td>84</td>
 <td>flight_controller</td>
 <td>ground_station</td>
-<td>bmp_raw</td>
+<td>imu_raw</td>
 </tr>
 <tr>
 <td>85</td>
 <td>flight_controller</td>
 <td>ground_station</td>
-<td>imu_raw</td>
-</tr>
-<tr>
-<td>86</td>
-<td>flight_controller</td>
-<td>ground_station</td>
 <td>position</td>
 </tr>
 <tr>
-<td>87</td>
+<td>86</td>
 <td>flight_controller</td>
 <td>ground_station</td>
 <td>differential_pressure</td>
@@ -419,7 +413,7 @@ GENERATED FILE DO NOT EDIT
 </tbody>
 </table>
 
-### 81 - GNSS_data_1 <br> flight_controller &rarr; ground_station
+### 81 - GNSS_data <br> flight_controller &rarr; ground_station
 #### fields
 <table>
 <thead>
@@ -433,37 +427,10 @@ GENERATED FILE DO NOT EDIT
 <tbody>
 <tr>
 <td>gnss_time</td>
-<td>uint</td>
-<td>uint32</td>
+<td>float</td>
+<td>float</td>
 <td>N/A</td>
 </tr>
-<tr>
-<td>latitude</td>
-<td>int</td>
-<td>int32</td>
-<td>N/A</td>
-</tr>
-<tr>
-<td>longitude</td>
-<td>int</td>
-<td>int32</td>
-<td>N/A</td>
-</tr>
-</tbody>
-</table>
-
-### 82 - GNSS_data_2 <br> flight_controller &rarr; ground_station
-#### fields
-<table>
-<thead>
-<tr>
-<th>name</th>
-<th>type</th>
-<th>native type</th>
-<th>info</th>
-</tr>
-</thead>
-<tbody>
 <tr>
 <td>altitude</td>
 <td>scaledFloat</td>
@@ -503,7 +470,7 @@ GENERATED FILE DO NOT EDIT
 </tbody>
 </table>
 
-### 83 - ms_raw <br> flight_controller &rarr; ground_station
+### 82 - ms_raw <br> flight_controller &rarr; ground_station
 #### fields
 <table>
 <thead>
@@ -530,7 +497,7 @@ GENERATED FILE DO NOT EDIT
 </tbody>
 </table>
 
-### 84 - bmp_raw <br> flight_controller &rarr; ground_station
+### 83 - bmp_raw <br> flight_controller &rarr; ground_station
 #### fields
 <table>
 <thead>
@@ -557,7 +524,7 @@ GENERATED FILE DO NOT EDIT
 </tbody>
 </table>
 
-### 85 - imu_raw <br> flight_controller &rarr; ground_station
+### 84 - imu_raw <br> flight_controller &rarr; ground_station
 #### fields
 <table>
 <thead>
@@ -632,7 +599,7 @@ GENERATED FILE DO NOT EDIT
 </tbody>
 </table>
 
-### 86 - position <br> flight_controller &rarr; ground_station
+### 85 - position <br> flight_controller &rarr; ground_station
 #### fields
 <table>
 <thead>
@@ -665,7 +632,7 @@ GENERATED FILE DO NOT EDIT
 </tbody>
 </table>
 
-### 87 - differential_pressure <br> flight_controller &rarr; ground_station
+### 86 - differential_pressure <br> flight_controller &rarr; ground_station
 #### fields
 <table>
 <thead>
@@ -853,83 +820,83 @@ GENERATED FILE DO NOT EDIT
 <td>14</td>
 </tr>
 <tr>
-<td>latitude</td>
+<td>altitude</td>
 <td>15</td>
 </tr>
 <tr>
-<td>longitude</td>
+<td>heading</td>
 <td>16</td>
 </tr>
 <tr>
-<td>altitude</td>
+<td>horiz_speed</td>
 <td>17</td>
 </tr>
 <tr>
-<td>heading</td>
+<td>fix_status</td>
 <td>18</td>
 </tr>
 <tr>
-<td>horiz_speed</td>
+<td>n_satellites</td>
 <td>19</td>
 </tr>
 <tr>
-<td>fix_status</td>
+<td>h_dop</td>
 <td>20</td>
 </tr>
 <tr>
-<td>n_satellites</td>
+<td>pressure</td>
 <td>21</td>
 </tr>
 <tr>
-<td>h_dop</td>
+<td>temperature</td>
 <td>22</td>
 </tr>
 <tr>
-<td>pressure</td>
+<td>imu_id</td>
 <td>23</td>
 </tr>
 <tr>
-<td>temperature</td>
+<td>accel_x</td>
 <td>24</td>
 </tr>
 <tr>
-<td>imu_id</td>
+<td>accel_y</td>
 <td>25</td>
 </tr>
 <tr>
-<td>accel_x</td>
+<td>accel_z</td>
 <td>26</td>
 </tr>
 <tr>
-<td>accel_y</td>
+<td>gyro_x</td>
 <td>27</td>
 </tr>
 <tr>
-<td>accel_z</td>
+<td>gyro_y</td>
 <td>28</td>
 </tr>
 <tr>
-<td>gyro_x</td>
+<td>gyro_z</td>
 <td>29</td>
 </tr>
 <tr>
-<td>gyro_y</td>
+<td>magnet_x</td>
 <td>30</td>
 </tr>
 <tr>
-<td>gyro_z</td>
+<td>magnet_y</td>
 <td>31</td>
 </tr>
 <tr>
-<td>magnet_x</td>
+<td>magnet_z</td>
 <td>32</td>
 </tr>
 <tr>
-<td>magnet_y</td>
+<td>longitude</td>
 <td>33</td>
 </tr>
 <tr>
-<td>magnet_z</td>
+<td>latitude</td>
 <td>34</td>
 </tr>
 <tr>
@@ -1013,32 +980,28 @@ GENERATED FILE DO NOT EDIT
 <td>15</td>
 </tr>
 <tr>
-<td>GNSS_data_1</td>
+<td>GNSS_data</td>
 <td>16</td>
 </tr>
 <tr>
-<td>GNSS_data_2</td>
+<td>ms_raw</td>
 <td>17</td>
 </tr>
 <tr>
-<td>ms_raw</td>
+<td>bmp_raw</td>
 <td>18</td>
 </tr>
 <tr>
-<td>bmp_raw</td>
+<td>imu_raw</td>
 <td>19</td>
 </tr>
 <tr>
-<td>imu_raw</td>
+<td>position</td>
 <td>20</td>
 </tr>
 <tr>
-<td>position</td>
-<td>21</td>
-</tr>
-<tr>
 <td>differential_pressure</td>
-<td>22</td>
+<td>21</td>
 </tr>
 </tbody>
 </table>
