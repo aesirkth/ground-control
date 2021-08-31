@@ -9,7 +9,6 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 def main():
     #init threads
     tm = Telemetry()
-    
     # Init Qt
     app = QtWidgets.QApplication(sys.argv)
 

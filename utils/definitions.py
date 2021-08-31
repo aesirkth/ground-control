@@ -1,5 +1,5 @@
 
-SEPARATOR = [0x0A, 0x0D]
+SEPARATOR = [10] #"\n"
 
 
 #The IDs are no longer updated. do not use

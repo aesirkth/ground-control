@@ -13,6 +13,7 @@ from utils.definitions import *
 from utils.data_handling import (TimeSeries, write_data_db, get_current_time,
     formatted_time_to_sec, get_current_time_sec, NumDecoder, EnumDecoder,
     BitDecoder, EmptyDecoder)
+from enum import Enum
 
 LIVE = 0
 BACKUP_TIMESTAMP = 1
@@ -30,7 +31,7 @@ FLASH_TIMESTAMP = 2
 #open_serial() - open the serial connection
 class SerialWrapper():
     def __init__(self, device):
-        self.ser = serial.Serial()
+        self.ser = serial.Serial(timeout=0.5)
         self.device = device
         #get file name
         now = datetime.now()
@@ -96,8 +97,8 @@ class SerialWrapper():
         elif self.device == "flight_controller":
             msg = protocol.handshake_from_ground_station_to_flight_controller()
             reply = protocol.return_handshake_from_flight_controller_to_ground_station()
-            handshake = bytes(SEPARATOR + [msg.get_id()]) 
-            response = bytes(SEPARATOR + [reply.get_id()])
+            handshake = bytes(SEPARATOR + [msg.get_id()] + [0]) 
+            response = bytes(SEPARATOR + [reply.get_id()] + [0])
             self.ser.read_all()
             self.ser.write(handshake)
             time.sleep(0.5)
@@ -175,7 +176,6 @@ class SerialReader():
         self.pause = False
         self.exit = False
         self.decoders = {}
-        self.parse_message_definitions("utils/edda_messages.json")
         #use defaultdict to let the front-end use uninitialized data
         self.data = defaultdict(lambda: defaultdict(lambda: defaultdict(TimeSeries)))
 
@@ -236,56 +236,6 @@ class SerialReader():
     def seconds_since_last_message(self):
         return time.time() - self.last_message_time
 
-    def parse_message_definitions(self, path):
-        #Assigns decoders (defined in data_handling.py) to each message type.
-        f = open(path)
-        raw = json.load(f)
-        f.close()
-        messages = {}
-        enums = {}
-        datatypes = {}
-        for message in raw["messages"]:
-            if message['receiverNodeName'] == "Flight Controller":
-                id = message["id"]
-                messages[id] = message
-        for enum in raw["enums"]:
-            name = enum["name"]
-            enums[name] = enum["entries"]
-        for datatype in raw["dataTypes"]:
-            name = datatype["name"]
-            datatypes[name] = datatype
-
-        for id in messages.keys():
-            self.decoders[id] = []
-            #Beginning of defining tree_pos as [*sender name*][*datatype name*][*field name*]
-            sender_name = messages[id]["senderNodeName"]
-            datatype_name = messages[id]["dataType"]
-            ##
-            if len(datatypes[datatype_name]["fields"]) == 0:
-                tree_pos = [sender_name, datatype_name, "value"]
-                self.decoders[id].append(EmptyDecoder(tree_pos))
-            #Iterating through fields in message (eg. acceleration in x, y and z)            
-            else:
-                for field in datatypes[datatype_name]["fields"]:
-                    actual_type = field["definition"]
-                    #Finalizing definition of tree_pos
-                    field_name = field["name"]
-                    tree_pos = [sender_name, datatype_name, field_name]
-                    ##
-                    #Assigning correct decoder based on type
-                    if field["definition"]["type"] in ("integer", "id"):
-                        NumDecoder_type = actual_type["nativeType"]
-                        self.decoders[id].append(NumDecoder(tree_pos, NumDecoder_type))
-                    elif field["definition"]["type"] == "packedFloat":
-                        NumDecoder_type = actual_type["packedType"]
-                        maxi = actual_type["maximumValue"]
-                        mini = actual_type["minimumValue"]
-                        self.decoders[id].append(NumDecoder(tree_pos, NumDecoder_type, max=maxi, min=mini))
-                    elif field["definition"]["type"] == "enum":
-                        self.decoders[id].append(EnumDecoder(tree_pos, enums[field["definition"]["enumName"]]))
-                
-            #do stuff with with the message
-
     #get the current time using either the computer clock or the last timestamp
     def decide_on_time(self, name, value):
         self.last_message_time = time.time()
@@ -322,7 +272,7 @@ class SerialReader():
             #test for frame separator, read one byte at a time so it aligns itself
             if separator == b"":
                 continue
-            if separator[0] != SEPARATOR[0] or self.stream.read(1)[0] != SEPARATOR[1]:
+            if separator[0] != SEPARATOR[0]:
                 print(self.device + ": Invalid Separator: " + str(separator))
                 continue
             #timestamp if reading from serial
@@ -330,45 +280,52 @@ class SerialReader():
                 self.ser.timestamp(self.get_current_time() * 1000)
             frame_id = self.stream.read(1)[0]
 
-            #we have two different protocol definitions so decide on which one ot use
-            #try to get fc decoder
+            #we have two different protocol definitions so decide on which one to use
             fc_decoder = protocol.id_to_message_class(frame_id)
             ec_decoder = edda.id_to_message_class(frame_id)
 
-            if fc_decoder:
-                self.read_data(fc_decoder)
-            elif ec_decoder:
-                pass
+            if ec_decoder != None:
                 self.read_data(ec_decoder)
+            elif fc_decoder != None:
+                self.read_data(fc_decoder)
             else:
                 print("invalid id: ", frame_id)
             
     def read_data(self, decoder):
+        checksum = self.stream.read(1)[0]
         length = decoder.get_size()
         buf = self.stream.read(length)
         if len(buf) != length:
             print("invalid length")
-            return    
+            return
+        msg_checksum = 0
+        for v in buf:
+            msg_checksum ^= v
+        if msg_checksum != checksum:
+            print(f"invalid checksum. expected: {checksum} got: {msg_checksum}")
+            print(buf)
+            print(decoder.get_id())
+            return
+
         decoder.parse_buf(buf)
         decoded_data = decoder.get_all_data()
+    
         source = decoder.get_sender()
         message = decoder.get_message()
-        sensor_index = None
+        suffix = ""
         if len(decoded_data) == 0:
             current_time = self.decide_on_time("", 0)
             self.data[source.name][message.name]["value"].x.append(current_time)
             self.data[source.name][message.name]["value"].y.append(1)
+            
         for single_data in decoded_data:
             (field, value) = single_data
-            name = field.name
-            if name == "sensor_index":
-                sensor_index = value
-                continue
-            #add the sensor index to the measurement so e.g. temperature becomes temperature2
-            if sensor_index != None:
-                name += str(sensor_index)
-                sensor_index = None
-            current_time = self.decide_on_time(name, value)
-            print("bajs", message.name, name)
-            self.data[source.name][message.name][name].x.append(current_time)
-            self.data[source.name][message.name][name].y.append(value)
+            if edda.is_specifier(source, message, field):
+                suffix += ":" + (value.name if isinstance(value, Enum) else str(value))
+
+        for single_data in decoded_data:
+            (field, value) = single_data
+            current_time = self.decide_on_time(field.name, value)
+            print(source.name, message.name, field.name + suffix, value)
+            self.data[source.name][message.name][field.name + suffix].x.append(current_time)
+            self.data[source.name][message.name][field.name + suffix].y.append(value)

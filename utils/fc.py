@@ -29,93 +29,85 @@ def uint_to_packedFloat(value, minValue, maxValue, size):
     ratio = (value - 1) / (intMax - 2)
     return ratio * (maxValue - minValue) + minValue
 
+class flight_state(Enum):
+    sleeping = 0
+    idle = 1
+    ready = 2
+    burning = 3
+    ascending = 4
+    descending = 5
+    drogue = 6
+    main_chute = 7
+    landed = 8
 class fix_status(Enum):
     no_fix = 0
     fix_2D = 1
     fix_3D = 2
 class nodes(Enum):
     local = 0
-    test = 1
-    ground_station = 2
-    flight_controller = 3
+    ground_station = 1
+    flight_controller = 2
 class fields(Enum):
     timestamp = 0
-    ms_since_boot = 1
-    altitude = 2
-    catastrophe = 3
-    x = 4
-    y = 5
-    z = 6
-    system_time = 7
-    is_fpv_en = 8
-    is_tm_en = 9
-    is_parachute_armed = 10
-    is_parachute1_en = 11
-    is_parachute2_en = 12
-    is_logging_en = 13
-    dump_sd = 14
-    dump_usb = 15
-    battery_1 = 16
-    battery_2 = 17
-    gnss_time = 18
-    latitude = 19
-    longitude = 20
-    h_dop = 21
-    n_satellites = 22
-    HW_state = 23
-    SW_state = 24
-    mission_state = 25
-    us_since_boot = 26
-    current_time = 27
-    heading = 28
-    horiz_speed = 29
-    fix_status = 30
-    temperature_1 = 31
-    temperature_2 = 32
-    pressure_1 = 33
-    pressure_2 = 34
-    accel_x = 35
-    accel_y = 36
-    accel_z = 37
-    gyro_x = 38
-    gyro_y = 39
-    gyro_z = 40
-    magnet_x = 41
-    magnet_y = 42
-    magnet_z = 43
+    system_time = 1
+    state = 2
+    is_parachute_armed = 3
+    is_parachute1_en = 4
+    is_parachute2_en = 5
+    is_logging_en = 6
+    dump_sd = 7
+    dump_usb = 8
+    is_fpv_en = 9
+    is_tm_en = 10
+    battery_1 = 11
+    battery_2 = 12
+    ms_since_boot = 13
+    gnss_time = 14
+    latitude = 15
+    longitude = 16
+    altitude = 17
+    heading = 18
+    horiz_speed = 19
+    fix_status = 20
+    n_satellites = 21
+    h_dop = 22
+    pressure = 23
+    temperature = 24
+    imu_id = 25
+    accel_x = 26
+    accel_y = 27
+    accel_z = 28
+    gyro_x = 29
+    gyro_y = 30
+    gyro_z = 31
+    magnet_x = 32
+    magnet_y = 33
+    magnet_z = 34
+    differential_pressure = 35
 class messages(Enum):
     local_timestamp = 0
-    ms_since_boot = 1
-    altitude = 2
-    acceleration = 3
-    pressure = 4
-    catastrophe = 5
-    gyro = 6
-    time_sync = 7
-    set_power_mode = 8
-    set_radio_equipment = 9
-    set_parachute_output = 10
-    set_data_logging = 11
-    dump_flash = 12
-    handshake = 13
-    return_time_sync = 14
-    return_power_mode = 15
-    return_radio_equipment = 16
-    return_parachute_output = 17
-    onboard_battery_voltage = 18
-    gnss_data = 19
-    flight_controller_status = 20
-    return_data_logging = 21
-    return_dump_flash = 22
-    return_handshake = 23
-    us_since_boot = 24
-    current_time = 25
-    GNSS_data_1 = 26
-    GNSS_data_2 = 27
-    inside_static_temperature = 28
-    inside_static_pressure = 29
-    IMU1 = 30
-    IMU2 = 31
+    time_sync = 1
+    set_state = 2
+    set_parachute_output = 3
+    set_data_logging = 4
+    dump_flash = 5
+    handshake = 6
+    return_time_sync = 7
+    return_power_mode = 8
+    return_radio_equipment = 9
+    return_parachute_output = 10
+    onboard_battery_voltage = 11
+    return_data_logging = 12
+    return_dump_flash = 13
+    return_handshake = 14
+    ms_since_boot = 15
+    GNSS_data_1 = 16
+    GNSS_data_2 = 17
+    ms_raw = 18
+    bmp_raw = 19
+    imu_raw = 20
+    position = 21
+    differential_pressure = 22
 class categories(Enum):
     none = 0
 class local_timestamp_from_local_to_local:
@@ -156,252 +148,6 @@ class local_timestamp_from_local_to_local:
         self._timestamp = struct.unpack_from("<L", buf, index)[0]
         index += 4
         return
-class ms_since_boot_from_test_to_test:
-    def __init__(self):
-        self._sender = nodes.test
-        self._receiver = nodes.test
-        self._message = messages.ms_since_boot
-        self._category = categories.none
-        self._id = 64
-        self._size = 4
-        self._ms_since_boot = 0
-    def get_sender(self):
-        return self._sender
-    def get_receiver(self):
-        return self._receiver
-    def get_message(self):
-        return self._message
-    def get_id(self):
-        return self._id
-    def get_size(self):
-        return self._size
-    def get_category(self):
-        return self._category
-    def set_ms_since_boot(self, value):
-        self._ms_since_boot = value
-    def build_buf(self):
-        buf = b""
-        buf += struct.pack("<L", self._ms_since_boot)
-        return buf
-    def get_ms_since_boot(self):
-        return self._ms_since_boot
-    def get_all_data(self):
-        data = []
-        data.append((fields.ms_since_boot, self.get_ms_since_boot()))
-        return data
-    def parse_buf(self, buf):
-        index = 0
-        self._ms_since_boot = struct.unpack_from("<L", buf, index)[0]
-        index += 4
-        return
-class altitude_from_test_to_test:
-    def __init__(self):
-        self._sender = nodes.test
-        self._receiver = nodes.test
-        self._message = messages.altitude
-        self._category = categories.none
-        self._id = 0
-        self._size = 2
-        self._altitude = 0
-    def get_sender(self):
-        return self._sender
-    def get_receiver(self):
-        return self._receiver
-    def get_message(self):
-        return self._message
-    def get_id(self):
-        return self._id
-    def get_size(self):
-        return self._size
-    def get_category(self):
-        return self._category
-    def set_altitude(self, value):
-        self._altitude = value
-    def build_buf(self):
-        buf = b""
-        buf += struct.pack("<H", self._altitude)
-        return buf
-    def get_altitude(self):
-        return self._altitude
-    def get_all_data(self):
-        data = []
-        data.append((fields.altitude, self.get_altitude()))
-        return data
-    def parse_buf(self, buf):
-        index = 0
-        self._altitude = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        return
-class acceleration_from_test_to_test:
-    def __init__(self):
-        self._sender = nodes.test
-        self._receiver = nodes.test
-        self._message = messages.acceleration
-        self._category = categories.none
-        self._id = 1
-        self._size = 1
-        self._altitude = 0
-    def get_sender(self):
-        return self._sender
-    def get_receiver(self):
-        return self._receiver
-    def get_message(self):
-        return self._message
-    def get_id(self):
-        return self._id
-    def get_size(self):
-        return self._size
-    def get_category(self):
-        return self._category
-    def set_altitude(self, value):
-        self._altitude = value
-    def build_buf(self):
-        buf = b""
-        buf += struct.pack("<B", self._altitude)
-        return buf
-    def get_altitude(self):
-        return self._altitude
-    def get_all_data(self):
-        data = []
-        data.append((fields.altitude, self.get_altitude()))
-        return data
-    def parse_buf(self, buf):
-        index = 0
-        self._altitude = struct.unpack_from("<B", buf, index)[0]
-        index += 1
-        return
-class pressure_from_test_to_test:
-    def __init__(self):
-        self._sender = nodes.test
-        self._receiver = nodes.test
-        self._message = messages.pressure
-        self._category = categories.none
-        self._id = 2
-        self._size = 2
-        self._altitude = 0
-    def get_sender(self):
-        return self._sender
-    def get_receiver(self):
-        return self._receiver
-    def get_message(self):
-        return self._message
-    def get_id(self):
-        return self._id
-    def get_size(self):
-        return self._size
-    def get_category(self):
-        return self._category
-    def set_altitude(self, value):
-        self._altitude = value
-    def build_buf(self):
-        buf = b""
-        buf += struct.pack("<H", self._altitude)
-        return buf
-    def get_altitude(self):
-        return self._altitude
-    def get_all_data(self):
-        data = []
-        data.append((fields.altitude, self.get_altitude()))
-        return data
-    def parse_buf(self, buf):
-        index = 0
-        self._altitude = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        return
-class catastrophe_from_test_to_test:
-    def __init__(self):
-        self._sender = nodes.test
-        self._receiver = nodes.test
-        self._message = messages.catastrophe
-        self._category = categories.none
-        self._id = 3
-        self._size = 1
-        self._bit_field = 0
-    def get_sender(self):
-        return self._sender
-    def get_receiver(self):
-        return self._receiver
-    def get_message(self):
-        return self._message
-    def get_id(self):
-        return self._id
-    def get_size(self):
-        return self._size
-    def get_category(self):
-        return self._category
-    def set_catastrophe(self, value):
-        self._bit_field =  value * (self._bit_field | (1 << 0)) + (not value) * (self._bit_field & ~(1 << 0))
-    def build_buf(self):
-        buf = b""
-        buf += struct.pack("<B", self._bit_field)
-        return buf
-    def get_catastrophe(self):
-        return self._bit_field & (1 << 0)
-    def get_all_data(self):
-        data = []
-        data.append((fields.catastrophe, self.get_catastrophe()))
-        return data
-    def parse_buf(self, buf):
-        index = 0
-        self._bit_field = struct.unpack_from("<B", buf, index)[0]
-        index += 1
-        return
-class gyro_from_test_to_test:
-    def __init__(self):
-        self._sender = nodes.test
-        self._receiver = nodes.test
-        self._message = messages.gyro
-        self._category = categories.none
-        self._id = 4
-        self._size = 3
-        self._x = 0
-        self._y = 0
-        self._z = 0
-    def get_sender(self):
-        return self._sender
-    def get_receiver(self):
-        return self._receiver
-    def get_message(self):
-        return self._message
-    def get_id(self):
-        return self._id
-    def get_size(self):
-        return self._size
-    def get_category(self):
-        return self._category
-    def set_x(self, value):
-        self._x = value
-    def set_y(self, value):
-        self._y = value
-    def set_z(self, value):
-        self._z = value
-    def build_buf(self):
-        buf = b""
-        buf += struct.pack("<B", self._x)
-        buf += struct.pack("<B", self._y)
-        buf += struct.pack("<B", self._z)
-        return buf
-    def get_x(self):
-        return self._x
-    def get_y(self):
-        return self._y
-    def get_z(self):
-        return self._z
-    def get_all_data(self):
-        data = []
-        data.append((fields.x, self.get_x()))
-        data.append((fields.y, self.get_y()))
-        data.append((fields.z, self.get_z()))
-        return data
-    def parse_buf(self, buf):
-        index = 0
-        self._x = struct.unpack_from("<B", buf, index)[0]
-        index += 1
-        self._y = struct.unpack_from("<B", buf, index)[0]
-        index += 1
-        self._z = struct.unpack_from("<B", buf, index)[0]
-        index += 1
-        return
 class time_sync_from_ground_station_to_flight_controller:
     def __init__(self):
         self._sender = nodes.ground_station
@@ -440,44 +186,15 @@ class time_sync_from_ground_station_to_flight_controller:
         self._system_time = struct.unpack_from("<L", buf, index)[0]
         index += 4
         return
-class set_power_mode_from_ground_station_to_flight_controller:
+class set_state_from_ground_station_to_flight_controller:
     def __init__(self):
         self._sender = nodes.ground_station
         self._receiver = nodes.flight_controller
-        self._message = messages.set_power_mode
+        self._message = messages.set_state
         self._category = categories.none
         self._id = 17
-        self._size = 0
-    def get_sender(self):
-        return self._sender
-    def get_receiver(self):
-        return self._receiver
-    def get_message(self):
-        return self._message
-    def get_id(self):
-        return self._id
-    def get_size(self):
-        return self._size
-    def get_category(self):
-        return self._category
-    def build_buf(self):
-        buf = b""
-        return buf
-    def get_all_data(self):
-        data = []
-        return data
-    def parse_buf(self, buf):
-        index = 0
-        return
-class set_radio_equipment_from_ground_station_to_flight_controller:
-    def __init__(self):
-        self._sender = nodes.ground_station
-        self._receiver = nodes.flight_controller
-        self._message = messages.set_radio_equipment
-        self._category = categories.none
-        self._id = 18
         self._size = 1
-        self._bit_field = 0
+        self._state = 0
     def get_sender(self):
         return self._sender
     def get_receiver(self):
@@ -490,26 +207,21 @@ class set_radio_equipment_from_ground_station_to_flight_controller:
         return self._size
     def get_category(self):
         return self._category
-    def set_is_fpv_en(self, value):
-        self._bit_field =  value * (self._bit_field | (1 << 0)) + (not value) * (self._bit_field & ~(1 << 0))
-    def set_is_tm_en(self, value):
-        self._bit_field =  value * (self._bit_field | (1 << 1)) + (not value) * (self._bit_field & ~(1 << 1))
+    def set_state(self, value):
+        self._state = value.value
     def build_buf(self):
         buf = b""
-        buf += struct.pack("<B", self._bit_field)
+        buf += struct.pack("<B", self._state)
         return buf
-    def get_is_fpv_en(self):
-        return self._bit_field & (1 << 0)
-    def get_is_tm_en(self):
-        return self._bit_field & (1 << 1)
+    def get_state(self):
+        return flight_state(self._state)
     def get_all_data(self):
         data = []
-        data.append((fields.is_fpv_en, self.get_is_fpv_en()))
-        data.append((fields.is_tm_en, self.get_is_tm_en()))
+        data.append((fields.state, self.get_state()))
         return data
     def parse_buf(self, buf):
         index = 0
-        self._bit_field = struct.unpack_from("<B", buf, index)[0]
+        self._state = struct.unpack_from("<B", buf, index)[0]
         index += 1
         return
 class set_parachute_output_from_ground_station_to_flight_controller:
@@ -518,7 +230,7 @@ class set_parachute_output_from_ground_station_to_flight_controller:
         self._receiver = nodes.flight_controller
         self._message = messages.set_parachute_output
         self._category = categories.none
-        self._id = 19
+        self._id = 18
         self._size = 1
         self._bit_field = 0
     def get_sender(self):
@@ -566,7 +278,7 @@ class set_data_logging_from_ground_station_to_flight_controller:
         self._receiver = nodes.flight_controller
         self._message = messages.set_data_logging
         self._category = categories.none
-        self._id = 20
+        self._id = 19
         self._size = 1
         self._bit_field = 0
     def get_sender(self):
@@ -604,7 +316,7 @@ class dump_flash_from_ground_station_to_flight_controller:
         self._receiver = nodes.flight_controller
         self._message = messages.dump_flash
         self._category = categories.none
-        self._id = 21
+        self._id = 20
         self._size = 1
         self._bit_field = 0
     def get_sender(self):
@@ -647,7 +359,7 @@ class handshake_from_ground_station_to_flight_controller:
         self._receiver = nodes.flight_controller
         self._message = messages.handshake
         self._category = categories.none
-        self._id = 22
+        self._id = 21
         self._size = 0
     def get_sender(self):
         return self._sender
@@ -866,143 +578,13 @@ class onboard_battery_voltage_from_flight_controller_to_ground_station:
         self._battery_2 = struct.unpack_from("<H", buf, index)[0]
         index += 2
         return
-class gnss_data_from_flight_controller_to_ground_station:
-    def __init__(self):
-        self._sender = nodes.flight_controller
-        self._receiver = nodes.ground_station
-        self._message = messages.gnss_data
-        self._category = categories.none
-        self._id = 37
-        self._size = 15
-        self._gnss_time = 0
-        self._latitude = 0
-        self._longitude = 0
-        self._h_dop = 0
-        self._n_satellites = 0
-    def get_sender(self):
-        return self._sender
-    def get_receiver(self):
-        return self._receiver
-    def get_message(self):
-        return self._message
-    def get_id(self):
-        return self._id
-    def get_size(self):
-        return self._size
-    def get_category(self):
-        return self._category
-    def set_gnss_time(self, value):
-        self._gnss_time = value
-    def set_latitude(self, value):
-        self._latitude = value
-    def set_longitude(self, value):
-        self._longitude = value
-    def set_h_dop(self, value):
-        self._h_dop = scaledFloat_to_uint(value, 100)
-    def set_n_satellites(self, value):
-        self._n_satellites = value
-    def build_buf(self):
-        buf = b""
-        buf += struct.pack("<L", self._gnss_time)
-        buf += struct.pack("<l", self._latitude)
-        buf += struct.pack("<l", self._longitude)
-        buf += struct.pack("<H", self._h_dop)
-        buf += struct.pack("<B", self._n_satellites)
-        return buf
-    def get_gnss_time(self):
-        return self._gnss_time
-    def get_latitude(self):
-        return self._latitude
-    def get_longitude(self):
-        return self._longitude
-    def get_h_dop(self):
-        return uint_to_scaledFloat(self._h_dop, 100)
-    def get_n_satellites(self):
-        return self._n_satellites
-    def get_all_data(self):
-        data = []
-        data.append((fields.gnss_time, self.get_gnss_time()))
-        data.append((fields.latitude, self.get_latitude()))
-        data.append((fields.longitude, self.get_longitude()))
-        data.append((fields.h_dop, self.get_h_dop()))
-        data.append((fields.n_satellites, self.get_n_satellites()))
-        return data
-    def parse_buf(self, buf):
-        index = 0
-        self._gnss_time = struct.unpack_from("<L", buf, index)[0]
-        index += 4
-        self._latitude = struct.unpack_from("<l", buf, index)[0]
-        index += 4
-        self._longitude = struct.unpack_from("<l", buf, index)[0]
-        index += 4
-        self._h_dop = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        self._n_satellites = struct.unpack_from("<B", buf, index)[0]
-        index += 1
-        return
-class flight_controller_status_from_flight_controller_to_ground_station:
-    def __init__(self):
-        self._sender = nodes.flight_controller
-        self._receiver = nodes.ground_station
-        self._message = messages.flight_controller_status
-        self._category = categories.none
-        self._id = 38
-        self._size = 3
-        self._HW_state = 0
-        self._SW_state = 0
-        self._mission_state = 0
-    def get_sender(self):
-        return self._sender
-    def get_receiver(self):
-        return self._receiver
-    def get_message(self):
-        return self._message
-    def get_id(self):
-        return self._id
-    def get_size(self):
-        return self._size
-    def get_category(self):
-        return self._category
-    def set_HW_state(self, value):
-        self._HW_state = value
-    def set_SW_state(self, value):
-        self._SW_state = value
-    def set_mission_state(self, value):
-        self._mission_state = value
-    def build_buf(self):
-        buf = b""
-        buf += struct.pack("<B", self._HW_state)
-        buf += struct.pack("<B", self._SW_state)
-        buf += struct.pack("<B", self._mission_state)
-        return buf
-    def get_HW_state(self):
-        return self._HW_state
-    def get_SW_state(self):
-        return self._SW_state
-    def get_mission_state(self):
-        return self._mission_state
-    def get_all_data(self):
-        data = []
-        data.append((fields.HW_state, self.get_HW_state()))
-        data.append((fields.SW_state, self.get_SW_state()))
-        data.append((fields.mission_state, self.get_mission_state()))
-        return data
-    def parse_buf(self, buf):
-        index = 0
-        self._HW_state = struct.unpack_from("<B", buf, index)[0]
-        index += 1
-        self._SW_state = struct.unpack_from("<B", buf, index)[0]
-        index += 1
-        self._mission_state = struct.unpack_from("<B", buf, index)[0]
-        index += 1
-        return
 class return_data_logging_from_flight_controller_to_ground_station:
     def __init__(self):
         self._sender = nodes.flight_controller
         self._receiver = nodes.ground_station
         self._message = messages.return_data_logging
         self._category = categories.none
-        self._id = 39
+        self._id = 37
         self._size = 1
         self._bit_field = 0
     def get_sender(self):
@@ -1040,7 +622,7 @@ class return_dump_flash_from_flight_controller_to_ground_station:
         self._receiver = nodes.ground_station
         self._message = messages.return_dump_flash
         self._category = categories.none
-        self._id = 40
+        self._id = 38
         self._size = 1
         self._bit_field = 0
     def get_sender(self):
@@ -1083,7 +665,7 @@ class return_handshake_from_flight_controller_to_ground_station:
         self._receiver = nodes.ground_station
         self._message = messages.return_handshake
         self._category = categories.none
-        self._id = 41
+        self._id = 39
         self._size = 0
     def get_sender(self):
         return self._sender
@@ -1113,7 +695,7 @@ class ms_since_boot_from_flight_controller_to_ground_station:
         self._message = messages.ms_since_boot
         self._category = categories.none
         self._id = 80
-        self._size = 2
+        self._size = 4
         self._ms_since_boot = 0
     def get_sender(self):
         return self._sender
@@ -1131,7 +713,7 @@ class ms_since_boot_from_flight_controller_to_ground_station:
         self._ms_since_boot = value
     def build_buf(self):
         buf = b""
-        buf += struct.pack("<H", self._ms_since_boot)
+        buf += struct.pack("<L", self._ms_since_boot)
         return buf
     def get_ms_since_boot(self):
         return self._ms_since_boot
@@ -1141,83 +723,7 @@ class ms_since_boot_from_flight_controller_to_ground_station:
         return data
     def parse_buf(self, buf):
         index = 0
-        self._ms_since_boot = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        return
-class us_since_boot_from_flight_controller_to_ground_station:
-    def __init__(self):
-        self._sender = nodes.flight_controller
-        self._receiver = nodes.ground_station
-        self._message = messages.us_since_boot
-        self._category = categories.none
-        self._id = 81
-        self._size = 4
-        self._us_since_boot = 0
-    def get_sender(self):
-        return self._sender
-    def get_receiver(self):
-        return self._receiver
-    def get_message(self):
-        return self._message
-    def get_id(self):
-        return self._id
-    def get_size(self):
-        return self._size
-    def get_category(self):
-        return self._category
-    def set_us_since_boot(self, value):
-        self._us_since_boot = value
-    def build_buf(self):
-        buf = b""
-        buf += struct.pack("<L", self._us_since_boot)
-        return buf
-    def get_us_since_boot(self):
-        return self._us_since_boot
-    def get_all_data(self):
-        data = []
-        data.append((fields.us_since_boot, self.get_us_since_boot()))
-        return data
-    def parse_buf(self, buf):
-        index = 0
-        self._us_since_boot = struct.unpack_from("<L", buf, index)[0]
-        index += 4
-        return
-class current_time_from_flight_controller_to_ground_station:
-    def __init__(self):
-        self._sender = nodes.flight_controller
-        self._receiver = nodes.ground_station
-        self._message = messages.current_time
-        self._category = categories.none
-        self._id = 82
-        self._size = 4
-        self._current_time = 0
-    def get_sender(self):
-        return self._sender
-    def get_receiver(self):
-        return self._receiver
-    def get_message(self):
-        return self._message
-    def get_id(self):
-        return self._id
-    def get_size(self):
-        return self._size
-    def get_category(self):
-        return self._category
-    def set_current_time(self, value):
-        self._current_time = value
-    def build_buf(self):
-        buf = b""
-        buf += struct.pack("<L", self._current_time)
-        return buf
-    def get_current_time(self):
-        return self._current_time
-    def get_all_data(self):
-        data = []
-        data.append((fields.current_time, self.get_current_time()))
-        return data
-    def parse_buf(self, buf):
-        index = 0
-        self._current_time = struct.unpack_from("<L", buf, index)[0]
+        self._ms_since_boot = struct.unpack_from("<L", buf, index)[0]
         index += 4
         return
 class GNSS_data_1_from_flight_controller_to_ground_station:
@@ -1226,7 +732,7 @@ class GNSS_data_1_from_flight_controller_to_ground_station:
         self._receiver = nodes.ground_station
         self._message = messages.GNSS_data_1
         self._category = categories.none
-        self._id = 83
+        self._id = 81
         self._size = 12
         self._gnss_time = 0
         self._latitude = 0
@@ -1282,7 +788,7 @@ class GNSS_data_2_from_flight_controller_to_ground_station:
         self._receiver = nodes.ground_station
         self._message = messages.GNSS_data_2
         self._category = categories.none
-        self._id = 84
+        self._id = 82
         self._size = 12
         self._altitude = 0
         self._heading = 0
@@ -1359,16 +865,118 @@ class GNSS_data_2_from_flight_controller_to_ground_station:
         self._h_dop = struct.unpack_from("<H", buf, index)[0]
         index += 2
         return
-class inside_static_temperature_from_flight_controller_to_ground_station:
+class ms_raw_from_flight_controller_to_ground_station:
     def __init__(self):
         self._sender = nodes.flight_controller
         self._receiver = nodes.ground_station
-        self._message = messages.inside_static_temperature
+        self._message = messages.ms_raw
+        self._category = categories.none
+        self._id = 83
+        self._size = 8
+        self._pressure = 0
+        self._temperature = 0
+    def get_sender(self):
+        return self._sender
+    def get_receiver(self):
+        return self._receiver
+    def get_message(self):
+        return self._message
+    def get_id(self):
+        return self._id
+    def get_size(self):
+        return self._size
+    def get_category(self):
+        return self._category
+    def set_pressure(self, value):
+        self._pressure = value
+    def set_temperature(self, value):
+        self._temperature = value
+    def build_buf(self):
+        buf = b""
+        buf += struct.pack("<f", self._pressure)
+        buf += struct.pack("<f", self._temperature)
+        return buf
+    def get_pressure(self):
+        return self._pressure
+    def get_temperature(self):
+        return self._temperature
+    def get_all_data(self):
+        data = []
+        data.append((fields.pressure, self.get_pressure()))
+        data.append((fields.temperature, self.get_temperature()))
+        return data
+    def parse_buf(self, buf):
+        index = 0
+        self._pressure = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._temperature = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        return
+class bmp_raw_from_flight_controller_to_ground_station:
+    def __init__(self):
+        self._sender = nodes.flight_controller
+        self._receiver = nodes.ground_station
+        self._message = messages.bmp_raw
+        self._category = categories.none
+        self._id = 84
+        self._size = 8
+        self._pressure = 0
+        self._temperature = 0
+    def get_sender(self):
+        return self._sender
+    def get_receiver(self):
+        return self._receiver
+    def get_message(self):
+        return self._message
+    def get_id(self):
+        return self._id
+    def get_size(self):
+        return self._size
+    def get_category(self):
+        return self._category
+    def set_pressure(self, value):
+        self._pressure = value
+    def set_temperature(self, value):
+        self._temperature = value
+    def build_buf(self):
+        buf = b""
+        buf += struct.pack("<f", self._pressure)
+        buf += struct.pack("<f", self._temperature)
+        return buf
+    def get_pressure(self):
+        return self._pressure
+    def get_temperature(self):
+        return self._temperature
+    def get_all_data(self):
+        data = []
+        data.append((fields.pressure, self.get_pressure()))
+        data.append((fields.temperature, self.get_temperature()))
+        return data
+    def parse_buf(self, buf):
+        index = 0
+        self._pressure = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._temperature = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        return
+class imu_raw_from_flight_controller_to_ground_station:
+    def __init__(self):
+        self._sender = nodes.flight_controller
+        self._receiver = nodes.ground_station
+        self._message = messages.imu_raw
         self._category = categories.none
         self._id = 85
-        self._size = 8
-        self._temperature_1 = 0
-        self._temperature_2 = 0
+        self._size = 37
+        self._imu_id = 0
+        self._accel_x = 0
+        self._accel_y = 0
+        self._accel_z = 0
+        self._gyro_x = 0
+        self._gyro_y = 0
+        self._gyro_z = 0
+        self._magnet_x = 0
+        self._magnet_y = 0
+        self._magnet_z = 0
     def get_sender(self):
         return self._sender
     def get_receiver(self):
@@ -1381,41 +989,106 @@ class inside_static_temperature_from_flight_controller_to_ground_station:
         return self._size
     def get_category(self):
         return self._category
-    def set_temperature_1(self, value):
-        self._temperature_1 = scaledFloat_to_uint(value, 100)
-    def set_temperature_2(self, value):
-        self._temperature_2 = scaledFloat_to_uint(value, 100)
+    def set_imu_id(self, value):
+        self._imu_id = value
+    def set_accel_x(self, value):
+        self._accel_x = value
+    def set_accel_y(self, value):
+        self._accel_y = value
+    def set_accel_z(self, value):
+        self._accel_z = value
+    def set_gyro_x(self, value):
+        self._gyro_x = value
+    def set_gyro_y(self, value):
+        self._gyro_y = value
+    def set_gyro_z(self, value):
+        self._gyro_z = value
+    def set_magnet_x(self, value):
+        self._magnet_x = value
+    def set_magnet_y(self, value):
+        self._magnet_y = value
+    def set_magnet_z(self, value):
+        self._magnet_z = value
     def build_buf(self):
         buf = b""
-        buf += struct.pack("<l", self._temperature_1)
-        buf += struct.pack("<l", self._temperature_2)
+        buf += struct.pack("<B", self._imu_id)
+        buf += struct.pack("<f", self._accel_x)
+        buf += struct.pack("<f", self._accel_y)
+        buf += struct.pack("<f", self._accel_z)
+        buf += struct.pack("<f", self._gyro_x)
+        buf += struct.pack("<f", self._gyro_y)
+        buf += struct.pack("<f", self._gyro_z)
+        buf += struct.pack("<f", self._magnet_x)
+        buf += struct.pack("<f", self._magnet_y)
+        buf += struct.pack("<f", self._magnet_z)
         return buf
-    def get_temperature_1(self):
-        return uint_to_scaledFloat(self._temperature_1, 100)
-    def get_temperature_2(self):
-        return uint_to_scaledFloat(self._temperature_2, 100)
+    def get_imu_id(self):
+        return self._imu_id
+    def get_accel_x(self):
+        return self._accel_x
+    def get_accel_y(self):
+        return self._accel_y
+    def get_accel_z(self):
+        return self._accel_z
+    def get_gyro_x(self):
+        return self._gyro_x
+    def get_gyro_y(self):
+        return self._gyro_y
+    def get_gyro_z(self):
+        return self._gyro_z
+    def get_magnet_x(self):
+        return self._magnet_x
+    def get_magnet_y(self):
+        return self._magnet_y
+    def get_magnet_z(self):
+        return self._magnet_z
     def get_all_data(self):
         data = []
-        data.append((fields.temperature_1, self.get_temperature_1()))
-        data.append((fields.temperature_2, self.get_temperature_2()))
+        data.append((fields.imu_id, self.get_imu_id()))
+        data.append((fields.accel_x, self.get_accel_x()))
+        data.append((fields.accel_y, self.get_accel_y()))
+        data.append((fields.accel_z, self.get_accel_z()))
+        data.append((fields.gyro_x, self.get_gyro_x()))
+        data.append((fields.gyro_y, self.get_gyro_y()))
+        data.append((fields.gyro_z, self.get_gyro_z()))
+        data.append((fields.magnet_x, self.get_magnet_x()))
+        data.append((fields.magnet_y, self.get_magnet_y()))
+        data.append((fields.magnet_z, self.get_magnet_z()))
         return data
     def parse_buf(self, buf):
         index = 0
-        self._temperature_1 = struct.unpack_from("<l", buf, index)[0]
+        self._imu_id = struct.unpack_from("<B", buf, index)[0]
+        index += 1
+        self._accel_x = struct.unpack_from("<f", buf, index)[0]
         index += 4
-        self._temperature_2 = struct.unpack_from("<l", buf, index)[0]
+        self._accel_y = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._accel_z = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._gyro_x = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._gyro_y = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._gyro_z = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._magnet_x = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._magnet_y = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._magnet_z = struct.unpack_from("<f", buf, index)[0]
         index += 4
         return
-class inside_static_pressure_from_flight_controller_to_ground_station:
+class position_from_flight_controller_to_ground_station:
     def __init__(self):
         self._sender = nodes.flight_controller
         self._receiver = nodes.ground_station
-        self._message = messages.inside_static_pressure
+        self._message = messages.position
         self._category = categories.none
         self._id = 86
-        self._size = 8
-        self._pressure_1 = 0
-        self._pressure_2 = 0
+        self._size = 12
+        self._altitude = 0
+        self._longitude = 0
+        self._latitude = 0
     def get_sender(self):
         return self._sender
     def get_receiver(self):
@@ -1428,48 +1101,48 @@ class inside_static_pressure_from_flight_controller_to_ground_station:
         return self._size
     def get_category(self):
         return self._category
-    def set_pressure_1(self, value):
-        self._pressure_1 = scaledFloat_to_uint(value, 100)
-    def set_pressure_2(self, value):
-        self._pressure_2 = scaledFloat_to_uint(value, 100)
+    def set_altitude(self, value):
+        self._altitude = value
+    def set_longitude(self, value):
+        self._longitude = value
+    def set_latitude(self, value):
+        self._latitude = value
     def build_buf(self):
         buf = b""
-        buf += struct.pack("<l", self._pressure_1)
-        buf += struct.pack("<l", self._pressure_2)
+        buf += struct.pack("<f", self._altitude)
+        buf += struct.pack("<f", self._longitude)
+        buf += struct.pack("<f", self._latitude)
         return buf
-    def get_pressure_1(self):
-        return uint_to_scaledFloat(self._pressure_1, 100)
-    def get_pressure_2(self):
-        return uint_to_scaledFloat(self._pressure_2, 100)
+    def get_altitude(self):
+        return self._altitude
+    def get_longitude(self):
+        return self._longitude
+    def get_latitude(self):
+        return self._latitude
     def get_all_data(self):
         data = []
-        data.append((fields.pressure_1, self.get_pressure_1()))
-        data.append((fields.pressure_2, self.get_pressure_2()))
+        data.append((fields.altitude, self.get_altitude()))
+        data.append((fields.longitude, self.get_longitude()))
+        data.append((fields.latitude, self.get_latitude()))
         return data
     def parse_buf(self, buf):
         index = 0
-        self._pressure_1 = struct.unpack_from("<l", buf, index)[0]
+        self._altitude = struct.unpack_from("<f", buf, index)[0]
         index += 4
-        self._pressure_2 = struct.unpack_from("<l", buf, index)[0]
+        self._longitude = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._latitude = struct.unpack_from("<f", buf, index)[0]
         index += 4
         return
-class IMU1_from_flight_controller_to_ground_station:
+class differential_pressure_from_flight_controller_to_ground_station:
     def __init__(self):
         self._sender = nodes.flight_controller
         self._receiver = nodes.ground_station
-        self._message = messages.IMU1
+        self._message = messages.differential_pressure
         self._category = categories.none
         self._id = 87
-        self._size = 18
-        self._accel_x = 0
-        self._accel_y = 0
-        self._accel_z = 0
-        self._gyro_x = 0
-        self._gyro_y = 0
-        self._gyro_z = 0
-        self._magnet_x = 0
-        self._magnet_y = 0
-        self._magnet_z = 0
+        self._size = 4
+        self._differential_pressure = 0
     def get_sender(self):
         return self._sender
     def get_receiver(self):
@@ -1482,238 +1155,43 @@ class IMU1_from_flight_controller_to_ground_station:
         return self._size
     def get_category(self):
         return self._category
-    def set_accel_x(self, value):
-        self._accel_x = value
-    def set_accel_y(self, value):
-        self._accel_y = value
-    def set_accel_z(self, value):
-        self._accel_z = value
-    def set_gyro_x(self, value):
-        self._gyro_x = value
-    def set_gyro_y(self, value):
-        self._gyro_y = value
-    def set_gyro_z(self, value):
-        self._gyro_z = value
-    def set_magnet_x(self, value):
-        self._magnet_x = value
-    def set_magnet_y(self, value):
-        self._magnet_y = value
-    def set_magnet_z(self, value):
-        self._magnet_z = value
+    def set_differential_pressure(self, value):
+        self._differential_pressure = value
     def build_buf(self):
         buf = b""
-        buf += struct.pack("<H", self._accel_x)
-        buf += struct.pack("<H", self._accel_y)
-        buf += struct.pack("<H", self._accel_z)
-        buf += struct.pack("<H", self._gyro_x)
-        buf += struct.pack("<H", self._gyro_y)
-        buf += struct.pack("<H", self._gyro_z)
-        buf += struct.pack("<H", self._magnet_x)
-        buf += struct.pack("<H", self._magnet_y)
-        buf += struct.pack("<H", self._magnet_z)
+        buf += struct.pack("<f", self._differential_pressure)
         return buf
-    def get_accel_x(self):
-        return self._accel_x
-    def get_accel_y(self):
-        return self._accel_y
-    def get_accel_z(self):
-        return self._accel_z
-    def get_gyro_x(self):
-        return self._gyro_x
-    def get_gyro_y(self):
-        return self._gyro_y
-    def get_gyro_z(self):
-        return self._gyro_z
-    def get_magnet_x(self):
-        return self._magnet_x
-    def get_magnet_y(self):
-        return self._magnet_y
-    def get_magnet_z(self):
-        return self._magnet_z
+    def get_differential_pressure(self):
+        return self._differential_pressure
     def get_all_data(self):
         data = []
-        data.append((fields.accel_x, self.get_accel_x()))
-        data.append((fields.accel_y, self.get_accel_y()))
-        data.append((fields.accel_z, self.get_accel_z()))
-        data.append((fields.gyro_x, self.get_gyro_x()))
-        data.append((fields.gyro_y, self.get_gyro_y()))
-        data.append((fields.gyro_z, self.get_gyro_z()))
-        data.append((fields.magnet_x, self.get_magnet_x()))
-        data.append((fields.magnet_y, self.get_magnet_y()))
-        data.append((fields.magnet_z, self.get_magnet_z()))
+        data.append((fields.differential_pressure, self.get_differential_pressure()))
         return data
     def parse_buf(self, buf):
         index = 0
-        self._accel_x = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        self._accel_y = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        self._accel_z = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        self._gyro_x = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        self._gyro_y = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        self._gyro_z = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        self._magnet_x = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        self._magnet_y = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        self._magnet_z = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        return
-class IMU2_from_flight_controller_to_ground_station:
-    def __init__(self):
-        self._sender = nodes.flight_controller
-        self._receiver = nodes.ground_station
-        self._message = messages.IMU2
-        self._category = categories.none
-        self._id = 88
-        self._size = 18
-        self._accel_x = 0
-        self._accel_y = 0
-        self._accel_z = 0
-        self._gyro_x = 0
-        self._gyro_y = 0
-        self._gyro_z = 0
-        self._magnet_x = 0
-        self._magnet_y = 0
-        self._magnet_z = 0
-    def get_sender(self):
-        return self._sender
-    def get_receiver(self):
-        return self._receiver
-    def get_message(self):
-        return self._message
-    def get_id(self):
-        return self._id
-    def get_size(self):
-        return self._size
-    def get_category(self):
-        return self._category
-    def set_accel_x(self, value):
-        self._accel_x = value
-    def set_accel_y(self, value):
-        self._accel_y = value
-    def set_accel_z(self, value):
-        self._accel_z = value
-    def set_gyro_x(self, value):
-        self._gyro_x = value
-    def set_gyro_y(self, value):
-        self._gyro_y = value
-    def set_gyro_z(self, value):
-        self._gyro_z = value
-    def set_magnet_x(self, value):
-        self._magnet_x = value
-    def set_magnet_y(self, value):
-        self._magnet_y = value
-    def set_magnet_z(self, value):
-        self._magnet_z = value
-    def build_buf(self):
-        buf = b""
-        buf += struct.pack("<H", self._accel_x)
-        buf += struct.pack("<H", self._accel_y)
-        buf += struct.pack("<H", self._accel_z)
-        buf += struct.pack("<H", self._gyro_x)
-        buf += struct.pack("<H", self._gyro_y)
-        buf += struct.pack("<H", self._gyro_z)
-        buf += struct.pack("<H", self._magnet_x)
-        buf += struct.pack("<H", self._magnet_y)
-        buf += struct.pack("<H", self._magnet_z)
-        return buf
-    def get_accel_x(self):
-        return self._accel_x
-    def get_accel_y(self):
-        return self._accel_y
-    def get_accel_z(self):
-        return self._accel_z
-    def get_gyro_x(self):
-        return self._gyro_x
-    def get_gyro_y(self):
-        return self._gyro_y
-    def get_gyro_z(self):
-        return self._gyro_z
-    def get_magnet_x(self):
-        return self._magnet_x
-    def get_magnet_y(self):
-        return self._magnet_y
-    def get_magnet_z(self):
-        return self._magnet_z
-    def get_all_data(self):
-        data = []
-        data.append((fields.accel_x, self.get_accel_x()))
-        data.append((fields.accel_y, self.get_accel_y()))
-        data.append((fields.accel_z, self.get_accel_z()))
-        data.append((fields.gyro_x, self.get_gyro_x()))
-        data.append((fields.gyro_y, self.get_gyro_y()))
-        data.append((fields.gyro_z, self.get_gyro_z()))
-        data.append((fields.magnet_x, self.get_magnet_x()))
-        data.append((fields.magnet_y, self.get_magnet_y()))
-        data.append((fields.magnet_z, self.get_magnet_z()))
-        return data
-    def parse_buf(self, buf):
-        index = 0
-        self._accel_x = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        self._accel_y = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        self._accel_z = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        self._gyro_x = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        self._gyro_y = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        self._gyro_z = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        self._magnet_x = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        self._magnet_y = struct.unpack_from("<H", buf, index)[0]
-        index += 2
-        self._magnet_z = struct.unpack_from("<H", buf, index)[0]
-        index += 2
+        self._differential_pressure = struct.unpack_from("<f", buf, index)[0]
+        index += 4
         return
 def id_to_message_class(id):
     if id == 255:
         receiver = local_timestamp_from_local_to_local()
         return receiver
-    if id == 64:
-        receiver = ms_since_boot_from_test_to_test()
-        return receiver
-    if id == 0:
-        receiver = altitude_from_test_to_test()
-        return receiver
-    if id == 1:
-        receiver = acceleration_from_test_to_test()
-        return receiver
-    if id == 2:
-        receiver = pressure_from_test_to_test()
-        return receiver
-    if id == 3:
-        receiver = catastrophe_from_test_to_test()
-        return receiver
-    if id == 4:
-        receiver = gyro_from_test_to_test()
-        return receiver
     if id == 16:
         receiver = time_sync_from_ground_station_to_flight_controller()
         return receiver
     if id == 17:
-        receiver = set_power_mode_from_ground_station_to_flight_controller()
+        receiver = set_state_from_ground_station_to_flight_controller()
         return receiver
     if id == 18:
-        receiver = set_radio_equipment_from_ground_station_to_flight_controller()
-        return receiver
-    if id == 19:
         receiver = set_parachute_output_from_ground_station_to_flight_controller()
         return receiver
-    if id == 20:
+    if id == 19:
         receiver = set_data_logging_from_ground_station_to_flight_controller()
         return receiver
-    if id == 21:
+    if id == 20:
         receiver = dump_flash_from_ground_station_to_flight_controller()
         return receiver
-    if id == 22:
+    if id == 21:
         receiver = handshake_from_ground_station_to_flight_controller()
         return receiver
     if id == 32:
@@ -1732,44 +1210,115 @@ def id_to_message_class(id):
         receiver = onboard_battery_voltage_from_flight_controller_to_ground_station()
         return receiver
     if id == 37:
-        receiver = gnss_data_from_flight_controller_to_ground_station()
-        return receiver
-    if id == 38:
-        receiver = flight_controller_status_from_flight_controller_to_ground_station()
-        return receiver
-    if id == 39:
         receiver = return_data_logging_from_flight_controller_to_ground_station()
         return receiver
-    if id == 40:
+    if id == 38:
         receiver = return_dump_flash_from_flight_controller_to_ground_station()
         return receiver
-    if id == 41:
+    if id == 39:
         receiver = return_handshake_from_flight_controller_to_ground_station()
         return receiver
     if id == 80:
         receiver = ms_since_boot_from_flight_controller_to_ground_station()
         return receiver
     if id == 81:
-        receiver = us_since_boot_from_flight_controller_to_ground_station()
-        return receiver
-    if id == 82:
-        receiver = current_time_from_flight_controller_to_ground_station()
-        return receiver
-    if id == 83:
         receiver = GNSS_data_1_from_flight_controller_to_ground_station()
         return receiver
-    if id == 84:
+    if id == 82:
         receiver = GNSS_data_2_from_flight_controller_to_ground_station()
         return receiver
+    if id == 83:
+        receiver = ms_raw_from_flight_controller_to_ground_station()
+        return receiver
+    if id == 84:
+        receiver = bmp_raw_from_flight_controller_to_ground_station()
+        return receiver
     if id == 85:
-        receiver = inside_static_temperature_from_flight_controller_to_ground_station()
+        receiver = imu_raw_from_flight_controller_to_ground_station()
         return receiver
     if id == 86:
-        receiver = inside_static_pressure_from_flight_controller_to_ground_station()
+        receiver = position_from_flight_controller_to_ground_station()
         return receiver
     if id == 87:
-        receiver = IMU1_from_flight_controller_to_ground_station()
+        receiver = differential_pressure_from_flight_controller_to_ground_station()
         return receiver
-    if id == 88:
-        receiver = IMU2_from_flight_controller_to_ground_station()
-        return receiver
+def is_specifier(sender, name, field):
+    if (messages.local_timestamp == name and nodes.local == sender):
+        if (fields.timestamp == field):
+            return False
+    if (messages.time_sync == name and nodes.ground_station == sender):
+        if (fields.system_time == field):
+            return False
+    if (messages.set_state == name and nodes.ground_station == sender):
+        if (fields.state == field):
+            return False
+    if (messages.onboard_battery_voltage == name and nodes.flight_controller == sender):
+        if (fields.battery_1 == field):
+            return False
+        if (fields.battery_2 == field):
+            return False
+    if (messages.ms_since_boot == name and nodes.flight_controller == sender):
+        if (fields.ms_since_boot == field):
+            return False
+    if (messages.GNSS_data_1 == name and nodes.flight_controller == sender):
+        if (fields.gnss_time == field):
+            return False
+        if (fields.latitude == field):
+            return False
+        if (fields.longitude == field):
+            return False
+    if (messages.GNSS_data_2 == name and nodes.flight_controller == sender):
+        if (fields.altitude == field):
+            return False
+        if (fields.heading == field):
+            return False
+        if (fields.horiz_speed == field):
+            return False
+        if (fields.fix_status == field):
+            return False
+        if (fields.n_satellites == field):
+            return False
+        if (fields.h_dop == field):
+            return False
+    if (messages.ms_raw == name and nodes.flight_controller == sender):
+        if (fields.pressure == field):
+            return False
+        if (fields.temperature == field):
+            return False
+    if (messages.bmp_raw == name and nodes.flight_controller == sender):
+        if (fields.pressure == field):
+            return False
+        if (fields.temperature == field):
+            return False
+    if (messages.imu_raw == name and nodes.flight_controller == sender):
+        if (fields.imu_id == field):
+            return False
+        if (fields.accel_x == field):
+            return False
+        if (fields.accel_y == field):
+            return False
+        if (fields.accel_z == field):
+            return False
+        if (fields.gyro_x == field):
+            return False
+        if (fields.gyro_y == field):
+            return False
+        if (fields.gyro_z == field):
+            return False
+        if (fields.magnet_x == field):
+            return False
+        if (fields.magnet_y == field):
+            return False
+        if (fields.magnet_z == field):
+            return False
+    if (messages.position == name and nodes.flight_controller == sender):
+        if (fields.altitude == field):
+            return False
+        if (fields.longitude == field):
+            return False
+        if (fields.latitude == field):
+            return False
+    if (messages.differential_pressure == name and nodes.flight_controller == sender):
+        if (fields.differential_pressure == field):
+            return False
+    return False
