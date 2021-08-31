@@ -1,9 +1,12 @@
+import os.path
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import Qt
 import pyqtgraph as pg
 from PyQt5.QtGui import QPalette, QColor
 from time import time
 from random import randint
+from .save import save_data_to_file_json, load_json, save_data_to_file_csv, load_csv
+from datetime import datetime
 
 
 INTERVAL = 30 # delay in ms - increase it if the dashboard is freezing, decrease to speed up the update rate
@@ -915,11 +918,19 @@ class MenuBar(QtWidgets.QMenuBar):
 		self.openFile = QtWidgets.QAction("Open &file")
 		self.openFile.triggered.connect(self.parent()._open_file)
 
+		self.saveJSON = QtWidgets.QAction("Save as &JSON")
+		self.saveJSON.triggered.connect(self.parent()._save_to_json)
+
+		self.saveCSV = QtWidgets.QAction("Save as &CSV")
+		self.saveCSV.triggered.connect(self.parent()._save_to_csv)
+
 		self.exit = QtWidgets.QAction("&Exit")
 		self.exit.triggered.connect(self.parent().close)
 
 		self.fileMenu.addAction(self.openSerial)
 		self.fileMenu.addAction(self.openFile)
+		self.fileMenu.addAction(self.saveJSON)
+		self.fileMenu.addAction(self.saveCSV)
 		self.fileMenu.addAction(self.exit)
 		self.addMenu(self.fileMenu)
 
@@ -1067,7 +1078,32 @@ class MainWindow(QtWidgets.QMainWindow):
 
 	def _load_file(self, fname):
 		print("Loading:", fname)
-		self.tm.open_flash_file(fname)
-		# self.tm.open_flash_file("data/test")
-		self.menu.hide()
-		self.timer.start()
+		_, ext = os.path.splitext(fname)
+		if ext == "":
+			self.tm.open_flash_file(fname)
+			# self.tm.open_flash_file("data/test")
+			self.menu.hide()
+			self.timer.start()
+		elif ext == ".json":
+			load_json(self.tm, fname)
+			self.menu.hide()
+			self.timer.start()
+		elif ext == ".csv":
+			#Load csv
+			print("Cannot load csv files yet")
+		else:
+			print("Cannot load this file")
+
+	def _save_to_json(self):
+		now = datetime.now()
+		date = now.strftime("%Y-%m-%d-%H-%M-%S")
+		fname = self.tm.device + "-" + date + ".json"
+		path = save_data_to_file_json(self.tm.data, fname)
+		print('Save as "{}"'.format(path))
+
+	def _save_to_csv(self):
+		now = datetime.now()
+		date = now.strftime("%Y-%m-%d-%H-%M-%S")
+		fname = self.tm.device + "-" + date + ".csv"
+		path = save_data_to_file_csv(self.tm.data, fname)
+		print('Save as "{}"'.format(path))
