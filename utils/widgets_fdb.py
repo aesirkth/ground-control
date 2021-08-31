@@ -1,10 +1,12 @@
 import os, random
-from math import ceil, pi, cos, sin
+from math import ceil, pi, cos, sin, sqrt
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5 import QtPositioning, QtQuickWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QColor
-from utils.widgets_edb import MainMenu, InfoDialog, DataWidget, GraphWidget, TitleWidget
+from utils.widgets_edb import MenuButton, InfoDialog, DataWidget, GraphWidget, TitleWidget
+from .save import save_data_to_file_json, load_json, save_data_to_file_csv, load_csv
+from utils.simulation import Simulator
 import pyqtgraph as pg
 
 
@@ -282,6 +284,124 @@ class GraphWithTitle(QtWidgets.QWidget):
 		self.setLayout(layout)
 
 
+class GraphAirSpeed(QtWidgets.QWidget):
+
+	max_iter = 100
+	min_super_mach = 1 # Minimum mach number of supersonic speed
+	max_super_mach = 5 # Maximum mach number of supersonic speed
+	epsilon = 1e-6 # Table precision
+	gamma = 1.4 # Heat capacity ratio
+
+	def __init__(self, timer, tm, parent=None):
+		super().__init__()
+		self.airSpeedList = []
+		self.tm = tm
+
+		layout = QtWidgets.QVBoxLayout()
+		layout.setContentsMargins(0, 0, 0, 0)
+		layout.setSpacing(0)
+		title = TitleWidget("Mach number")
+		# graph = GraphWidget(timer, tm, updateFields=updateFields, dataNames=dataNames, displayXLabel=displayXLabel)
+		graph = GraphWidgetFDB(timer, lambda:self.updateAirSpeed(), "Air Speed (m/s)")
+		layout.addWidget(title)
+		layout.addWidget(graph)
+		self.setLayout(layout)
+
+	def updateAirSpeed(self):
+		x, pressure = self.tm.data["test"]["gyro"]["x"].pack()
+
+		#
+		# TODO: Compute the pressure ratio
+		#
+
+		if len(self.airSpeedList) != len(pressure):
+			for k in range(len(self.airSpeedList), len(pressure)):
+				self.airSpeedList.append(self.ratio_to_M(pressure[k]+1))
+		return x, self.airSpeedList
+
+	def ratio_to_M(self, ratio):
+		"""Pressure ration to Mach number"""
+		M = self.subsonic(ratio)
+		if M > 1:
+			M = self.dicho(self.rayleigh, ratio, self.min_super_mach, self.max_super_mach, self.epsilon)
+		return M
+
+
+	def dicho(self, f, target, xmin, xmax, epsilon):
+		x = (xmin + xmax) / 2
+		y = f(x)
+		nb_iter = 0
+		while abs(y - target) > epsilon:
+			if y < target:
+				xmin = x
+			else:
+				xmax = x
+			x = (xmin + xmax) / 2
+			y = f(x)
+			nb_iter += 1
+			if nb_iter >= self.max_iter:
+				print("Air Speed calculation: Maximum iteration reached (pressure ratio = {})".format(target))
+				break
+		return x
+
+	def subsonic(self, ratio):
+		M = sqrt(2/(self.gamma-1) * (ratio ** ((self.gamma-1)/self.gamma) - 1))
+		return M
+
+	def rayleigh(self, M):
+		gamma = self.gamma
+		ratio = (gamma + 1)**2 * M**2 / (4*gamma*M**2 - 2 * (gamma - 1))
+		ratio **= gamma/(gamma-1)
+		ratio *= (1-gamma + 2*gamma*M**2) / (gamma+1)
+		return ratio
+
+
+class MainMenu(QtWidgets.QWidget):
+	def __init__(self, parent=None):
+		super().__init__(parent)
+		self.setAcceptDrops(True) # So one can drop a file to open it
+
+		# Background color
+		self.setAutoFillBackground(True)
+		palette = self.palette()
+		palette.setColor(QPalette.Window, QColor(0, 0, 0, 128))
+		self.setPalette(palette)
+
+		self.serial_button = MenuButton("Open Serial", self.parent()._open_serial)
+
+		self.file_button = MenuButton("Open File", self.parent()._open_file)
+
+		self.simu_button = MenuButton("Launch Simulation", self.parent()._open_simu)
+
+		layout = QtWidgets.QVBoxLayout()
+		layout.addWidget(self.serial_button)
+		layout.addWidget(self.file_button)
+		layout.addWidget(self.simu_button)
+
+		layout.setSpacing(20)
+
+		wid = QtWidgets.QWidget()
+		wid.setLayout(layout)
+		wid.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+
+		layout = QtWidgets.QVBoxLayout()
+		layout.addWidget(wid)
+		layout.setAlignment(Qt.AlignCenter)
+
+		self.setLayout(layout)
+
+	def dragEnterEvent(self, event):
+		# No file verification here
+		# I assume the user know what he's doing...
+		if event.mimeData().hasUrls():
+			event.acceptProposedAction()
+
+	def dropEvent(self, event):
+		# print(event.mimeData().urls())
+		fname = event.mimeData().urls()[0].toLocalFile()
+		self.parent()._load_file(fname)
+
+
 class MenuBar(QtWidgets.QMenuBar):
 	def __init__(self, parent=None):
 		super().__init__(parent=parent)
@@ -378,7 +498,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		centralWidget = QtWidgets.QWidget()
 		layoutC = QtWidgets.QVBoxLayout()
 		layoutC.addWidget(GraphWithTitle("Altitude", self.timer, self.tm, ["test", "gyro", "x"]))
-		layoutC.addWidget(GraphWithTitle("Air speed", self.timer, self.tm, ["test", "gyro", "x"]))
+		# layoutC.addWidget(GraphWithTitle("Air speed", self.timer, self.tm, ["test", "gyro", "x"]))
+		layoutC.addWidget(GraphAirSpeed(self.timer, self.tm))
 		layoutC.setContentsMargins(0, 0, 0, 0)
 		centralWidget.setLayout(layoutC)
 
@@ -421,6 +542,9 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.mappy = None
 		self._show_map()
 
+		# Simulator
+		self.simulator = None
+
 		# Allow the application to end when the window is closed
 		QtCore.QCoreApplication.setQuitLockEnabled(True)
 
@@ -428,6 +552,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		# properly stop all threads
 		self.mappy.close()
 		self.tm.stop()
+		if self.simulator is not None:
+			self.simulator.stop()
 		event.accept()
 
 	def resizeEvent(self, event):
@@ -448,10 +574,42 @@ class MainWindow(QtWidgets.QMainWindow):
 
 	def _load_file(self, fname):
 		print("Loading:", fname)
-		self.tm.open_flash_file(fname)
-		# self.tm.open_flash_file("data/test")
+		_, ext = os.path.splitext(fname)
+		if ext == "":
+			self.tm.open_flash_file(fname)
+			# self.tm.open_flash_file("data/test")
+			self.menu.hide()
+			self.timer.start()
+		elif ext == ".json":
+			load_json(self.tm, fname)
+			self.menu.hide()
+			self.timer.start()
+		elif ext == ".csv":
+			#Load csv
+			print("Cannot load csv files yet")
+		else:
+			print("Cannot load this file")
+
+	def _save_to_json(self):
+		now = datetime.now()
+		date = now.strftime("%Y-%m-%d-%H-%M-%S")
+		fname = self.tm.device + "-" + date + ".json"
+		path = save_data_to_file_json(self.tm.data, fname)
+		print('Save as "{}"'.format(path))
+
+	def _save_to_csv(self):
+		now = datetime.now()
+		date = now.strftime("%Y-%m-%d-%H-%M-%S")
+		fname = self.tm.device + "-" + date + ".csv"
+		path = save_data_to_file_csv(self.tm.data, fname)
+		print('Save as "{}"'.format(path))
+
+	def _open_simu(self):
+		self.simulator = Simulator(self.tm)
+		self.simulator.launch()
 		self.menu.hide()
 		self.timer.start()
+
 
 	def _show_map(self):
 		if self.mappy is None or not self.mappy.isVisible():
