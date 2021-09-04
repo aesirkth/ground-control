@@ -415,6 +415,9 @@ class MenuBar(QtWidgets.QMenuBar):
 		self.openFile = QtWidgets.QAction("Open &file")
 		self.openFile.triggered.connect(self.parent()._open_file)
 
+		self.lauchSimulation = QtWidgets.QAction("&Launch simulation")
+		self.lauchSimulation.triggered.connect(self.parent()._open_simu)
+
 		self.showMap = QtWidgets.QAction("Show/hide &map")
 		self.showMap.triggered.connect(self.parent()._show_map)
 
@@ -423,6 +426,7 @@ class MenuBar(QtWidgets.QMenuBar):
 
 		self.fileMenu.addAction(self.openSerial)
 		self.fileMenu.addAction(self.openFile)
+		self.fileMenu.addAction(self.lauchSimulation)
 		self.fileMenu.addAction(self.showMap)
 		self.fileMenu.addAction(self.exit)
 		self.addMenu(self.fileMenu)

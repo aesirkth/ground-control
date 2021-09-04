@@ -202,7 +202,7 @@ class AutoModeSwitch(QtWidgets.QWidget):
 # Graphs
 class TempOxidizerGraph(GraphWidget):
 	def __init__(self, timer, tm, parent=None):
-		updateField = ["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]
+		updateField = ["test", "gyro", "x"]
 		updateFields = [updateField]*5
 		dataNames = None
 		super().__init__(timer, tm, updateFields=updateFields, dataNames=dataNames, parent=parent)
@@ -214,7 +214,7 @@ class TempOxidizerGraph(GraphWidget):
 
 class TempPipeworkGraph(GraphWidget):
 	def __init__(self, timer, tm, parent=None):
-		updateField = ["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]
+		updateField = ["test", "gyro", "x"]
 		updateFields = [updateField]*4
 		dataNames = None
 		super().__init__(timer, tm, updateFields=updateFields, dataNames=dataNames, parent=parent)
@@ -224,7 +224,7 @@ class TempPipeworkGraph(GraphWidget):
 
 class TempInjectorGraph(GraphWidget):
 	def __init__(self, timer, tm, parent=None):
-		updateField = ["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]
+		updateField = ["test", "gyro", "x"]
 		updateFields = [updateField]
 		dataNames = None
 		super().__init__(timer, tm, updateFields=updateFields, dataNames=dataNames, parent=parent)
@@ -234,7 +234,7 @@ class TempInjectorGraph(GraphWidget):
 
 class TempCombustionGraph(GraphWidget):
 	def __init__(self, timer, tm, parent=None):
-		updateField = ["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]
+		updateField = ["test", "gyro", "x"]
 		updateFields = [updateField]*3
 		dataNames = ["Wall 1", "Wall 2", "Wall 3"]
 		super().__init__(timer, tm, updateFields=updateFields, dataNames=dataNames, parent=parent)
@@ -244,7 +244,7 @@ class TempCombustionGraph(GraphWidget):
 
 class TempNozzleGraph(GraphWidget):
 	def __init__(self, timer, tm, parent=None):
-		updateField = ["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]
+		updateField = ["test", "gyro", "x"]
 		updateFields = [updateField]
 		dataNames = None
 		super().__init__(timer, tm, updateFields=updateFields, dataNames=dataNames, parent=parent)
@@ -255,11 +255,11 @@ class TempOxidizer(GraphPlusWidget):
 	def __init__(self, timer, tm, parent=None):
 		graph = TempOxidizerGraph
 		updateFields = [
-			["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"],
-			["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"],
-			["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"],
-			["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"],
-			["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]]
+			["test", "gyro", "x"],
+			["test", "gyro", "x"],
+			["test", "gyro", "x"],
+			["test", "gyro", "x"],
+			["test", "gyro", "x"]]
 		super().__init__(timer, tm, graph, updateFields, parent=parent)
 
 
@@ -267,17 +267,17 @@ class TempPipework(GraphPlusWidget):
 	def __init__(self, timer, tm, parent=None):
 		graph = TempPipeworkGraph
 		updateFields = [
-			["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"],
-			["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"],
-			["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"],
-			["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]]
+			["test", "gyro", "x"],
+			["test", "gyro", "x"],
+			["test", "gyro", "x"],
+			["test", "gyro", "x"]]
 		super().__init__(timer, tm, graph, updateFields, parent=parent)
 
 
 class TempInjector(GraphPlusWidget):
 	def __init__(self, timer, tm, parent=None):
 		graph = TempInjectorGraph
-		updateFields = [["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]]
+		updateFields = [["test", "gyro", "x"]]
 		super().__init__(timer, tm, graph, updateFields, parent=parent)
 
 
@@ -285,16 +285,16 @@ class TempCombustion(GraphPlusWidget):
 	def __init__(self, timer, tm, parent=None):
 		graph = TempCombustionGraph
 		updateFields = [
-			["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"],
-			["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"],
-			["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]]
+			["test", "gyro", "x"],
+			["test", "gyro", "x"],
+			["test", "gyro", "x"]]
 		super().__init__(timer, tm, graph, updateFields, parent=parent)
 
 
 class TempNozzle(GraphPlusWidget):
 	def __init__(self, timer, tm, parent=None):
 		graph = TempNozzleGraph
-		updateFields = [["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]]
+		updateFields = [["test", "gyro", "x"]]
 		super().__init__(timer, tm, graph, updateFields, parent=parent)
 
 
@@ -302,7 +302,7 @@ class TempNozzle(GraphPlusWidget):
 # Graphs
 class PreOxidizerGraph(GraphWidget):
 	def __init__(self, timer, tm, parent=None):
-		updateField = ["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]
+		updateField = ["test", "gyro", "x"]
 		updateFields = [updateField]*2
 		dataNames = ["Top", "Bottom"]
 		super().__init__(timer, tm, updateFields=updateFields, dataNames=dataNames, parent=parent)
@@ -312,7 +312,7 @@ class PreOxidizerGraph(GraphWidget):
 
 class PreInjectorGraph(GraphWidget):
 	def __init__(self, timer, tm, parent=None):
-		updateField = ["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]
+		updateField = ["test", "gyro", "x"]
 		updateFields = [updateField]
 		dataNames = None
 		super().__init__(timer, tm, updateFields=updateFields, dataNames=dataNames, parent=parent)
@@ -322,7 +322,7 @@ class PreInjectorGraph(GraphWidget):
 
 class PreCombustionGraph(GraphWidget):
 	def __init__(self, timer, tm, parent=None):
-		updateField = ["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]
+		updateField = ["test", "gyro", "x"]
 		updateFields = [updateField]
 		dataNames = None
 		super().__init__(timer, tm, updateFields=updateFields, dataNames=dataNames, parent=parent)
@@ -332,7 +332,7 @@ class PreCombustionGraph(GraphWidget):
 
 class PreAmbientGraph(GraphWidget):
 	def __init__(self, timer, tm, parent=None):
-		updateField = ["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]
+		updateField = ["test", "gyro", "x"]
 		updateFields = [updateField]*2
 		dataNames = None
 		super().__init__(timer, tm, updateFields=updateFields, dataNames=dataNames, parent=parent)
@@ -345,22 +345,22 @@ class PreOxidizer(GraphPlusWidget):
 	def __init__(self, timer, tm, parent=None):
 		graph = PreOxidizerGraph
 		updateFields = [
-			["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"],
-			["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]]
+			["test", "gyro", "x"],
+			["test", "gyro", "x"]]
 		super().__init__(timer, tm, graph, updateFields, parent=parent)
 
 
 class PreInjector(GraphPlusWidget):
 	def __init__(self, timer, tm, parent=None):
 		graph = PreInjectorGraph
-		updateFields = [["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]]
+		updateFields = [["test", "gyro", "x"]]
 		super().__init__(timer, tm, graph, updateFields, parent=parent)
 
 
 class PreCombustion(GraphPlusWidget):
 	def __init__(self, timer, tm, parent=None):
 		graph = PreCombustionGraph
-		updateFields = [["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]]
+		updateFields = [["test", "gyro", "x"]]
 		super().__init__(timer, tm, graph, updateFields, parent=parent)
 
 
@@ -368,8 +368,8 @@ class PreAmbient(GraphPlusWidget):
 	def __init__(self, timer, tm, parent=None):
 		graph = PreAmbientGraph
 		updateFields = [
-			["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"],
-			["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]]
+			["test", "gyro", "x"],
+			["test", "gyro", "x"]]
 		super().__init__(timer, tm, graph, updateFields, formatting="{:>5.2f}", parent=parent)
 
 
@@ -504,15 +504,15 @@ class Electrical(QtWidgets.QWidget):
 
 		# Graphs
 		listGraphs = [
-			GraphWidget(timer, tm, [["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]], displayXLabel=False),
-			GraphWidget(timer, tm, [["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]], displayXLabel=False),
-			GraphWidget(timer, tm, [["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]], displayXLabel=False),
-			GraphWidget(timer, tm, [["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]], displayXLabel=False),
-			GraphWidget(timer, tm, [["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]], displayXLabel=False),
-			GraphWidget(timer, tm, [["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]], displayXLabel=False),
-			GraphWidget(timer, tm, [["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]], displayXLabel=False),
-			GraphWidget(timer, tm, [["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]], displayXLabel=False),
-			GraphWidget(timer, tm, [["Edda_Simulator", "LoopInfo", "loopTime_microseconds:GenericThreadLoop:4"]], displayXLabel=False)
+			GraphWidget(timer, tm, [["test", "gyro", "x"]], displayXLabel=False),
+			GraphWidget(timer, tm, [["test", "gyro", "x"]], displayXLabel=False),
+			GraphWidget(timer, tm, [["test", "gyro", "x"]], displayXLabel=False),
+			GraphWidget(timer, tm, [["test", "gyro", "x"]], displayXLabel=False),
+			GraphWidget(timer, tm, [["test", "gyro", "x"]], displayXLabel=False),
+			GraphWidget(timer, tm, [["test", "gyro", "x"]], displayXLabel=False),
+			GraphWidget(timer, tm, [["test", "gyro", "x"]], displayXLabel=False),
+			GraphWidget(timer, tm, [["test", "gyro", "x"]], displayXLabel=False),
+			GraphWidget(timer, tm, [["test", "gyro", "x"]], displayXLabel=False)
 		]
 
 		# Changing the background color
@@ -828,7 +828,7 @@ class MenuButton(QtWidgets.QPushButton):
 		font.setPointSize(12)
 		self.setFont(font)
 
-		self.setContentsMargins(500, 500, 500, 500)
+		self.setStyleSheet("padding :5px 8px 5px 8px")
 
 
 class MainMenu(QtWidgets.QWidget):
