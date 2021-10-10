@@ -14,6 +14,11 @@ INTERVAL = 60 # delay in ms - increase it if the dashboard is freezing, decrease
 
 AUTO_MODE = True # Will be use in the futur (maybe)
 
+# TODO :
+# better dicho (auto increase of x_max)
+#
+
+
 # + Altitude
 # + Air Speed
 # + Acceleration
@@ -71,7 +76,8 @@ class PathManager(QtCore.QObject):
 		super(PathManager, self).__init__(parent)
 		self._width = 100
 		self._height = 100
-		self._path = [QtPositioning.QGeoCoordinate(67.85, 20.24), QtPositioning.QGeoCoordinate(68, 20)]
+		# self._path = [QtPositioning.QGeoCoordinate(67.85, 20.24), QtPositioning.QGeoCoordinate(68, 20)]
+		self._path = []
 
 	@QtCore.pyqtProperty(list, notify=pathChanged)
 	def path(self):
@@ -89,9 +95,12 @@ class PathManager(QtCore.QObject):
 
 
 class MapWidget(QtQuickWidgets.QQuickWidget):
-	def __init__(self, timer, parent=None):
+	def __init__(self, tm, timer, parent=None):
 		super(MapWidget, self).__init__(parent,
 			resizeMode=QtQuickWidgets.QQuickWidget.SizeRootObjectToView)
+		self.tm = tm
+		self.last_lat = None
+		self.last_lon = None
 
 		# Antialiasing
 		form = QtGui.QSurfaceFormat()
@@ -127,16 +136,27 @@ class MapWidget(QtQuickWidgets.QQuickWidget):
 
 	def update(self):
 		if self.isVisible():
+			# protocol.nodes.flight_controller
 
-			x = 67.85 + random.randint(-20, 20)/100
-			y = 20.24 + random.randint(-40, 40)/100
+			lat_data = self.tm.data["flight_controller"]["position"]["latitude"]
+			if len(lat_data.y) == 0:
+				return
+			lat = lat_data.y[-1] # get_last()
+			lon = self.tm.data["flight_controller"]["position"]["longitude"].get_last()
+			if self.last_lat != lat or self.last_lon != lon:
+				self.last_lat = lat
+				self.last_lon = lon
+				self.manager.addCoordinate(lat, lon)
+
+			# x = 67.85 + random.randint(-20, 20)/100
+			# y = 20.24 + random.randint(-40, 40)/100
 
 			# Two different method to plot a path
 
 			# self.manager.addCoordinate(x, y)
 
-			path = [QtPositioning.QGeoCoordinate(67.85 , 20.24), QtPositioning.QGeoCoordinate(x, y)]
-			self.manager.path = path
+			# path = [QtPositioning.QGeoCoordinate(67.85 , 20.24), QtPositioning.QGeoCoordinate(x, y)]
+			# self.manager.path = path
 
 			# path = self.manager.path.copy()
 			# path.append(QtPositioning.QGeoCoordinate(x, y))
@@ -258,10 +278,8 @@ class GraphWidgetFDB(pg.PlotWidget):
 		x, y = self.updateFunction()
 		if self.lenx != len(x) or self.leny != len(y):
 			self.lenx, self.leny = len(x), len(y)
-			# y = y.copy()
-			# for k in range(len(y)):
-			# 	y[k] *= 1000
-			self.line.setData(x, y)
+			minlen = min(self.lenx, self.leny)
+			self.line.setData(x[:minlen], y[:minlen])
 
 
 class GraphWithTitle(QtWidgets.QWidget):
@@ -294,7 +312,7 @@ class GraphAirSpeed(QtWidgets.QWidget):
 
 	def __init__(self, timer, tm, parent=None):
 		super().__init__()
-		self.airSpeedList = []
+		self.airSpeedList = [0]
 		self.tm = tm
 
 		layout = QtWidgets.QVBoxLayout()
@@ -308,20 +326,25 @@ class GraphAirSpeed(QtWidgets.QWidget):
 		self.setLayout(layout)
 
 	def updateAirSpeed(self):
-		x, pressure = self.tm.data["test"]["gyro"]["x"].pack()
+		x, pressure = self.tm.data["flight_controller"]["differential_pressure"]["differential_pressure"].pack()
 
 		#
 		# TODO: Compute the pressure ratio
 		#
+		pressure_ratio = pressure
 
-		if len(self.airSpeedList) != len(pressure):
-			for k in range(len(self.airSpeedList), len(pressure)):
-				self.airSpeedList.append(self.ratio_to_M(pressure[k]+1))
+		if len(self.airSpeedList) != len(pressure_ratio):
+			for k in range(len(self.airSpeedList), len(pressure_ratio)):
+				self.airSpeedList.append(self.ratio_to_M(pressure_ratio[k]))
 		return x, self.airSpeedList
 
 	def ratio_to_M(self, ratio):
 		"""Pressure ration to Mach number"""
 		M = self.subsonic(ratio)
+		# print(M)
+		# print("Lecture :", ratio)
+		# if random.random() < 0.01:
+		# 	os._exit(1)
 		if M > 1:
 			M = self.dicho(self.rayleigh, ratio, self.min_super_mach, self.max_super_mach, self.epsilon)
 		return M
@@ -474,14 +497,18 @@ class MainWindow(QtWidgets.QMainWindow):
 		palette.setColor(QPalette.Window, QColor("white"))
 		self.setPalette(palette)
 
+		# Mach number graph
+		self.machgraph = GraphAirSpeed(self.timer, self.tm)
+
 		# Altitude
-		self.altitude = ValueIndicator("Altitude", self.timer, lambda:"-")
+		self.altitude = ValueIndicator("Altitude (m)", self.timer, lambda: int(self.tm.data["flight_controller"]["position"]["altitude"].get_last()))
 
 		# Air speed
-		self.speed = ValueIndicator("Air speed", self.timer, lambda:"-")
+		# updateAirSpeed = lambda:"{:>.2f}".format(self.tm.data["flight_controller"]["differential_pressure"]["differential_pressure"].get_last())
+		self.speed = ValueIndicator("Air speed (m/s)", self.timer, lambda: int(self.machgraph.airSpeedList[-1]*340))
 
 		# Acceleration
-		self.acceleration = ValueIndicator("Acceleration", self.timer, lambda:"-")
+		self.acceleration = ValueIndicator("Acceleration (m)", self.timer, lambda:"-")
 
 		# GNSS
 		self.position = GNSSIndicator(self.timer) # TODO : Change the function's input
@@ -501,9 +528,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		centralWidget = QtWidgets.QWidget()
 		layoutC = QtWidgets.QVBoxLayout()
-		layoutC.addWidget(GraphWithTitle("Altitude", self.timer, self.tm, ["test", "gyro", "x"]))
+		layoutC.addWidget(GraphWithTitle("Altitude", self.timer, self.tm, ["flight_controller", "position", "altitude"]))
 		# layoutC.addWidget(GraphWithTitle("Air speed", self.timer, self.tm, ["test", "gyro", "x"]))
-		layoutC.addWidget(GraphAirSpeed(self.timer, self.tm))
+		layoutC.addWidget(self.machgraph)
 		layoutC.setContentsMargins(0, 0, 0, 0)
 		centralWidget.setLayout(layoutC)
 
@@ -554,7 +581,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 	def closeEvent(self, event):
 		# properly stop all threads
-		self.mappy.close()
+		if self.mappy is not None:
+			self.mappy.close()
 		self.tm.stop()
 		if self.simulator is not None:
 			self.simulator.stop()
@@ -610,14 +638,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
 	def _open_simu(self):
 		self.simulator = Simulator(self.tm)
-		self.simulator.launch()
 		self.menu.hide()
+		self.simulator.launch()
 		self.timer.start()
 
 
 	def _show_map(self):
 		if self.mappy is None or not self.mappy.isVisible():
-			self.mappy = MapWidget(self.timer)
+			self.mappy = MapWidget(self.tm, self.timer)
 			self.mappy.setWindowTitle("Æsir - Flight dashboard - Map")
 			self.mappy.show()
 		else:

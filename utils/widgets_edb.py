@@ -6,6 +6,7 @@ from PyQt5.QtGui import QPalette, QColor
 from time import time
 from random import randint
 from .save import save_data_to_file_json, load_json, save_data_to_file_csv, load_csv
+load_csv
 from datetime import datetime
 
 

@@ -1,8 +1,11 @@
 import matplotlib.pyplot as plt
+import utils.fc as protocol
 from time import time, sleep
 from math import pi, sqrt, cos, sin
 from threading import Thread
 from numpy.random import normal
+from utils.definitions import *
+
 
 def send_data():
 	print(".", end="")
@@ -14,6 +17,18 @@ def white_noze(scale=1):
 	# For uniform distribution, random.random can be used
 	return normal(0, scale)
 
+def pressure_ratio_from_mach(M):
+	gamma = 1.4 # Heat capacity ratio
+	if M > 1: # Rayleigh formula
+		ratio = (gamma + 1)**2 * M**2 / (4*gamma*M**2 - 2 * (gamma - 1))
+		ratio **= gamma/(gamma-1)
+		ratio *= (1-gamma + 2*gamma*M**2) / (gamma+1)
+		return ratio
+	else:
+		ratio = 1 + (gamma-1)/2 * M * M
+		ratio **= gamma/(gamma-1)
+		return ratio
+
 
 class Simulator(object):
 	"""Simulation of the rocket"""
@@ -22,6 +37,10 @@ class Simulator(object):
 		self.real_time = real_time
 		self.t = None
 		self._must_stop = False
+		self.next_data = b""
+		self.current_data = []
+		self.pointer = 0
+		self.tm.open_simulation(self)
 
 	def launch(self):
 		self.t = Thread(target = self._simu)
@@ -29,6 +48,56 @@ class Simulator(object):
 
 	def stop(self):
 		self._must_stop = True
+
+	def read(self,size=1):
+		if self.pointer == 0:
+			self.current_data = self.next_data
+			self.next_data = b""
+
+		if self.current_data == b"":
+			return self.current_data
+
+		size = min(size, len(self.current_data)-self.pointer)
+		data = self.current_data[self.pointer:self.pointer+size]
+		self.pointer += size
+		if self.pointer >= len(self.current_data):
+			self.pointer = 0
+		# print("Simu :", data)
+		return data
+
+	def send_data(self, x, y, z, v_x, v_y, v_z):
+		altitude = z
+		latitude, longitude = 67.85, 20.24
+		latitude += x * 180 / (pi*6371e3)
+		mach_number = sqrt(v_x*v_x + v_y*v_y + v_z*v_z) / 340 # Assume air speed cst = 340 m/s
+		# print(mach_number)
+		pressure_ratio = pressure_ratio_from_mach(mach_number)
+
+		data = b""
+
+		# 85 = position
+		class_id = 85
+		fc_encoder = protocol.id_to_message_class(class_id)
+		fc_encoder.set_altitude(altitude)
+		fc_encoder.set_longitude(longitude)
+		fc_encoder.set_latitude(latitude)
+		buf = fc_encoder.build_buf()
+		msg_checksum = 0
+		for v in buf:
+			msg_checksum ^= v
+		data += bytes([SEPARATOR[0], class_id, msg_checksum]) + buf
+
+		# 86 = differential_pressure (but pressure ratio here)
+		class_id = 86
+		fc_encoder = protocol.id_to_message_class(class_id)
+		fc_encoder.set_differential_pressure(pressure_ratio)
+		buf = fc_encoder.build_buf()
+		msg_checksum = 0
+		for v in buf:
+			msg_checksum ^= v
+		data += bytes([SEPARATOR[0], class_id, msg_checksum]) + buf
+
+		self.next_data = data
 
 	def _simu(self):
 		gamma0 = 89 # angle between the horizon and the rocket (°) 
@@ -44,7 +113,7 @@ class Simulator(object):
 		m_dry = 50 # kg
 		m_prop = 50 # kg
 		ISP = 250 # ~ solid or liquid fuel
-		CD = 0.3
+		CD = 0.3 # Drag coefficient
 		rho0 = 1.2 # Air density at T = 25°C
 		S = 0.0314 # Cross section surface
 
@@ -60,6 +129,9 @@ class Simulator(object):
 		Z = [z]
 		Vx = [v_x]
 		Vz = [v_z]
+		print("/!\\ For the moment it is not the differential pressure which is return but the pressure ratio /!\\")
+		print("Phase 1")
+		empty_tank = False
 
 		phase = 0
 		t = 0
@@ -78,6 +150,9 @@ class Simulator(object):
 				else:
 					T = 0
 			else:
+				if not empty_tank:
+					empty_tank = True
+					print("No more propellant")
 				T = 0
 				if m_prop < 0:
 					m_prop = 0
@@ -97,5 +172,8 @@ class Simulator(object):
 
 			if not self.real_time:
 				t += h
+			else:
+				self.send_data(x, 0, z, v_x, 0, v_z)
 
-			send_data()
+		if self.real_time:
+			self.send_data(x, 0, z, 0, 0, 0)

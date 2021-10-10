@@ -232,6 +232,11 @@ class SerialReader():
             return True
         return False
 
+    def open_simulation(self, sim):
+        self.time_sync_state = LIVE
+        self.stream = sim
+        self.stream_is_active = True
+
     #gets the seconds since the last message
     def seconds_since_last_message(self):
         return time.time() - self.last_message_time
@@ -326,6 +331,6 @@ class SerialReader():
         for single_data in decoded_data:
             (field, value) = single_data
             current_time = self.decide_on_time(field.name, value)
-            print(source.name, message.name, field.name + suffix, value)
+            # print(source.name, message.name, field.name + suffix, value)
             self.data[source.name][message.name][field.name + suffix].x.append(current_time)
             self.data[source.name][message.name][field.name + suffix].y.append(value)
