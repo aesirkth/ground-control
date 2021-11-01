@@ -1107,3 +1107,96 @@ class MainWindow(QtWidgets.QMainWindow):
 		fname = self.tm.device + "-" + date + ".csv"
 		path = save_data_to_file_csv(self.tm.data, fname)
 		print('Save as "{}"'.format(path))
+
+
+# Window used by the dashboards manager
+class EDBWindow(QtWidgets.QWidget):
+
+	def __init__(self, tm, parent, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.setAttribute(Qt.WA_DeleteOnClose, True)
+
+		self.setWindowTitle("Æsir - Engine dashboard")
+
+		self.tm = tm
+		self.parent = parent
+		self.timer = QtCore.QTimer(self)
+		self.timer.setInterval(INTERVAL)
+
+		# Temperature
+		# Left Column
+		temperatureTitle = TitleWidget("Temperature (°C)")
+		tempOxidizer = TempOxidizer(self.timer, tm, parent=self)
+		tempPipework = TempPipework(self.timer, tm, parent=self)
+		tempInjector = TempInjector(self.timer, tm, parent=self)
+		tempCombustion = TempCombustion(self.timer, tm, parent=self)
+		tempNozzle = TempNozzle(self.timer, tm, parent=self)
+
+
+		temperature = QtWidgets.QVBoxLayout()
+		widgets = [temperatureTitle, tempOxidizer, tempPipework, tempInjector, tempCombustion, tempNozzle]
+		
+		for w in widgets:
+			temperature.addWidget(w)
+
+		# Pressure
+		# Middle Column
+		pressureTitle = TitleWidget("Pressure (bar)")
+		preOxidizer = PreOxidizer(self.timer, tm, parent=self)
+		preInjector = PreInjector(self.timer, tm, parent=self)
+		preCombustion = PreCombustion(self.timer, tm, parent=self)
+		preAmbient = PreAmbient(self.timer, tm, parent=self)
+
+		pressure = QtWidgets.QVBoxLayout()
+		widgets = [pressureTitle, preOxidizer, preInjector, preCombustion, preAmbient]
+		
+		for w in widgets:
+			pressure.addWidget(w)
+
+		# Graphs list
+		graphs_list = [tempOxidizer.graph, tempPipework.graph, tempInjector.graph, tempCombustion.graph, tempNozzle.graph, preOxidizer.graph, preInjector.graph, preCombustion.graph, preAmbient.graph]
+
+		
+		# Others
+		# Right Column
+		others = QtWidgets.QVBoxLayout()
+
+		electrical = Electrical(self.timer, tm)
+		status = Status(self.timer, tm)
+		diagnostic = Diagnostic(self.timer, tm, graphs_list + electrical.listGraphs)
+
+		sizePolicy = electrical.sizePolicy()
+		sizePolicy.setVerticalPolicy(QtWidgets.QSizePolicy.Expanding)
+		electrical.setSizePolicy(sizePolicy)
+
+		# maxWidth = diagnostic.minimumSizeHint().width()
+		maxWidth = 500
+
+		electrical.setMaximumWidth(maxWidth)
+		status.setMaximumWidth(maxWidth)
+		diagnostic.setMaximumWidth(maxWidth)
+
+		others.addWidget(electrical)
+		others.addWidget(status)
+		others.addWidget(diagnostic)
+
+		# Global layout
+		layout = QtWidgets.QHBoxLayout()
+		layout.addLayout(temperature)
+		layout.addLayout(pressure)
+		layout.addLayout(others)
+
+		self.setLayout(layout)
+
+		QtCore.QCoreApplication.setQuitLockEnabled(True)
+		# Allow the application to end when the window is closed
+
+	def startTimer(self):
+		self.timer.start()
+
+	def stopTimer(self):
+		self.timer.stop()
+
+	def closeEvent(self, event):
+		self.parent.delete_edb()
+		event.accept()

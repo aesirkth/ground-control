@@ -651,3 +651,114 @@ class MainWindow(QtWidgets.QMainWindow):
 		else:
 			self.mappy.close()
 			self.mappy = None
+
+
+# Window used by the dashboards manager
+class FDBWindow(QtWidgets.QWidget):
+	def __init__(self, tm, parent, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.setAttribute(Qt.WA_DeleteOnClose, True)
+
+		self.setWindowTitle("Æsir - Flight dashboard")
+
+		self.tm = tm
+		self.parent = parent
+		self.timer = QtCore.QTimer(self)
+		self.timer.setInterval(INTERVAL)
+
+		# Background color
+		self.setAutoFillBackground(True)
+		palette = self.palette()
+		palette.setColor(QPalette.Window, QColor("white"))
+		self.setPalette(palette)
+
+		# Mach number graph
+		self.machgraph = GraphAirSpeed(self.timer, self.tm)
+
+		# Altitude
+		self.altitude = ValueIndicator("Altitude (m)", self.timer, lambda: int(self.tm.data["flight_controller"]["position"]["altitude"].get_last()))
+
+		# Air speed
+		# updateAirSpeed = lambda:"{:>.2f}".format(self.tm.data["flight_controller"]["differential_pressure"]["differential_pressure"].get_last())
+		self.speed = ValueIndicator("Air speed (m/s)", self.timer, lambda: int(self.machgraph.airSpeedList[-1]*340))
+
+		# Acceleration
+		self.acceleration = ValueIndicator("Acceleration (m)", self.timer, lambda:"-")
+
+		# GNSS
+		self.position = GNSSIndicator(self.timer) # TODO : Change the function's input
+
+		# Inside/Static Temperature
+		self.temperature = ValueIndicator("Static Temperature", self.timer, lambda:"-")
+
+		# External pressure
+		self.ex_pressure = ValueIndicator("External Pressure", self.timer, lambda:"-")
+
+		# Inside/Static pressure
+		self.in_pressure = ValueIndicator("Static Pressure", self.timer, lambda:"-")
+
+
+		# Compass
+		# self.compass = Compass(self.timer)
+
+		centralWidget = QtWidgets.QWidget()
+		layoutC = QtWidgets.QVBoxLayout()
+		layoutC.addWidget(GraphWithTitle("Altitude", self.timer, self.tm, ["flight_controller", "position", "altitude"]))
+		# layoutC.addWidget(GraphWithTitle("Air speed", self.timer, self.tm, ["test", "gyro", "x"]))
+		layoutC.addWidget(self.machgraph)
+		layoutC.setContentsMargins(0, 0, 0, 0)
+		centralWidget.setLayout(layoutC)
+
+		layout = QtWidgets.QGridLayout()
+		layout.addWidget(centralWidget, 1, 0, 9, 3)
+		layout.addWidget(self.altitude, 0, 0)
+		layout.addWidget(self.speed, 0, 1)
+		layout.addWidget(self.acceleration, 0, 2)
+
+		layout.addWidget(self.temperature, 1, 3)
+		layout.addWidget(self.ex_pressure, 3, 3)
+		layout.addWidget(self.in_pressure, 5, 3)
+
+		layout.addWidget(self.position, 7, 3)
+		layout.addWidget(Compass(self.timer), 9, 3)
+
+		layout.addWidget(ExpandionMargin(), 2, 3)
+		layout.addWidget(ExpandionMargin(), 4, 3)
+		layout.addWidget(ExpandionMargin(), 6, 3)
+		layout.addWidget(ExpandionMargin(), 8, 3)
+
+		layout.setContentsMargins(0, 0, 0, 0)
+		layout.setSpacing(0)
+
+		# Set the central widget of the Window. Widget will expand
+		# to take up all the space in the window by default.
+		self.setLayout(layout)
+
+		# Map window
+		self.mappy = None
+		self._show_map()
+
+		# Allow the application to end when the window is closed
+		QtCore.QCoreApplication.setQuitLockEnabled(True)
+
+	def closeEvent(self, event):
+		if self.mappy is not None:
+			self.mappy.close()
+		self.parent.delete_fdb()
+		event.accept()
+
+	def startTimer(self):
+		self.timer.start()
+
+	def stopTimer(self):
+		self.timer.stop()
+
+	def _show_map(self):
+		if self.mappy is None or not self.mappy.isVisible():
+			self.mappy = MapWidget(self.tm, self.timer)
+			self.mappy.setWindowTitle("Æsir - Flight dashboard - Map")
+			self.mappy.show()
+		else:
+			self.mappy.close()
+			self.mappy = None
+
