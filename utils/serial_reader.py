@@ -31,7 +31,7 @@ FLASH_TIMESTAMP = 2
 #open_serial() - open the serial connection
 class SerialWrapper():
     def __init__(self, device):
-        self.ser = serial.Serial(timeout=0.5)
+        self.ser = serial.Serial(timeout=1)
         self.device = device
         #get file name
         now = datetime.now()
@@ -103,6 +103,7 @@ class SerialWrapper():
             self.ser.write(handshake)
             time.sleep(0.5)
             buff = self.ser.read_all()
+            print(buff)
             return response in buff
         else:
             return False
@@ -307,9 +308,9 @@ class SerialReader():
         for v in buf:
             msg_checksum ^= v
         if msg_checksum != checksum:
-            print(f"invalid checksum. expected: {checksum} got: {msg_checksum}")
-            print(buf)
-            print(decoder.get_id())
+            #print(f"invalid checksum. expected: {checksum} got: {msg_checksum}")
+            #print(buf)
+            #print(decoder.get_id())
             return
 
         decoder.parse_buf(buf)
@@ -331,6 +332,7 @@ class SerialReader():
         for single_data in decoded_data:
             (field, value) = single_data
             current_time = self.decide_on_time(field.name, value)
-            # print(source.name, message.name, field.name + suffix, value)
+            if self.stream == self.ser:
+                print(source.name, message.name, field.name + suffix, value)
             self.data[source.name][message.name][field.name + suffix].x.append(current_time)
             self.data[source.name][message.name][field.name + suffix].y.append(value)
