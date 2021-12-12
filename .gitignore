@@ -8,3 +8,6 @@ radio_test.py
 utils/dummyserialwrapper.py
 utils/sensors.py
 test.py
+/test_ray.py
+/Dashbords.png
+/utils/widgets_db.py

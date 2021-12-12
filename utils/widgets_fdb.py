@@ -475,7 +475,8 @@ class MenuBar(QtWidgets.QMenuBar):
 	def _aboutAesir(self):
 		title = "Æsir"
 		text = """ÆSIR is a student rocketry association founded in 2016 at KTH Royal Institute of Technology in Stockholm. It has around 40 members every year, which are all students at KTH. Roughly half of the members are international students and they cover many disciplines and levels of study, although most of ÆSIR's members study Aerospace Engineering, Computer Science, Vehicle Engineering, Electrical Engineering, Engineering Physics and Mechanical Engineering.<br /><br /><a href=\"http://aesir.se\">ÆSIR website</a>"""
-		image = 'gui/logo/256x256.png'
+		root = os.path.dirname(__file__)
+		image = os.path.join(root, 'gui/logo/256x256.png')
 		InfoDialog(title, text, image).exec_()
 
 
@@ -651,3 +652,91 @@ class MainWindow(QtWidgets.QMainWindow):
 		else:
 			self.mappy.close()
 			self.mappy = None
+
+
+class FlightDashboard(QtWidgets.QWidget):
+	def __init__(self, tm, timer, controller, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.setAttribute(Qt.WA_DeleteOnClose, True)
+
+		self.setWindowTitle("Æsir - Flight dashboard")
+
+		self.controller = controller
+		self.tm = tm
+		self.timer = timer
+
+		# Background color
+		self.setAutoFillBackground(True)
+		palette = self.palette()
+		palette.setColor(QPalette.Window, QColor("white"))
+		self.setPalette(palette)
+
+		# Mach number graph
+		self.machgraph = GraphAirSpeed(self.timer, self.tm)
+
+		# Altitude
+		self.altitude = ValueIndicator("Altitude (m)", self.timer, lambda: int(self.tm.data["flight_controller"]["position"]["altitude"].get_last()))
+
+		# Air speed
+		# updateAirSpeed = lambda:"{:>.2f}".format(self.tm.data["flight_controller"]["differential_pressure"]["differential_pressure"].get_last())
+		self.speed = ValueIndicator("Air speed (m/s)", self.timer, lambda: int(self.machgraph.airSpeedList[-1]*340))
+
+		# Acceleration
+		self.acceleration = ValueIndicator("Acceleration (m)", self.timer, lambda:"-")
+
+		# GNSS
+		self.position = GNSSIndicator(self.timer) # TODO : Change the function's input
+
+		# Inside/Static Temperature
+		self.temperature = ValueIndicator("Static Temperature", self.timer, lambda:"-")
+
+		# External pressure
+		self.ex_pressure = ValueIndicator("External Pressure", self.timer, lambda:"-")
+
+		# Inside/Static pressure
+		self.in_pressure = ValueIndicator("Static Pressure", self.timer, lambda:"-")
+
+
+		# Compass
+		self.compass = Compass(self.timer)
+
+		centralWidget = QtWidgets.QWidget()
+		layoutC = QtWidgets.QVBoxLayout()
+		layoutC.addWidget(GraphWithTitle("Altitude", self.timer, self.tm, ["flight_controller", "position", "altitude"]))
+		# layoutC.addWidget(GraphWithTitle("Air speed", self.timer, self.tm, ["test", "gyro", "x"]))
+		layoutC.addWidget(self.machgraph)
+		layoutC.setContentsMargins(0, 0, 0, 0)
+		centralWidget.setLayout(layoutC)
+
+		layout = QtWidgets.QGridLayout()
+		layout.addWidget(centralWidget, 1, 0, 9, 3)
+		layout.addWidget(self.altitude, 0, 0)
+		layout.addWidget(self.speed, 0, 1)
+		layout.addWidget(self.acceleration, 0, 2)
+
+		layout.addWidget(self.temperature, 1, 3)
+		layout.addWidget(self.ex_pressure, 3, 3)
+		layout.addWidget(self.in_pressure, 5, 3)
+
+		layout.addWidget(self.position, 7, 3)
+		layout.addWidget(self.compass, 9, 3)
+
+		layout.addWidget(ExpandionMargin(), 2, 3)
+		layout.addWidget(ExpandionMargin(), 4, 3)
+		layout.addWidget(ExpandionMargin(), 6, 3)
+		layout.addWidget(ExpandionMargin(), 8, 3)
+
+		layout.setContentsMargins(0, 0, 0, 0)
+		layout.setSpacing(0)
+
+		# Set the layout of the widget
+		self.setLayout(layout)
+
+		# Allow the application to end when the window is closed
+		QtCore.QCoreApplication.setQuitLockEnabled(True)
+
+	def closeEvent(self, event):
+		if self.controller.must_stop:
+			event.accept()
+		else:
+			self.controller.close()

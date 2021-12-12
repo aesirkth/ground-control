@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
-from utils.widgets_ec import ValueIndicator, OpenSerial, LargePushButton
+from utils.widgets_ec import ValueIndicator, LargePushButton
 
 
 class TitleWidget(QtWidgets.QLabel):
@@ -23,6 +23,32 @@ class TitleWidget(QtWidgets.QLabel):
 		# self.setPalette(palette)
 
 		self.setFixedHeight(35)
+
+
+class OpenSerial(QtWidgets.QPushButton):
+	def __init__(self, parent):
+		self.parent = parent
+		text = "Open serial"
+		self.shortcut = "Ctrl+O"
+		tooltip = "{} ({})".format("Open the serial communication", self.shortcut)
+
+		super(OpenSerial, self).__init__(text)
+		self.setShortcut(self.shortcut) # Shortcut key
+		self.clicked.connect(self.parent.parent()._open_serial)
+		self.setToolTip(tooltip) # Tool tip
+
+
+class OpenSimu(QtWidgets.QPushButton):
+	def __init__(self, parent):
+		self.parent = parent
+		text = "Open simulation"
+		self.shortcut = "Ctrl+S"
+		tooltip = "{} ({})".format("Launch the simulation", self.shortcut)
+
+		super(OpenSimu, self).__init__(text)
+		self.setShortcut(self.shortcut) # Shortcut key
+		self.clicked.connect(self.parent.parent()._open_simu)
+		self.setToolTip(tooltip) # Tool tip
 
 
 class PowerMode(LargePushButton):
@@ -357,6 +383,7 @@ class FlightController(QtWidgets.QWidget):
 
 		title = TitleWidget("Flight Controller")
 		self.serial = OpenSerial(self)
+		self.simu = OpenSimu(self)
 		radioEquipment = RadioEquipment(tc)
 		parachute = Parachute(tc)
 		self.backup = Backup(tc)
@@ -368,7 +395,7 @@ class FlightController(QtWidgets.QWidget):
 		layout = QtWidgets.QVBoxLayout()
 		layout.setContentsMargins(5,5,5,5)
 		layout.setSpacing(10)
-		widgets = [title, self.serial, self.power, radioEquipment, parachute]
+		widgets = [title, self.serial, self.simu, self.power, radioEquipment, parachute]
 		
 		for w in widgets:
 			layout.addWidget(w)

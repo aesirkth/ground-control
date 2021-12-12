@@ -955,7 +955,8 @@ class MenuBar(QtWidgets.QMenuBar):
 	def _aboutAesir(self):
 		title = "Æsir"
 		text = """ÆSIR is a student rocketry association founded in 2016 at KTH Royal Institute of Technology in Stockholm. It has around 40 members every year, which are all students at KTH. Roughly half of the members are international students and they cover many disciplines and levels of study, although most of ÆSIR's members study Aerospace Engineering, Computer Science, Vehicle Engineering, Electrical Engineering, Engineering Physics and Mechanical Engineering.<br /><br /><a href=\"http://aesir.se\">ÆSIR website</a>"""
-		image = 'gui/logo/256x256.png'
+		root = os.path.dirname(__file__)
+		image = os.path.join(root, 'gui/logo/256x256.png')
 		InfoDialog(title, text, image).exec_()
 
 

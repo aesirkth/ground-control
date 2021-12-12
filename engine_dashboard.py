@@ -7,22 +7,23 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 
 
 def main():
-    #init threads
-    tm = Telemetry()
-    # Init Qt
-    app = QtWidgets.QApplication(sys.argv)
+	#init threads
+	tm = Telemetry()
+	# Init Qt
+	app = QtWidgets.QApplication(sys.argv)
 
-    # set app icon    
-    app_icon = QtGui.QIcon()
-    app_icon.addFile('gui/logo/16x16.png', QtCore.QSize(16,16))
-    app_icon.addFile('gui/logo/24x24.png', QtCore.QSize(24,24))
-    app_icon.addFile('gui/logo/32x32.png', QtCore.QSize(32,32))
-    app_icon.addFile('gui/logo/48x48.png', QtCore.QSize(48,48))
-    app_icon.addFile('gui/logo/256x256.png', QtCore.QSize(256,256))
-    app.setWindowIcon(app_icon)
+	# set app icon    
+	app_icon = QtGui.QIcon()
+	root = os.path.dirname(__file__)
+	app_icon.addFile(os.path.join(root, 'gui/logo/16x16.png'), QtCore.QSize(16,16))
+	app_icon.addFile(os.path.join(root, 'gui/logo/24x24.png'), QtCore.QSize(24,24))
+	app_icon.addFile(os.path.join(root, 'gui/logo/32x32.png'), QtCore.QSize(32,32))
+	app_icon.addFile(os.path.join(root, 'gui/logo/48x48.png'), QtCore.QSize(48,48))
+	app_icon.addFile(os.path.join(root, 'gui/logo/256x256.png'), QtCore.QSize(256,256))
+	app.setWindowIcon(app_icon)
 
-    w = MainWindow(tm)
-    w.show()
-    sys.exit(app.exec_())
-    
+	w = MainWindow(tm)
+	w.show()
+	sys.exit(app.exec_())
+	
 main()

@@ -33,19 +33,6 @@ class TitleWidget(QtWidgets.QLabel):
 		self.setFixedHeight(35)
 
 
-class OpenSerial(QtWidgets.QPushButton):
-	def __init__(self, parent):
-		self.parent = parent
-		text = "Open serial"
-		self.shortcut = "Ctrl+O"
-		tooltip = "{} ({})".format("Open the serial communication", self.shortcut)
-
-		super(OpenSerial, self).__init__(text)
-		self.setShortcut(self.shortcut) # Shortcut key
-		self.clicked.connect(self.parent.parent()._open_serial)
-		self.setToolTip(tooltip) # Tool tip
-
-
 class PowerMode(LargePushButton):
 	def __init__(self, tc, engineState):
 		text = "Turn on"
@@ -202,7 +189,6 @@ class EngineController(QtWidgets.QWidget):
 		super(EngineController, self).__init__(parent=parent)
 
 		title = TitleWidget("Engine Controller")
-		self.serial = OpenSerial(self)
 		fire = FireRocket(tc)
 		engineState = EngineState(tc, fire)
 		self.power = PowerMode(tc, engineState)
@@ -214,7 +200,7 @@ class EngineController(QtWidgets.QWidget):
 		layout = QtWidgets.QVBoxLayout()
 		layout.setContentsMargins(5,5,5,5)
 		layout.setSpacing(10)
-		widgets = [title, self.serial, self.power, engineState, fire]
+		widgets = [title, self.power, engineState, fire]
 		
 		for w in widgets:
 			layout.addWidget(w)
