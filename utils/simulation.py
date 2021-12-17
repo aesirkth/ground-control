@@ -104,15 +104,15 @@ class Simulator(object):
 
 		h = 0.01
 
-		times = [10, 20, 30]
-		trusts = [5e3, 5e3, 5e3]
+		times = [14]
+		trusts = [3.3e3]
 
 		g0 = 9.81 # g at sea-level
 
 		# Rocket's characteristics
-		m_dry = 50 # kg
-		m_prop = 50 # kg
-		ISP = 250 # ~ solid or liquid fuel
+		m_dry = 30 # kg (~21 kg propulsion system)
+		m_prop = 31.2 # kg (28.1 kg nitrous oxide oxidizer mass + 3.1 kg paraffin+carbon fuel)
+		ISP = 214 # ~ 214-221
 		CD = 0.3 # Drag coefficient
 		rho0 = 1.2 # Air density at T = 25°C
 		S = 0.0314 # Cross section surface
@@ -134,6 +134,7 @@ class Simulator(object):
 		empty_tank = False
 
 		phase = 0
+		T = trusts[phase]
 		t = 0
 		t0 = time()
 		while z >= 0 and not self._must_stop:
@@ -141,14 +142,17 @@ class Simulator(object):
 				last_t = t
 				t = time() - t0
 				h = t - last_t
-			if phase < len(times) and m_prop > 0:
-				if t >= times[phase]:
-					phase += 1
-					print("Phase", phase + 1)
+			if m_prop > 0:
 				if phase < len(times):
-					T = trusts[phase]
-				else:
-					T = 0
+					if t >= times[phase]:
+						phase += 1
+						if phase < len(times):
+							print("Phase", phase + 1)
+							T = trusts[phase]
+						else:
+							print("End of propulsion")
+							print("Propellant remaining:", m_prop)
+							T = 0
 			else:
 				if not empty_tank:
 					empty_tank = True
