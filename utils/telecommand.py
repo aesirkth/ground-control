@@ -26,7 +26,7 @@ import utils.fc as protocol
 # set_parachute(self, armed, enable_1, enable_2)
 class Telecommand(SerialReader):
     def __init__(self, **kwargs):
-        super().__init__(device = "RFD", **kwargs)
+        super().__init__(device = "telecommand", **kwargs)
 
     def __send_header(self, id):
         self.ser.write(bytes(SEPARATOR + [id]))

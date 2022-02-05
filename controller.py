@@ -48,7 +48,7 @@ class MenuBar(QtWidgets.QMenuBar):
 		self.openSerial = QtWidgets.QAction("Open &serial")
 		self.openSerial.triggered.connect(self.parent()._open_serial)
 
-		self.openSimu = QtWidgets.QAction("Open &serial")
+		self.openSimu = QtWidgets.QAction("Open s&imulation")
 		self.openSimu.triggered.connect(self.parent()._open_simu)
 
 		self.showMap = QtWidgets.QAction("Show/&hide map")

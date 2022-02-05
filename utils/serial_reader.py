@@ -24,7 +24,7 @@ FLASH_TIMESTAMP = 2
 #directory. It can also find and open a connection to a device 
 ###
 #init(device)
-#   device can be, "gateway", "flight_controller", "RFD"
+#   device can be, "gateway", "flight_controller", "RFD", "telecommand"
 #
 #write(*args) - copy of pyserial's write
 #read(*args) - copy of pyserial's read
@@ -103,7 +103,16 @@ class SerialWrapper():
             self.ser.write(handshake)
             time.sleep(0.5)
             buff = self.ser.read_all()
-            print(buff)
+            return response in buff
+        elif self.device == "telecommand":
+            msg = protocol.handshake_from_ground_station_to_flight_controller()
+            reply = protocol.return_handshake_from_flight_controller_to_ground_station()
+            handshake = bytes(SEPARATOR + [msg.get_id()] + [0]) 
+            response = bytes(SEPARATOR + [reply.get_id()] + [0])
+            self.ser.read_all()
+            self.ser.write(handshake)
+            time.sleep(0.5)
+            buff = self.ser.read_all()
             return response in buff
         else:
             return False
@@ -124,7 +133,8 @@ class SerialWrapper():
         baudrates ={
             "gateway": 115200,
             "RFD": 57600,
-            "flight_controller": 115200
+            "flight_controller": 115200,
+            "telecommand": 115200
         }
         self.ser.baudrate = baudrates[self.device]
 
@@ -299,6 +309,7 @@ class SerialReader():
             
     def read_data(self, decoder):
         checksum = self.stream.read(1)[0]
+        print(checksum)
         length = decoder.get_size()
         buf = self.stream.read(length)
         if len(buf) != length:

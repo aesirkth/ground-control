@@ -12,8 +12,8 @@ def send_data():
 	return
 
 
-def white_noze(scale=1):
-	"""Normal white noze"""
+def white_noise(scale=1):
+	"""Normal white noise"""
 	# For uniform distribution, random.random can be used
 	return normal(0, scale)
 
@@ -165,7 +165,7 @@ class Simulator(object):
 			rho = rho0
 			g = g0 # Assuming g cst
 			m_dot = T / (ISP * g0) # T = Isp * g * m_dot
-			D = 1/2 * CD * rho * S * (v_z**2 + v_x**2) # Drag force (isothermal atmostphere)
+			D = 1/2 * CD * rho * S * (v_z**2 + v_x**2) # Drag force (isothermal atmosphere)
 
 			v_x = v_x + (T - D) * cos(gamma) / m * h
 			v_z = v_z + ((T - D) * sin(gamma) / m - g) * h
@@ -178,6 +178,7 @@ class Simulator(object):
 				t += h
 			else:
 				self.send_data(x, 0, z, v_x, 0, v_z)
+				sleep(0.05) # Decrease the accuracy, but increase the FPS of the controller/dashboard
 
 		if self.real_time:
 			self.send_data(x, 0, z, 0, 0, 0)
