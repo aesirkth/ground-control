@@ -281,11 +281,14 @@ class SerialReader():
     
     def reader_thread(self):
         while not self.exit:
+            # Wait for an order
             if not self.stream_is_active or self.pause:
                 time.sleep(0.1) # Don't overload the computer
                 continue
+
+            # === Looking for the beginning of a sequence
             separator = self.stream.read(1)
-            #test for frame separator, read one byte at a time so it aligns itself
+            # test for frame separator, read one byte at a time so it aligns itself
             if separator == b"":
                 continue
             if separator[0] != SEPARATOR[0]:
@@ -294,39 +297,57 @@ class SerialReader():
             #timestamp if reading from serial
             if self.stream == self.ser:
                 self.ser.timestamp(self.get_current_time() * 1000)
-            frame_id = self.stream.read(1)[0]
 
-            #we have two different protocol definitions so decide on which one to use
-            fc_decoder = protocol.id_to_message_class(frame_id)
-            ec_decoder = edda.id_to_message_class(frame_id)
+            # === Checksum + number of data (4 + 4 bits)
+            info = self.stream.read(1)[0] # 1 byte
+            checksum = (info&240)>>4 # First 4 bits (240 = b"\xf0")
+            packet_length = info&15 # Last 4 bits   (15 = b"\x0f")
 
-            if ec_decoder != None:
-                self.read_data(ec_decoder)
-            elif fc_decoder != None:
-                self.read_data(fc_decoder)
-            else:
-                print("invalid id: ", frame_id)
+            message_checksum = 0
+            messages = []
+            for k in range(packet_length):
+                # === Reading the id
+                frame_id = self.stream.read(1)[0]
+
+                # we have two different protocol definitions so decide on which one to use
+                decoder = protocol.id_to_message_class(frame_id) # fc decoder
+                if decoder is None:
+                    decoder = edda.id_to_message_class(frame_id) # ec decoder
+                if decoder is None:
+                    # Error in the transmission
+                    print("invalid id: ", frame_id)
+                    message_checksum = 16 # This checksum is not valid
+                    break
+
+                buf, cs = self.read_data(decoder)
+                messages.append((decoder,buf))
+                message_checksum = (message_checksum + cs) % 16 # 16 = 2**4
+
+            if checksum != message_checksum:
+                print("Checksum doesn't match")
+                continue
             
+            # === Writing data
+            for decoder, buf in messages:
+                self.decode_and_write(decoder, buf)
+
     def read_data(self, decoder):
-        checksum = self.stream.read(1)[0]
-        print(checksum)
+        """Read the data for 1 id and compute its checksum"""
+        msg_checksum = 16
         length = decoder.get_size()
         buf = self.stream.read(length)
         if len(buf) != length:
             print("invalid length")
-            return
-        msg_checksum = 0
-        for v in buf:
-            msg_checksum ^= v
-        if msg_checksum != checksum:
-            #print(f"invalid checksum. expected: {checksum} got: {msg_checksum}")
-            #print(buf)
-            #print(decoder.get_id())
-            return
+            return b"", msg_checksum
+        for byte in buf:
+            cs1 = (byte&240)>>4
+            cs2 = byte&15
+            msg_checksum = (message_checksum + cs1 +cs2) % 16
+        return buf, msg_checksum
 
+    def decode_and_write(self, decoder, buf)
         decoder.parse_buf(buf)
         decoded_data = decoder.get_all_data()
-    
         source = decoder.get_sender()
         message = decoder.get_message()
         suffix = ""
