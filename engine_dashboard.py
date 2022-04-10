@@ -1,5 +1,6 @@
 # main.py
 import sys  # We need sys so that we can pass argv to QApplication
+import os
 
 from utils.widgets_edb import MainWindow
 from utils.telemetry import Telemetry

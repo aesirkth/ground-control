@@ -189,12 +189,12 @@ class Compass(QtWidgets.QWidget):
 		x = self.center + lenght * cos(theta) / 2
 		y = self.center - lenght * sin(theta) / 2
 		painter.setPen(QtGui.QPen(Qt.red, self.thickness))
-		painter.drawLine(self.center, self.center, x, y)
+		painter.drawLine(int(self.center), int(self.center), int(x), int(y))
 
 		x -= self.thickness * cos(theta)
 		y += self.thickness * sin(theta)
 		painter.setPen(QtGui.QPen(Qt.black, self.thickness))
-		painter.drawLine(self.center, self.center, x, y)
+		painter.drawLine(int(self.center), int(self.center), int(x), int(y))
 
 	def update_direction(self):
 		self.theta += 1

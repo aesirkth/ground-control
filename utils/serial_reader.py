@@ -345,7 +345,7 @@ class SerialReader():
             msg_checksum = (message_checksum + cs1 +cs2) % 16
         return buf, msg_checksum
 
-    def decode_and_write(self, decoder, buf)
+    def decode_and_write(self, decoder, buf):
         decoder.parse_buf(buf)
         decoded_data = decoder.get_all_data()
         source = decoder.get_sender()

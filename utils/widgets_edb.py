@@ -418,7 +418,7 @@ class VerticalTextWidget(QtWidgets.QLabel):
 		painter = QtGui.QPainter(self)
 		painter.translate(0, self.height()/2+self.heightOffset)
 		painter.rotate(-90)
-		painter.drawText(0, self.width()/2+4, self.text())
+		painter.drawText(0, int(self.width()/2+4), self.text())
 		painter.end()
 
 
