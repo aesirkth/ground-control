@@ -7,11 +7,6 @@ from numpy.random import normal
 from utils.definitions import *
 
 
-def send_data():
-	print(".", end="")
-	return
-
-
 def white_noise(scale=1):
 	"""Normal white noise"""
 	# For uniform distribution, random.random can be used
@@ -74,6 +69,7 @@ class Simulator(object):
 		pressure_ratio = pressure_ratio_from_mach(mach_number)
 
 		data = b""
+		msg_checksum = 0
 
 		# 85 = position
 		class_id = 85
@@ -82,10 +78,8 @@ class Simulator(object):
 		fc_encoder.set_longitude(longitude)
 		fc_encoder.set_latitude(latitude)
 		buf = fc_encoder.build_buf()
-		msg_checksum = 0
-		for v in buf:
-			msg_checksum ^= v
-		data += bytes([SEPARATOR[0], class_id, msg_checksum]) + buf
+
+		data += bytes([class_id]) + buf
 
 		# 86 = differential_pressure (but pressure ratio here)
 		class_id = 86
@@ -93,9 +87,16 @@ class Simulator(object):
 		fc_encoder.set_differential_pressure(pressure_ratio)
 		buf = fc_encoder.build_buf()
 		msg_checksum = 0
-		for v in buf:
-			msg_checksum ^= v
-		data += bytes([SEPARATOR[0], class_id, msg_checksum]) + buf
+
+		data += bytes([class_id]) + buf
+
+		# Compute the checksum
+		for v in data:
+			msg_checksum += (v&240)>>4
+			msg_checksum = (msg_checksum + (v&15)) % 16
+
+		info = (msg_checksum << 4) + 2
+		data = bytes([SEPARATOR[0], info]) + data
 
 		self.next_data = data
 

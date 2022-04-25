@@ -303,11 +303,16 @@ class SerialReader():
             checksum = (info&240)>>4 # First 4 bits (240 = b"\xf0")
             packet_length = info&15 # Last 4 bits   (15 = b"\x0f")
 
+            # print("Read : separator")
+            # print("Read : checksum :", checksum)
+            # print("Read : packet_length :", packet_length)
+
             message_checksum = 0
             messages = []
             for k in range(packet_length):
                 # === Reading the id
                 frame_id = self.stream.read(1)[0]
+                # print("Read : id :", frame_id)
 
                 # we have two different protocol definitions so decide on which one to use
                 decoder = protocol.id_to_message_class(frame_id) # fc decoder
@@ -321,10 +326,12 @@ class SerialReader():
 
                 buf, cs = self.read_data(decoder)
                 messages.append((decoder,buf))
+                message_checksum += ((frame_id&240)>>4) + (frame_id&15)
                 message_checksum = (message_checksum + cs) % 16 # 16 = 2**4
 
             if checksum != message_checksum:
                 print("Checksum doesn't match")
+                print("    Given:", checksum, " | Expected:", message_checksum)
                 continue
             
             # === Writing data
@@ -342,7 +349,7 @@ class SerialReader():
         for byte in buf:
             cs1 = (byte&240)>>4
             cs2 = byte&15
-            msg_checksum = (message_checksum + cs1 +cs2) % 16
+            msg_checksum = (msg_checksum + cs1 +cs2) % 16
         return buf, msg_checksum
 
     def decode_and_write(self, decoder, buf):
