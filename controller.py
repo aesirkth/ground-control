@@ -6,6 +6,7 @@ import os
 from utils.telecommand import Telecommand
 from utils.widgets_ec import EngineController, EngineStatus
 from utils.widgets_fc import FlightController, FlightStatus, FlightStatus2, DebugStatus
+from utils.widgets_lc import LaunchPadController
 from utils.widgets_edb import InfoDialog
 from utils.widgets_fdb import FlightDashboard, MapWidget
 from utils.simulation import Simulator
@@ -131,6 +132,11 @@ class MainWindow(QtWidgets.QMainWindow):
 		hline2.setContentsMargins(0, 0, 5, 0)
 		layout.addWidget(hline2, 1, 4)
 		layout.addWidget(DebugStatus(tm, self.timer, self.flightController), 2, 4)
+		hline3 = QHSeperationLine()
+		hline3.setContentsMargins(5, 0, 5, 0)
+		layout.addWidget(hline3, 3, 0, 1, 5)
+		self.launchpadController = LaunchPadController(tm, parent=self)
+		layout.addWidget(self.launchpadController, 4, 0, 1, 5)
 		window.setLayout(layout)
 
 		# Map

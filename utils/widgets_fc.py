@@ -1,28 +1,7 @@
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
-from utils.widgets_ec import ValueIndicator, LargePushButton
-
-
-class TitleWidget(QtWidgets.QLabel):
-	"""Widget use to write columns' title"""
-	def __init__(self, text, parent=None):
-		super(TitleWidget, self).__init__(text, parent)
-
-		# Alignment / Font size
-		self.setAlignment(Qt.AlignCenter)
-		font = self.font()
-		font.setPointSize(20)
-		self.setFont(font)
-
-		self.setMinimumSize(160, 0)
-
-		# Background color
-		# self.setAutoFillBackground(True)
-		# palette = self.palette()
-		# palette.setColor(QPalette.Window, QColor("white"))
-		# self.setPalette(palette)
-
-		self.setFixedHeight(35)
+from utils.widgets_common import TitleWidget, LargePushButton
+from utils.widgets_ec import ValueIndicator
 
 
 class OpenSerial(QtWidgets.QPushButton):
